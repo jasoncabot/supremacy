@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: supremacy-backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: backend
+      app: supremacy-backend
   template:
     metadata:
       labels:
-        app: backend
+        app: supremacy-backend
     spec:
       containers:
-      - name: backend
+      - name: supremacy-backend
         image: supremacy.azurecr.io/backend
         ports:
         - containerPort: 3000
@@ -21,32 +21,32 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend
+  name: supremacy-backend
 spec:
   ports:
   - port: 80
     protocol: TCP
     targetPort: 3000
   selector:
-    app: backend
-# ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: backend
-#   annotations:
-#     certmanager.k8s.io/cluster-issuer: letsencrypt
-#     kubernetes.io/ingress.class: nginx
-#     nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
-# spec:
-#   tls:
-#   - hosts:
-#     - api.supremacy.net
-#     secretName: api-supremacy-net
-#   rules:
-#   - host: api.supremacy.net
-#     http:
-#       paths:
-#       - backend:
-#           serviceName: backend
-#           servicePort: 80
+    app: supremacy-backend
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: supremacy-backend
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - '*.jasoncabot.me'
+    secretName: jasoncabot-me
+  rules:
+  - host: api.supremacy.jasoncabot.me
+    http:
+      paths:
+      - backend:
+          serviceName: supremacy-backend
+          servicePort: 80
