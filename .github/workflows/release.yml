@@ -27,8 +27,12 @@ jobs:
 
       - name: Build and push frontend
         run: |
+          # .env file is copied as part of Dockerfile
+          echo "API_ENDPOINT=$API_ENDPOINT" >> frontend/.env
           DOCKER_BUILDKIT=1 docker build -f Dockerfile.frontend . -t ${{ secrets.REGISTRY_HOST }}/supremacy/frontend:${{ steps.get_version.outputs.VERSION }}
           docker push ${{ secrets.REGISTRY_HOST }}/supremacy/frontend:${{ steps.get_version.outputs.VERSION }}
+        env:
+          API_ENDPOINT: https://supremacyapi.jasoncabot.me
 
       - name: Build and push backend
         run: |
