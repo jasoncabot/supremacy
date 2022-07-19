@@ -19,6 +19,12 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '${{ steps.nvm.outputs.NVMRC }}'
+      - name: Build Shared
+        working-directory: ./shared
+        run: |
+          yarn
+          yarn build
+          CI=true yarn test
       - name: Build Frontend
         working-directory: ./frontend
         run: |
