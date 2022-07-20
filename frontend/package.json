@@ -29,6 +29,11 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+    "moduleNameMapper": {
+      "^@app/shared$": "<rootDir>/../shared/src/index.ts"
+    }
+  },
   "browserslist": {
     "production": [
       ">0.2%",
