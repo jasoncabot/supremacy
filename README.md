@@ -48,7 +48,7 @@ Runs locally with live reloading
 cd shared
 yarn
 yarn link
-yarn build --watch # required for live reloading of shared module
+yarn start # required for live reloading of shared module
 cd ../frontend
 yarn
 yarn link @app/shared # required for live reloading of shared module
