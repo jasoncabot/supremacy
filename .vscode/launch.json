@@ -5,11 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "command": "npm run dev",
+            "command": "yarn dev",
             "name": "Start backend",
             "request": "launch",
             "type": "node-terminal",
-            "cwd": "${workspaceFolder}/backend"
+            "cwd": "${workspaceFolder}/backend",
+        },
+        {
+            "name": "Start frontend",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://0.0.0.0:3000",
+            "webRoot": "${workspaceFolder}/frontend/src",
+            "cwd": "${workspaceFolder}/frontend",
+            "preLaunchTask": "yarn start - frontend"
         }
+
     ]
 }

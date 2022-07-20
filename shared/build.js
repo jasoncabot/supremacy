@@ -1,6 +1,8 @@
 const esbuild = require('esbuild');
 const path = require('path');
 
+console.log('[esbuild] start');
+
 esbuild.build({
     entryPoints: [path.join(__dirname, "src", "index.ts")],
     outfile: path.join(__dirname, "dist", "shared.js"),
@@ -15,3 +17,4 @@ esbuild.build({
     process.exitCode = 1
 }
 );
+console.log('[esbuild] finish');
