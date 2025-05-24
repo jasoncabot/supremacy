@@ -1,0 +1,101 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "supremacy",
+	"main": "worker/index.ts",
+	"compatibility_date": "2025-05-08",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"env": {
+		"dev": {
+			"name": "supremacy-dev",
+			"assets": {
+				"not_found_handling": "single-page-application",
+				"binding": "ASSETS",
+			},
+			"observability": {
+				"enabled": true,
+			},
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "GAMES",
+						"class_name": "GamesDurableObject",
+					},
+					{
+						"name": "MATCHMAKER",
+						"class_name": "MatchmakerDurableObject",
+					},
+					{
+						"name": "USERS",
+						"class_name": "UsersDurableObject",
+					},
+					{
+						"name": "TOKENS",
+						"class_name": "TokensDurableObject",
+					},
+				],
+			},
+		},
+		"production": {
+			"name": "supremacy",
+			"routes": [{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true }],
+			"assets": {
+				"not_found_handling": "single-page-application",
+				"binding": "ASSETS",
+			},
+			"observability": {
+				"enabled": true,
+			},
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "GAMES",
+						"class_name": "GamesDurableObject",
+					},
+					{
+						"name": "MATCHMAKER",
+						"class_name": "MatchmakerDurableObject",
+					},
+					{
+						"name": "USERS",
+						"class_name": "UsersDurableObject",
+					},
+					{
+						"name": "TOKENS",
+						"class_name": "TokensDurableObject",
+					},
+				],
+			},
+		},
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "GAMES",
+				"class_name": "GamesDurableObject",
+			},
+			{
+				"name": "MATCHMAKER",
+				"class_name": "MatchmakerDurableObject",
+			},
+			{
+				"name": "USERS",
+				"class_name": "UsersDurableObject",
+			},
+			{
+				"name": "TOKENS",
+				"class_name": "TokensDurableObject",
+			},
+		],
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"GamesDurableObject",
+				"MatchmakerDurableObject",
+				"UsersDurableObject",
+				"TokensDurableObject",
+			],
+		},
+	],
+}

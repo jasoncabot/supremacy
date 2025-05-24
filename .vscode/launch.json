@@ -1,25 +1,22 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "command": "yarn dev",
-            "name": "Start backend",
-            "request": "launch",
-            "type": "node-terminal",
-            "cwd": "${workspaceFolder}/backend",
-        },
-        {
-            "name": "Start frontend",
-            "request": "launch",
-            "type": "chrome",
-            "url": "http://0.0.0.0:3000",
-            "webRoot": "${workspaceFolder}/frontend/src",
-            "cwd": "${workspaceFolder}/frontend",
-            "preLaunchTask": "yarn start - frontend"
-        }
-
-    ]
+  "configurations": [
+    {
+      "name": "Wrangler",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "cwd": "/",
+      "resolveSourceMapLocations": null,
+      "attachExistingChildren": false,
+      "autoAttachChildProcesses": false,
+      "sourceMaps": true // works with or without this line
+    },
+    {
+      "name": "React Debugger",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src"
+    }
+  ]
 }

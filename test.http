@@ -1,0 +1,47 @@
+### Signup
+POST http://localhost:5173/api/auth/signup
+Content-Type: application/json
+X-Client-Id: test-client-id
+
+{
+  "username": "testuser",
+  "password": "testpassword",
+  "email": "test@example.com"
+}
+
+### Login
+# @name login
+
+POST http://localhost:5173/api/auth/login
+Content-Type: application/json
+X-Client-Id: test-client-id
+
+{
+  "username": "testuser",
+  "password": "testpassword"
+}
+
+### Mint new refresh token
+@refreshToken = {{login.response.body.refreshToken}}
+
+POST http://localhost:5173/api/auth/refresh
+Content-Type: application/json
+X-Client-Id: test-client-id
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Create a game
+POST http://localhost:5173/api/games
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.accessToken}}
+X-Client-Id: test-client-id
+
+{
+	"faction": "Empire",
+	"difficulty": "Easy",
+	"galaxySize": "Small",
+	"winCondition": "Standard",
+	"mode": "Single Player"
+}

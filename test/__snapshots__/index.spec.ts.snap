@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`api > returns appropriate content for health 1`] = `
+{
+  "status": "ok",
+}
+`;
+
+exports[`api > returns appropriate content for something-that-is-random 1`] = `
+{
+  "error": "Not Found",
+  "status": 404,
+}
+`;
+
+exports[`api > returns appropriate content for version 1`] = `
+{
+  "version": "0.1.0",
+}
+`;
+
+exports[`auth > can run through the whole sign up, login and refresh flow 1`] = `
+{
+  "accessToken": "swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:22222222222222222222222222222222",
+  "accessTokenExpiry": 1746403200000,
+  "clientId": "test-client-id",
+  "refreshToken": "swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:33333333333333333333333333333333",
+  "refreshTokenExpiry": 1748908800000,
+}
+`;
+
+exports[`auth > can run through the whole sign up, login and refresh flow 2`] = `
+{
+  "accessToken": "swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:44444444444444444444444444444444",
+  "accessTokenExpiry": 1746403200000,
+  "clientId": "test-client-id",
+  "refreshToken": "swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:11111111111111111111111111111111",
+  "refreshTokenExpiry": 1748908800000,
+}
+`;
+
+exports[`auth > can run through the whole sign up, login and refresh flow 3`] = `
+{
+  "accessToken": "swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:22222222222222222222222222222222",
+  "accessTokenExpiry": 1746403200000,
+  "clientId": "test-client-id",
+  "refreshToken": "swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:33333333333333333333333333333333",
+  "refreshTokenExpiry": 1748908800000,
+}
+`;
+
+exports[`auth > can run through the whole sign up, login and refresh flow 4`] = `
+{
+  "gameId": "game-4",
+}
+`;
