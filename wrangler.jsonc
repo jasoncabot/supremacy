@@ -38,7 +38,9 @@
 		},
 		"production": {
 			"name": "supremacy",
-			"routes": [{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true }],
+			"routes": [
+				{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true },
+			],
 			"assets": {
 				"not_found_handling": "single-page-application",
 				"binding": "ASSETS",
