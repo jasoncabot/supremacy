@@ -66,8 +66,8 @@ describe("auth", () => {
 		const signupRequest = new Request("http://example.com/api/auth/signup", {
 			method: "POST",
 			body: JSON.stringify({
-				username: "test",
-				password: "test",
+				username: "testuser",
+				password: "testpassword",
 			} as SignupRequest),
 			headers: standardHeaders,
 		});
@@ -77,8 +77,8 @@ describe("auth", () => {
 		const loginRequest = new Request("http://example.com/api/auth/login", {
 			method: "POST",
 			body: JSON.stringify({
-				username: "test",
-				password: "test",
+				username: "testuser",
+				password: "testpassword",
 			} as LoginRequest),
 			headers: standardHeaders,
 		});
@@ -89,7 +89,7 @@ describe("auth", () => {
 			method: "POST",
 			body: JSON.stringify({
 				refreshToken:
-					"swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:11111111111111111111111111111111",
+					"swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:44444444444444444444444444444444",
 			} as RefreshTokenRequest),
 			headers: standardHeaders,
 		});
@@ -109,7 +109,7 @@ describe("auth", () => {
 			headers: {
 				...standardHeaders,
 				Authorization:
-					"Bearer swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:22222222222222222222222222222222",
+					"Bearer swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:11111111111111111111111111111111",
 			},
 		});
 		const gameResponse = await SELF.fetch(gameRequest);

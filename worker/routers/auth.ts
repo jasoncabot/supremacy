@@ -26,7 +26,7 @@ const authRouter = Router<IRequest, [Env, ExecutionContext]>({
 
 		if (body.username !== "testuser") {
 			return error(403, {
-				error: "Signup is disabled for this endpoint",
+				error: "Signup is currently disabled for all users",
 			});
 		}
 
@@ -43,11 +43,7 @@ const authRouter = Router<IRequest, [Env, ExecutionContext]>({
 			passwordAuthId,
 		) as unknown as TokensDurableObject;
 
-		const result = await passwordAuthObj.signup(
-			body.username,
-			body.password,
-			clientId,
-		);
+		const result = await passwordAuthObj.signup(body, clientId);
 
 		if (result.error || !result.tokens) {
 			return error(result.error?.status || 400, {

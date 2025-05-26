@@ -1,6 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import { UsersDurableObject } from ".";
-import { ApiError } from "../api";
+import { ApiError, SignupRequest } from "../api";
 import { AuthScope } from "../middleware";
 
 interface TokenPair {
@@ -30,18 +30,17 @@ export class TokensDurableObject extends DurableObject<Env> {
 	}
 
 	async signup(
-		username: string,
-		password: string,
+		req: SignupRequest,
 		clientId: string,
 	): Promise<{ tokens?: TokenPair; error?: ApiError }> {
 		// this instance of the DO is for the users username and acts as a co-ordinator rather than storing the user data itself
-		const uid = idFromUsername(this.env.USERS, username);
+		const uid = idFromUsername(this.env.USERS, req.username);
 		const obj = (await this.env.USERS.get(
 			uid,
 		)) as unknown as UsersDurableObject;
 
 		// Store the user details specifically in the USERS object
-		const result = await obj.signup(username);
+		const result = await obj.signup(req);
 		if (result.error) {
 			return { error: result.error };
 		}
@@ -53,7 +52,7 @@ export class TokensDurableObject extends DurableObject<Env> {
 		)) as unknown as TokensDurableObject;
 
 		// Create refresh and access tokens for this user and client
-		return tobj.storePassword(uid.toString(), password, clientId);
+		return tobj.storePassword(uid.toString(), req.password, clientId);
 	}
 
 	/**

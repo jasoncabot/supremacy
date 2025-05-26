@@ -1,5 +1,10 @@
 import { DurableObject } from "cloudflare:workers";
-import { ApiError, SavedGameResponse, FactionMetadata } from "../api";
+import {
+	ApiError,
+	SavedGameResponse,
+	FactionMetadata,
+	SignupRequest,
+} from "../api";
 import { AuthScope } from "../middleware";
 
 export interface UserGame {
@@ -11,10 +16,10 @@ export interface UserGame {
 }
 
 interface User {
-	id: string;
 	createdAt: string;
 	updatedAt: string;
 	username: string;
+	email?: string; // Optional email field
 }
 
 export class UsersDurableObject extends DurableObject<Env> {
@@ -22,7 +27,7 @@ export class UsersDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 	}
 
-	async signup(username: string): Promise<{ error?: ApiError }> {
+	async signup(req: SignupRequest): Promise<{ error?: ApiError }> {
 		// Check if the user already exists
 		const existingUser = await this.getUser();
 		if (existingUser) {
@@ -30,10 +35,10 @@ export class UsersDurableObject extends DurableObject<Env> {
 		}
 
 		await this.ctx.storage.put<User>("user", {
-			id: crypto.randomUUID().replace(/-/g, ""),
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
-			username: username,
+			username: req.username,
+			email: req.email || "",
 		} as User);
 		return {};
 	}

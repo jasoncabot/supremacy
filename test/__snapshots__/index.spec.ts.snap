@@ -21,30 +21,30 @@ exports[`api > returns appropriate content for version 1`] = `
 
 exports[`auth > can run through the whole sign up, login and refresh flow 1`] = `
 {
-  "accessToken": "swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:22222222222222222222222222222222",
+  "accessToken": "swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:11111111111111111111111111111111",
   "accessTokenExpiry": 1746403200000,
   "clientId": "test-client-id",
-  "refreshToken": "swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:33333333333333333333333333333333",
+  "refreshToken": "swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:22222222222222222222222222222222",
   "refreshTokenExpiry": 1748908800000,
 }
 `;
 
 exports[`auth > can run through the whole sign up, login and refresh flow 2`] = `
 {
-  "accessToken": "swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:44444444444444444444444444444444",
+  "accessToken": "swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:33333333333333333333333333333333",
   "accessTokenExpiry": 1746403200000,
   "clientId": "test-client-id",
-  "refreshToken": "swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:11111111111111111111111111111111",
+  "refreshToken": "swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:44444444444444444444444444444444",
   "refreshTokenExpiry": 1748908800000,
 }
 `;
 
 exports[`auth > can run through the whole sign up, login and refresh flow 3`] = `
 {
-  "accessToken": "swa:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:22222222222222222222222222222222",
+  "accessToken": "swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:11111111111111111111111111111111",
   "accessTokenExpiry": 1746403200000,
   "clientId": "test-client-id",
-  "refreshToken": "swr:9cc45b3f05af7c62c2f9024c47b9e48f38b8160c2b04a5cc5acb8521775ed38d:33333333333333333333333333333333",
+  "refreshToken": "swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:22222222222222222222222222222222",
   "refreshTokenExpiry": 1748908800000,
 }
 `;

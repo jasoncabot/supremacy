@@ -17,6 +17,7 @@ export interface VersionResponse {
 export interface SignupRequest {
 	username: string;
 	password: string;
+	email?: string;
 }
 
 // Authentication-related types
