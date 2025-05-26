@@ -4,6 +4,7 @@
 	"main": "worker/index.ts",
 	"compatibility_date": "2025-05-08",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"workers_dev": false,
 	"env": {
 		"dev": {
 			"name": "supremacy-dev",
