@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { Loading } from "../Loading";
-import { FilterType } from "./Filters";
+import Filters, { FilterType } from "./Filters";
 import GameActions from "./GameActions";
 import GameContent from "./GameContent";
 import { GameProvider } from "./GameContext";
@@ -11,7 +11,7 @@ import { useGame } from "./useGame";
 
 // Inner component that uses the game context
 const GameScreenContent: React.FC = () => {
-	const [filter, setFilter] = useState<FilterType>("none");
+	const [filter, setFilter] = useState<FilterType>("OFF");
 	const [menuExpanded, setMenuExpanded] = useState(false);
 	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
 	const { game, loading, submitActions } = useGame();
@@ -55,13 +55,12 @@ const GameScreenContent: React.FC = () => {
 				<div className="flex flex-1 flex-col">
 					<StatusBar turn={game.turn} resources={game.faction.resources} />
 
-					<GameContent
-						activeView={activeView}
-						filter={filter}
-						onFilterChange={setFilter}
-					/>
+					<GameContent activeView={activeView} filter={filter} />
 
-					<GameActions onEndTurn={handleEndTurn} />
+					<div className="flex flex-row justify-between border-t border-purple-700/30 bg-gray-800/50 p-4 backdrop-blur-md">
+						<Filters filter={filter} onChange={setFilter} />
+						<GameActions onEndTurn={handleEndTurn} />
+					</div>
 				</div>
 			</div>
 		</div>

@@ -24,9 +24,9 @@ const GameActions: React.FC<GameActionsProps> = ({ onEndTurn }) => {
 	};
 
 	return (
-		<div className="fixed right-4 bottom-4 flex gap-3">
+		<div className="flex">
 			<button
-				className="rounded-lg bg-purple-700 px-4 py-2 font-bold text-white shadow-lg transition-all hover:bg-purple-600"
+				className="cursor-pointer rounded-lg bg-purple-700 px-4 py-2 font-bold text-white shadow-lg transition-all hover:bg-purple-600"
 				onClick={handleEndTurn}
 			>
 				End Turn {game?.turn}

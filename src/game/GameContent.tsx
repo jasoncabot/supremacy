@@ -1,50 +1,42 @@
 import React from "react";
 import { FilterType } from "./Filters";
-import Filters from "./Filters";
 import Notifications from "./Notifications";
+import SectorDetailWindow from "./SectorDetailWindow";
 import SectorOverview from "./SectorOverview";
 import { MenuView } from "./SideMenu";
 import { useGame } from "./useGame";
-import SectorDetailWindow from "./SectorDetailWindow";
 
 interface GameContentProps {
 	activeView: MenuView;
 	filter: FilterType;
-	onFilterChange: (filter: FilterType) => void;
 }
 
-const GameContent: React.FC<GameContentProps> = ({
-	activeView,
-	filter,
-	onFilterChange,
-}) => {
+const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 	const { sectors, planetsBySector, notifications, markNotificationAsRead } =
 		useGame();
 
 	const [openSectors, setOpenSectors] = React.useState<string[]>([]);
 
-	// Handle opening a sector for detailed view
 	const handleOpenSector = (sectorId: string) => {
-		// This would typically open a sector detail view
-		console.log("Open sector:", sectorId);
 		if (!openSectors.includes(sectorId)) {
 			setOpenSectors((prev) => [...prev, sectorId]);
+		} else {
+			setOpenSectors((prev) => {
+				const others = prev.filter((id) => id !== sectorId);
+				return [...others, sectorId];
+			});
 		}
-		// Implementation could dispatch to a modal/window manager
 	};
 
 	return (
-		<div className="mx-auto max-w-5xl px-4 pt-8">
+		<div className="mx-auto w-full flex-1 p-4 select-none">
 			{activeView === "sectorOverview" && (
-				<>
-					<SectorOverview
-						sectors={sectors}
-						planetsBySector={planetsBySector}
-						filter={filter}
-						onOpenSector={handleOpenSector}
-					/>
-					<Filters filter={filter} onChange={onFilterChange} />
-				</>
+				<SectorOverview
+					sectors={sectors}
+					planetsBySector={planetsBySector}
+					filter={filter}
+					onOpenSector={handleOpenSector}
+				/>
 			)}
 
 			{activeView === "notifications" && (
@@ -55,6 +47,24 @@ const GameContent: React.FC<GameContentProps> = ({
 				/>
 			)}
 
+			{activeView === "finder" && (
+				<div className="mx-auto w-full max-w-2xl p-4">
+					<h1 className="text-2xl font-bold text-white">Finder</h1>
+					<p className="text-gray-400">
+						This section is under construction. Stay tuned for updates!
+					</p>
+				</div>
+			)}
+
+			{activeView === "encyclopaedia" && (
+				<div className="mx-auto w-full max-w-2xl p-4">
+					<h1 className="text-2xl font-bold text-white">Encyclopaedia</h1>
+					<p className="text-gray-400">
+						This section is under construction. Stay tuned for updates!
+					</p>
+				</div>
+			)}
+
 			{/* Overlay everything with the set of sectors we have open  */}
 			{openSectors.length > 0 &&
 				openSectors.map((sectorId) => (
@@ -62,10 +72,16 @@ const GameContent: React.FC<GameContentProps> = ({
 						key={sectorId}
 						sector={sectors.find((s) => s.id === sectorId)!}
 						planets={planetsBySector[sectorId] || []}
+						onActivated={() => {
+							setOpenSectors((prev) => {
+								const others = prev.filter((id) => id !== sectorId);
+								return [...others, sectorId];
+							});
+						}}
 						onClose={function (): void {
 							setOpenSectors((prev) => prev.filter((id) => id !== sectorId));
 						}}
-						filter={"none"}
+						filter={filter}
 					/>
 				))}
 		</div>

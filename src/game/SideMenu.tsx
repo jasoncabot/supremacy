@@ -3,12 +3,19 @@ import {
 	Bars3Icon,
 	BellAlertIcon,
 	GlobeAltIcon,
+	BookOpenIcon,
+	MagnifyingGlassIcon,
+	WindowIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 import React from "react";
 
-export type MenuView = "sectorOverview" | "notifications";
+export type MenuView =
+	| "sectorOverview"
+	| "notifications"
+	| "encyclopaedia"
+	| "finder";
 
 interface SideMenuProps {
 	isExpanded: boolean;
@@ -61,7 +68,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 					{/* Main Navigation Options */}
 					<div className="mb-6 space-y-2">
 						<button
-							className={`w-full rounded-lg px-3 py-2 text-left transition-colors ${
+							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
 								activeView === "sectorOverview"
 									? "bg-purple-800/60 text-white"
 									: "text-purple-200 hover:bg-purple-900/40"
@@ -75,7 +82,20 @@ const SideMenu: React.FC<SideMenuProps> = ({
 						</button>
 
 						<button
-							className={`w-full rounded-lg px-3 py-2 text-left transition-colors ${
+							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left text-purple-200 transition-colors hover:bg-purple-900/40`}
+							onClick={() => {
+								// TODO: show a list of open windows
+								alert("Open windows feature not implemented yet.");
+							}}
+						>
+							<div className="flex items-center">
+								<WindowIcon className="mr-2 h-5 w-5" />
+								Windows
+							</div>
+						</button>
+
+						<button
+							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
 								activeView === "notifications"
 									? "bg-purple-800/60 text-white"
 									: "text-purple-200 hover:bg-purple-900/40"
@@ -87,6 +107,34 @@ const SideMenu: React.FC<SideMenuProps> = ({
 								Notifications
 							</div>
 						</button>
+
+						<button
+							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
+								activeView === "finder"
+									? "bg-purple-800/60 text-white"
+									: "text-purple-200 hover:bg-purple-900/40"
+							}`}
+							onClick={() => onChangeView("finder")}
+						>
+							<div className="flex items-center">
+								<MagnifyingGlassIcon className="mr-2 h-5 w-5" />
+								Finder
+							</div>
+						</button>
+
+						<button
+							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
+								activeView === "encyclopaedia"
+									? "bg-purple-800/60 text-white"
+									: "text-purple-200 hover:bg-purple-900/40"
+							}`}
+							onClick={() => onChangeView("encyclopaedia")}
+						>
+							<div className="flex items-center">
+								<BookOpenIcon className="mr-2 h-5 w-5" />
+								Encyclopaedia
+							</div>
+						</button>
 					</div>
 
 					{/* Horizontal Rule */}
@@ -95,7 +143,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 					{/* Game Options */}
 					<div className="space-y-2">
 						<button
-							className="w-full rounded-lg px-3 py-2 text-left text-purple-200 transition-colors hover:bg-purple-900/40"
+							className="w-full cursor-pointer rounded-lg px-3 py-2 text-left text-purple-200 transition-colors hover:bg-purple-900/40"
 							onClick={onExitGame}
 						>
 							<div className="flex items-center">
@@ -109,7 +157,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 				// Collapsed menu - only show icons
 				<div className="mt-4 flex flex-col items-center space-y-2">
 					<button
-						className={`flex h-10 w-10 items-center justify-center rounded-md ${
+						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
 							activeView === "sectorOverview"
 								? "bg-purple-800 text-white"
 								: "text-purple-300 hover:text-purple-100"
@@ -121,7 +169,18 @@ const SideMenu: React.FC<SideMenuProps> = ({
 					</button>
 
 					<button
-						className={`flex h-10 w-10 items-center justify-center rounded-md ${
+						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100`}
+						onClick={() => {
+							// TODO: show a list of open windows
+							alert("Open windows feature not implemented yet.");
+						}}
+						title="Windows"
+					>
+						<WindowIcon className="h-5 w-5" />
+					</button>
+
+					<button
+						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
 							activeView === "notifications"
 								? "bg-purple-800 text-white"
 								: "text-purple-300 hover:text-purple-100"
@@ -132,11 +191,35 @@ const SideMenu: React.FC<SideMenuProps> = ({
 						<BellAlertIcon className="h-5 w-5" />
 					</button>
 
+					<button
+						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
+							activeView === "finder"
+								? "bg-purple-800 text-white"
+								: "text-purple-300 hover:text-purple-100"
+						}`}
+						onClick={() => onChangeView("finder")}
+						title="Finder"
+					>
+						<MagnifyingGlassIcon className="h-5 w-5" />
+					</button>
+
+					<button
+						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
+							activeView === "encyclopaedia"
+								? "bg-purple-800 text-white"
+								: "text-purple-300 hover:text-purple-100"
+						}`}
+						onClick={() => onChangeView("encyclopaedia")}
+						title="Encyclopaedia"
+					>
+						<BookOpenIcon className="h-5 w-5" />
+					</button>
+
 					{/* Horizontal Rule as a small vertical line */}
 					<div className="h-6 w-px bg-purple-700/30"></div>
 
 					<button
-						className="flex h-10 w-10 items-center justify-center rounded-md text-purple-300 hover:text-purple-100"
+						className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100"
 						onClick={onExitGame}
 						title="Exit Game"
 					>
