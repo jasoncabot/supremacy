@@ -6,4 +6,6 @@ export { default as Notifications } from "./Notifications";
 export { default as SectorOverview } from "./SectorOverview";
 export { default as SideMenu } from "./SideMenu";
 export { default as StatusBar } from "./StatusBar";
+export { default as ViewWindow } from "./ViewWindow";
+export { default as DraggableWindow } from "./DraggableWindow";
 export { useGame } from "./useGame";

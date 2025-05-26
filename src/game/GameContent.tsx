@@ -4,6 +4,7 @@ import Notifications from "./Notifications";
 import SectorDetailWindow from "./SectorDetailWindow";
 import SectorOverview from "./SectorOverview";
 import { MenuView } from "./SideMenu";
+import ViewWindow from "./ViewWindow";
 import { useGame } from "./useGame";
 
 interface GameContentProps {
@@ -11,11 +12,21 @@ interface GameContentProps {
 	filter: FilterType;
 }
 
+type ViewWindowType = {
+	id: string; // Unique identifier for this view
+	planetId: string;
+	viewType: "fleets" | "defence" | "manufacturing" | "missions";
+	title: string;
+};
+
 const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 	const { sectors, planetsBySector, notifications, markNotificationAsRead } =
 		useGame();
 
 	const [openSectors, setOpenSectors] = React.useState<string[]>([]);
+	const [openViewWindows, setOpenViewWindows] = React.useState<
+		ViewWindowType[]
+	>([]);
 
 	const handleOpenSector = (sectorId: string) => {
 		if (!openSectors.includes(sectorId)) {
@@ -26,6 +37,32 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 				return [...others, sectorId];
 			});
 		}
+	};
+
+	const handleViewPlanet = (
+		planetId: string,
+		viewType: "fleets" | "defence" | "manufacturing" | "missions",
+		title: string,
+	) => {
+		const viewId = `${planetId}-${viewType}`;
+
+		// Check if this view is already open
+		if (!openViewWindows.some((view) => view.id === viewId)) {
+			setOpenViewWindows((prev) => [
+				...prev,
+				{ id: viewId, planetId, viewType, title },
+			]);
+		} else {
+			// Bring to front if already open (similar to sector handling)
+			setOpenViewWindows((prev) => {
+				const others = prev.filter((view) => view.id !== viewId);
+				return [...others, { id: viewId, planetId, viewType, title }];
+			});
+		}
+	};
+
+	const handleCloseViewWindow = (viewId: string) => {
+		setOpenViewWindows((prev) => prev.filter((view) => view.id !== viewId));
 	};
 
 	return (
@@ -82,6 +119,25 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 							setOpenSectors((prev) => prev.filter((id) => id !== sectorId));
 						}}
 						filter={filter}
+						onViewPlanet={handleViewPlanet}
+					/>
+				))}
+
+			{/* Overlay everything with the set of view windows we have open */}
+			{openViewWindows.length > 0 &&
+				openViewWindows.map((view) => (
+					<ViewWindow
+						key={view.id}
+						planetId={view.planetId}
+						viewType={view.viewType}
+						title={view.title}
+						onActivated={() => {
+							setOpenViewWindows((prev) => {
+								const others = prev.filter((v) => v.id !== view.id);
+								return [...others, view];
+							});
+						}}
+						onClose={() => handleCloseViewWindow(view.id)}
 					/>
 				))}
 		</div>
