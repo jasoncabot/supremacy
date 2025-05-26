@@ -1,6 +1,11 @@
 // worker/auth.ts
 import { error, IRequest, json, Router } from "itty-router";
-import { LoginRequest, RefreshTokenRequest, SignupRequest } from "../api";
+import {
+	ApiError,
+	LoginRequest,
+	RefreshTokenRequest,
+	SignupRequest,
+} from "../api";
 import { TokensDurableObject } from "../durable-objects";
 
 const tokenIdForPasswordAuth = (username: string) => `password:${username}`;
@@ -11,7 +16,7 @@ export const tokenIdForTokenAuth = (
 ) => {
 	const parts = token.split(":");
 	if (parts.length != 3 || (parts[0] !== "swa" && parts[0] !== "swr")) {
-		throw new Error("Invalid token format");
+		throw new ApiError(400, "bad_request", "Invalid token format");
 	}
 	return tokens.idFromString(parts[1]);
 };

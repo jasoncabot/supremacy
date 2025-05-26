@@ -1,113 +1,79 @@
-import React, { useEffect, useState } from "react";
-import { GameView, PlanetView, SectorMetadata } from "../../worker/api";
-import { useApi } from "../hooks/useApi";
-import Filters, { FilterType } from "./Filters";
-import Notifications from "./Notifications";
-import SectorDetailWindow from "./SectorDetailWindow";
-import SectorOverview from "./SectorOverview";
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { Loading } from "../Loading";
+import { FilterType } from "./Filters";
+import GameActions from "./GameActions";
+import GameContent from "./GameContent";
+import { GameProvider } from "./GameContext";
+import SideMenu, { MenuView } from "./SideMenu";
 import StatusBar from "./StatusBar";
+import { useGame } from "./useGame";
 
-const GameScreen: React.FC = () => {
-	const [game, setGame] = useState<GameView | null>(null);
-	const [sectors, setSectors] = useState<SectorMetadata[]>([]);
+// Inner component that uses the game context
+const GameScreenContent: React.FC = () => {
 	const [filter, setFilter] = useState<FilterType>("none");
-	const [openSectors, setOpenSectors] = useState<string[]>([]);
-	const [notifications, setNotifications] = useState<GameView["notifications"]>(
-		[],
-	);
-	const [planetsBySector, setPlanetsBySector] = useState<
-		Record<string, PlanetView[]>
-	>({});
+	const [menuExpanded, setMenuExpanded] = useState(false);
+	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
+	const { game, loading, submitActions } = useGame();
+	const navigate = useNavigate();
 
-	// Use our centralized API hook
-	const { fetchData } = useApi<GameView>();
-
-	// Fetch game state on mount
-	useEffect(() => {
-		const gameId = window.location.pathname.split("/").pop();
-
-		// Use the centralized fetchData function instead of direct fetch
-		fetchData(`/api/games/${gameId}`)
-			.then((data: GameView) => {
-				setGame(data);
-
-				// Transform sectors data
-				const sectorList = Object.values(data.sectors) as SectorMetadata[];
-				setSectors(sectorList);
-
-				// Group planets by sector
-				const planetMap: Record<string, PlanetView[]> = {};
-				for (const sector of sectorList) {
-					planetMap[sector.id] = sector.planetIds
-						.map((id: string) => data.planets[id])
-						.filter(Boolean);
-				}
-				setPlanetsBySector(planetMap);
-
-				setNotifications(data.notifications || []);
-			})
-			.catch((error: Error) => {
-				if (error.name === "AbortError") {
-					return;
-				}
-				console.error("Failed to load game:", error);
-			});
-	}, [fetchData]);
-
-	const handleOpenSector = (sectorId: string) => {
-		setOpenSectors((prev) =>
-			prev.includes(sectorId) ? prev : [...prev, sectorId],
-		);
-	};
-	const handleCloseSector = (sectorId: string) => {
-		setOpenSectors((prev) => prev.filter((id) => id !== sectorId));
-	};
-	const handleMarkRead = (id: string) => {
-		setNotifications((prev) =>
-			prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-		);
+	const handleToggleMenu = () => {
+		setMenuExpanded(!menuExpanded);
 	};
 
-	if (!game)
-		return (
-			<div className="flex min-h-screen items-center justify-center text-white">
-				Loading...
-			</div>
-		);
+	const handleChangeView = (view: MenuView) => {
+		setActiveView(view);
+	};
+
+	const handleExitGame = () => {
+		navigate("/");
+	};
+
+	const handleEndTurn = () => {
+		submitActions([]); // TODO: Implement actual end turn logic
+	};
+
+	if (loading || !game) {
+		return <Loading text={window.location.pathname.split("/").pop()} />;
+	}
 
 	return (
-		<div className="relative min-h-screen font-sans text-white">
-			<StatusBar turn={game.turn} resources={game.faction.resources} />
-			<div className="mx-auto max-w-5xl pt-8">
-				<Filters filter={filter} onChange={setFilter} />
-				<SectorOverview
-					sectors={sectors}
-					planetsBySector={planetsBySector}
-					filter={filter}
-					onOpenSector={handleOpenSector}
+		<div className="relative flex min-h-screen flex-col overflow-hidden bg-black text-white">
+			<div className="absolute inset-0 bg-[url('/stars-bg.jpg')] bg-cover opacity-50"></div>
+			<div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-slate-950/60 to-purple-950/40"></div>
+			<div className="absolute bottom-0 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl"></div>
+
+			<div className="relative z-10 flex h-screen w-full flex-row">
+				<SideMenu
+					isExpanded={menuExpanded}
+					onToggleExpand={handleToggleMenu}
+					activeView={activeView}
+					onChangeView={handleChangeView}
+					onExitGame={handleExitGame}
 				/>
-				{openSectors.map((sectorId) => {
-					const sector = sectors.find((s) => s.id === sectorId);
-					const planets = planetsBySector[sectorId] || [];
-					return sector ? (
-						<SectorDetailWindow
-							key={sector.id}
-							sector={sector}
-							planets={planets}
-							filter={filter}
-							onClose={() => handleCloseSector(sector.id)}
-							// Add galactic window styling inside SectorDetailWindow
-						/>
-					) : null;
-				})}
-			</div>
-			<div className="fixed right-4 bottom-4 z-50">
-				<Notifications
-					notifications={notifications}
-					onMarkRead={handleMarkRead}
-				/>
+
+				<div className="flex flex-1 flex-col">
+					<StatusBar turn={game.turn} resources={game.faction.resources} />
+
+					<GameContent
+						activeView={activeView}
+						filter={filter}
+						onFilterChange={setFilter}
+					/>
+
+					<GameActions onEndTurn={handleEndTurn} />
+				</div>
 			</div>
 		</div>
+	);
+};
+
+// Wrapper component that provides the GameContext
+const GameScreen: React.FC = () => {
+	return (
+		<GameProvider>
+			<GameScreenContent />
+		</GameProvider>
 	);
 };
 

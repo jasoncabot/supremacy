@@ -1,5 +1,6 @@
 import { DurableObject } from "cloudflare:workers";
 import {
+	ApiError,
 	CreateGameRequest,
 	CreateGameResponse,
 	FactionMetadata,
@@ -154,7 +155,6 @@ export class GamesDurableObject extends DurableObject<Env> {
 					const planetView: PlanetView = {
 						metadata: planetState.metadata,
 						discovered: isDiscovered,
-						lastUpdatedTurn: isDiscovered ? 1 : undefined,
 					};
 
 					if (isDiscovered) {
@@ -201,7 +201,6 @@ export class GamesDurableObject extends DurableObject<Env> {
 					const planetView: PlanetView = {
 						metadata: planetState.metadata,
 						discovered: isDiscovered,
-						lastUpdatedTurn: isDiscovered ? 1 : undefined,
 					};
 
 					if (isDiscovered) {
@@ -256,16 +255,24 @@ export class GamesDurableObject extends DurableObject<Env> {
 		const faction = await this.state.storage.get<FactionMetadata>(
 			`user:${userId}`,
 		);
-		if (!faction) throw new Error("User not found or not in game");
+		if (!faction) {
+			throw new ApiError(401, "unauthorized", "User not found or not in game");
+		}
 		if (!["Empire", "Rebellion"].includes(faction)) {
-			throw new Error("Invalid faction: " + faction);
+			throw new ApiError(
+				400,
+				"invalid_faction",
+				"Faction must be Empire or Rebellion",
+			);
 		}
 
 		const views =
 			await this.state.storage.get<Record<FactionMetadata, GameView>>("views");
-		if (!views) throw new Error("Game not found");
+		if (!views) throw new ApiError(404, "not_found", "No views found");
 		const view = views[faction];
-		if (!view) throw new Error("View not found for faction: " + faction);
+		if (!view) {
+			throw new ApiError(404, "not_found", "View not found for " + faction);
+		}
 		return view;
 	}
 }

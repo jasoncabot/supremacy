@@ -26,11 +26,12 @@ export interface LoginRequest {
 	password: string;
 }
 
-export interface TokenResponse {
+export interface TokenPair {
 	accessToken: string;
 	refreshToken: string;
 	accessTokenExpiry: number; // Unix timestamp in milliseconds
 	refreshTokenExpiry: number; // Unix timestamp in milliseconds
+	clientId: string; // Client ID for which the tokens are generated
 }
 
 export interface RefreshTokenRequest {
@@ -42,12 +43,6 @@ export interface SavedGameResponse {
 	name: string;
 	lastPlayed: string;
 	faction: FactionMetadata;
-}
-
-export interface UserProfile {
-	id: string;
-	username: string;
-	// Add other profile fields as needed
 }
 
 export type FactionMetadata = "Empire" | "Rebellion";
@@ -66,6 +61,12 @@ export interface CreateGameRequest {
 
 export interface CreateGameResponse {
 	gameId: string;
+}
+
+export interface GameAction {
+	type: string;
+	payload: Record<string, unknown>;
+	targetId?: string;
 }
 
 // Metadata: Static data that never changes and is known to all players
@@ -105,7 +106,6 @@ export interface PlanetView {
 		general?: string | null;
 		commander?: string | null;
 	};
-	lastUpdatedTurn?: number;
 	discovered: boolean;
 }
 

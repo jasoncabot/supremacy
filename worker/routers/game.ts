@@ -42,7 +42,7 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 				name: "New Game",
 				lastPlayed: new Date().toISOString(),
 				faction: body.faction,
-				completed: false
+				completed: false,
 			} as UserGame);
 
 			return json({ gameId } satisfies CreateGameResponse);

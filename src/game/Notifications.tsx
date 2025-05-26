@@ -4,13 +4,15 @@ import { GameView } from "../../worker/api";
 interface NotificationsProps {
 	notifications: GameView["notifications"];
 	onMarkRead: (id: string) => void;
+	className?: string;
 }
 
 const Notifications: React.FC<NotificationsProps> = ({
 	notifications,
 	onMarkRead,
+	className = "",
 }) => (
-	<div className="absolute top-16 right-4 z-50 w-80 rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 p-5 shadow-2xl backdrop-blur-md">
+	<div className={`rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 p-5 shadow-xl ${className}`}>
 		<div className="mb-3 flex items-center gap-2">
 			<h3 className="text-lg font-bold tracking-wide text-purple-300 [text-shadow:_0_0_8px_theme(colors.purple.700)]">
 				Notifications

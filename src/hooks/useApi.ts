@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { ApiError, LoginRequest, RefreshTokenRequest } from "../../worker/api";
+import {
+	ApiError,
+	LoginRequest,
+	RefreshTokenRequest,
+	TokenPair,
+} from "../../worker/api";
 
 interface ApiOptions<TBody = unknown> {
 	method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -17,14 +22,6 @@ interface ApiHook<TResponse> {
 	) => Promise<TResponse>;
 }
 
-// Token storage interface
-interface TokenStorage {
-	accessToken: string;
-	refreshToken: string;
-	accessTokenExpiry: number; // Unix timestamp in milliseconds
-	refreshTokenExpiry: number; // Unix timestamp in milliseconds
-}
-
 // Standard headers that should be included in all API requests
 const standardHeaders = {
 	"Content-Type": "application/json",
@@ -37,10 +34,10 @@ let pendingRefreshPromise: Promise<boolean> | null = null;
 /**
  * Get tokens from local storage
  */
-function getTokens(): TokenStorage | null {
+function getTokens(): TokenPair | null {
 	const tokens = localStorage.getItem("supremacy:auth:tokens");
 	if (tokens) {
-		return JSON.parse(tokens) as TokenStorage;
+		return JSON.parse(tokens) as TokenPair;
 	}
 	return null;
 }
@@ -48,7 +45,7 @@ function getTokens(): TokenStorage | null {
 /**
  * Save tokens to local storage
  */
-function saveTokens(tokens: TokenStorage) {
+function saveTokens(tokens: TokenPair) {
 	localStorage.setItem("supremacy:auth:tokens", JSON.stringify(tokens));
 }
 
@@ -169,7 +166,7 @@ export function useAuth() {
 				const [response] = await Promise.all([loginPromise, delayPromise]);
 
 				if (!response.ok) {
-					throw new Error("Invalid credentials");
+					throw new ApiError(401, "unauthorized", "Invalid credentials");
 				}
 
 				const tokens = await response.json();

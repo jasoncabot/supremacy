@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "../hooks/useApi";
 import { AuthContext } from "./useAuthContext";
+import { Loading } from "../Loading";
 
 interface AuthProviderProps {
 	children: ReactNode;
@@ -16,11 +17,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	}, [authenticated]);
 
 	if (!isReady) {
-		return (
-			<div className="flex h-screen items-center justify-center bg-black text-white">
-				<div className="animate-pulse-slow">Loading...</div>
-			</div>
-		);
+		return <Loading />;
 	}
 
 	const handleLogin = async (username: string, password: string) => {
@@ -28,13 +25,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	};
 
 	return (
-		<AuthContext.Provider 
-			value={{ 
-				isAuthenticated: authenticated, 
+		<AuthContext.Provider
+			value={{
+				isAuthenticated: authenticated,
 				login: handleLogin,
 				logout,
 				loading,
-				error
+				error,
 			}}
 		>
 			{children}

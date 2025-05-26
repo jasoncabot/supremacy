@@ -1,15 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { UsersDurableObject } from ".";
-import { ApiError, SignupRequest } from "../api";
+import { ApiError, SignupRequest, TokenPair } from "../api";
 import { AuthScope } from "../middleware";
-
-interface TokenPair {
-	accessToken: string;
-	refreshToken: string;
-	accessTokenExpiry: number; // Unix timestamp in milliseconds
-	refreshTokenExpiry: number; // Unix timestamp in milliseconds
-	clientId: string; // Client ID for which the tokens are generated
-}
 
 const idFromUsername = (
 	ns: DurableObjectNamespace<UsersDurableObject>,
