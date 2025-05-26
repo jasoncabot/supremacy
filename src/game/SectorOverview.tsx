@@ -160,20 +160,16 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 			return (
 				<div
 					key={sector.id}
-					className={`relative min-w-[200px] rounded-xl border bg-gradient-to-br from-slate-900 to-gray-900 p-6 shadow-xl ${
+					title={`View ${sector.name}`}
+					className={`relative min-w-[200px] cursor-pointer rounded-xl border bg-gradient-to-br from-slate-900 to-gray-900 p-6 shadow-xl ${
 						isInnerRim ? "border-yellow-500/40" : "border-purple-700/30"
 					} transition hover:border-purple-400`}
+					onClick={() => onOpenSector(sector.id)}
 				>
 					<div className="mb-3 flex items-center justify-between font-bold text-white">
 						<span className="text-lg tracking-wide [text-shadow:_0_0_8px_theme(colors.purple.700)]">
 							{sector.name}
 						</span>
-						<button
-							className="ml-2 h-8 rounded bg-purple-800/40 px-3 py-1 text-xs font-semibold text-purple-300 transition-all duration-200 hover:bg-purple-700/60 focus:ring-2 focus:ring-purple-400 focus:outline-none"
-							onClick={() => onOpenSector(sector.id)}
-						>
-							View
-						</button>
 					</div>
 					<div className="flex flex-wrap justify-center gap-2">
 						{planets.map((planet) => (

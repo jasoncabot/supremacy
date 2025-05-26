@@ -6,6 +6,7 @@ interface ViewWindowProps {
 	planet: PlanetView;
 	viewType: "fleets" | "defence" | "manufacturing" | "missions";
 	onClose: () => void;
+	onMinimized: () => void;
 	onActivated: () => void;
 }
 
@@ -13,6 +14,7 @@ const ViewWindow: React.FC<ViewWindowProps> = ({
 	planet,
 	viewType,
 	onClose,
+	onMinimized,
 	onActivated,
 }) => {
 	return (
@@ -20,6 +22,7 @@ const ViewWindow: React.FC<ViewWindowProps> = ({
 			title={`${viewType.charAt(0).toUpperCase() + viewType.slice(1)} View`}
 			onClose={onClose}
 			onActivated={onActivated}
+			onMinimized={onMinimized}
 			initialPosition={{ x: 150, y: 150 }}
 			zIndex={30}
 		>

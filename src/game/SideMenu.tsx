@@ -2,14 +2,23 @@ import {
 	ArrowLeftEndOnRectangleIcon,
 	Bars3Icon,
 	BellAlertIcon,
-	GlobeAltIcon,
 	BookOpenIcon,
+	GlobeAltIcon,
 	MagnifyingGlassIcon,
+	SparklesIcon,
 	WindowIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
 
+import {
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuItems,
+	MenuSeparator,
+} from "@headlessui/react";
 import React from "react";
+import { MinimizedWindowType } from "./GameScreen";
 
 export type MenuView =
 	| "sectorOverview"
@@ -23,6 +32,8 @@ interface SideMenuProps {
 	activeView: MenuView;
 	onChangeView: (view: MenuView) => void;
 	onExitGame: () => void;
+	minimizedWindows: MinimizedWindowType[];
+	onMaximizeWindow: (windowId: string) => void;
 }
 
 const SideMenu: React.FC<SideMenuProps> = ({
@@ -31,6 +42,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
 	activeView,
 	onChangeView,
 	onExitGame,
+	minimizedWindows,
+	onMaximizeWindow,
 }) => {
 	return (
 		<div
@@ -81,18 +94,40 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							</div>
 						</button>
 
-						<button
-							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left text-purple-200 transition-colors hover:bg-purple-900/40`}
-							onClick={() => {
-								// TODO: show a list of open windows
-								alert("Open windows feature not implemented yet.");
-							}}
-						>
+						<button className="w-full rounded-lg px-3 py-2 text-left text-purple-200 transition-colors">
 							<div className="flex items-center">
-								<WindowIcon className="mr-2 h-5 w-5" />
+								<div className="relative mr-2">
+									<WindowIcon className="h-5 w-5" />
+									{minimizedWindows.length > 0 && (
+										<span className="absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center rounded-full bg-purple-600 text-xs font-medium">
+											{minimizedWindows.length}
+										</span>
+									)}
+								</div>
 								Windows
 							</div>
 						</button>
+
+						{/* List of minimized windows */}
+						{minimizedWindows.length > 0 && (
+							<div className="ml-4 space-y-2">
+								{minimizedWindows.map((window) => (
+									<button
+										key={window.id}
+										className="w-full cursor-pointer rounded-lg px-3 py-1 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
+										onClick={() => onMaximizeWindow(window.id)}
+									>
+										{window.type === "sector" && (
+											<SparklesIcon className="mr-2 inline h-4 w-4" />
+										)}
+										{window.type === "view" && (
+											<GlobeAltIcon className="mr-2 inline h-4 w-4" />
+										)}
+										{window.title}
+									</button>
+								))}
+							</div>
+						)}
 
 						<button
 							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
@@ -156,75 +191,110 @@ const SideMenu: React.FC<SideMenuProps> = ({
 			) : (
 				// Collapsed menu - only show icons
 				<div className="mt-4 flex flex-col items-center space-y-2">
-					<button
-						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-							activeView === "sectorOverview"
-								? "bg-purple-800 text-white"
-								: "text-purple-300 hover:text-purple-100"
-						}`}
-						onClick={() => onChangeView("sectorOverview")}
-						title="Sector Overview"
-					>
-						<GlobeAltIcon className="h-5 w-5" />
-					</button>
+					<Menu>
+						<MenuButton
+							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
+								activeView === "sectorOverview"
+									? "bg-purple-800 text-white"
+									: "text-purple-300 hover:text-purple-100"
+							}`}
+							title="Sector Overview"
+							onClick={() => onChangeView("sectorOverview")}
+						>
+							<GlobeAltIcon className="h-5 w-5" />
+						</MenuButton>
+					</Menu>
+					<Menu>
+						<MenuButton
+							className={`flex h-10 w-10 items-center justify-center rounded-md text-purple-300 hover:text-purple-100 ${
+								minimizedWindows.length > 0
+									? "cursor-pointer"
+									: "cursor-not-allowed text-purple-300 hover:text-purple-100"
+							}`}
+							title="Windows"
+							disabled={minimizedWindows.length === 0}
+						>
+							<div className="relative">
+								<WindowIcon className="h-5 w-5" />
+								{minimizedWindows.length > 0 && (
+									<span className="absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center rounded-full bg-purple-600 text-xs font-medium">
+										{minimizedWindows.length}
+									</span>
+								)}
+							</div>
+						</MenuButton>
 
-					<button
-						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100`}
-						onClick={() => {
-							// TODO: show a list of open windows
-							alert("Open windows feature not implemented yet.");
-						}}
-						title="Windows"
-					>
-						<WindowIcon className="h-5 w-5" />
-					</button>
+						<MenuItems
+							transition
+							anchor="left start"
+							className="z-50 flex w-52 origin-top-right flex-col rounded-sm border border-white/5 bg-gray-900 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:--spacing(1)] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
+						>
+							{minimizedWindows.map((window) => (
+								<MenuItem key={window.id}>
+									<button
+										className="w-full cursor-pointer rounded-sm p-3 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
+										onClick={() => onMaximizeWindow(window.id)}
+									>
+										{window.title}
+									</button>
+								</MenuItem>
+							))}
+						</MenuItems>
+					</Menu>
 
-					<button
-						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-							activeView === "notifications"
-								? "bg-purple-800 text-white"
-								: "text-purple-300 hover:text-purple-100"
-						}`}
-						onClick={() => onChangeView("notifications")}
-						title="Notifications"
-					>
-						<BellAlertIcon className="h-5 w-5" />
-					</button>
+					<Menu>
+						<MenuButton
+							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
+								activeView === "notifications"
+									? "bg-purple-800 text-white"
+									: "text-purple-300 hover:text-purple-100"
+							}`}
+							title="Notifications"
+							onClick={() => onChangeView("notifications")}
+						>
+							<BellAlertIcon className="h-5 w-5" />
+						</MenuButton>
+					</Menu>
 
-					<button
-						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-							activeView === "finder"
-								? "bg-purple-800 text-white"
-								: "text-purple-300 hover:text-purple-100"
-						}`}
-						onClick={() => onChangeView("finder")}
-						title="Finder"
-					>
-						<MagnifyingGlassIcon className="h-5 w-5" />
-					</button>
+					<Menu>
+						<MenuButton
+							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
+								activeView === "finder"
+									? "bg-purple-800 text-white"
+									: "text-purple-300 hover:text-purple-100"
+							}`}
+							title="Finder"
+							onClick={() => onChangeView("finder")}
+						>
+							<MagnifyingGlassIcon className="h-5 w-5" />
+						</MenuButton>
+					</Menu>
 
-					<button
-						className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-							activeView === "encyclopaedia"
-								? "bg-purple-800 text-white"
-								: "text-purple-300 hover:text-purple-100"
-						}`}
-						onClick={() => onChangeView("encyclopaedia")}
-						title="Encyclopaedia"
-					>
-						<BookOpenIcon className="h-5 w-5" />
-					</button>
+					<Menu>
+						<MenuButton
+							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
+								activeView === "encyclopaedia"
+									? "bg-purple-800 text-white"
+									: "text-purple-300 hover:text-purple-100"
+							}`}
+							title="Encyclopaedia"
+							onClick={() => onChangeView("encyclopaedia")}
+						>
+							<BookOpenIcon className="h-5 w-5" />
+						</MenuButton>
+					</Menu>
 
-					{/* Horizontal Rule as a small vertical line */}
-					<div className="h-6 w-px bg-purple-700/30"></div>
+					<MenuSeparator className="h-6 w-px bg-purple-700/30" />
 
-					<button
-						className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100"
-						onClick={onExitGame}
-						title="Exit Game"
-					>
-						<ArrowLeftEndOnRectangleIcon className="h-5 w-5" />
-					</button>
+					<Menu>
+						<MenuButton
+							className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100"
+							title="Exit Game"
+							onClick={onExitGame}
+						>
+							<ArrowLeftEndOnRectangleIcon className="h-5 w-5" />
+						</MenuButton>
+					</Menu>
 				</div>
 			)}
 		</div>

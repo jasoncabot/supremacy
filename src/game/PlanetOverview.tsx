@@ -9,12 +9,12 @@ interface PlanetOverviewProps {
 	onViewMissions?: (planetId: string) => void;
 }
 
-const PlanetOverview: React.FC<PlanetOverviewProps> = ({ 
-	planet, 
-	onViewFleets, 
-	onViewDefence, 
-	onViewManufacturing, 
-	onViewMissions 
+const PlanetOverview: React.FC<PlanetOverviewProps> = ({
+	planet,
+	onViewFleets,
+	onViewDefence,
+	onViewManufacturing,
+	onViewMissions,
 }) => {
 	return (
 		<div className="mb-6 border-b border-purple-700/30 pb-4 last:border-b-0">
@@ -76,29 +76,29 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({
 					</span>
 				</li>
 			</ul>
-			
+
 			<div className="mt-4 flex flex-wrap gap-2">
 				<button
 					onClick={() => onViewFleets?.(planet.metadata.id)}
-					className="rounded bg-purple-700/30 px-3 py-1 text-sm text-white hover:bg-purple-700/50 transition-colors"
+					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Fleets
 				</button>
 				<button
 					onClick={() => onViewDefence?.(planet.metadata.id)}
-					className="rounded bg-purple-700/30 px-3 py-1 text-sm text-white hover:bg-purple-700/50 transition-colors"
+					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Defence
 				</button>
 				<button
 					onClick={() => onViewManufacturing?.(planet.metadata.id)}
-					className="rounded bg-purple-700/30 px-3 py-1 text-sm text-white hover:bg-purple-700/50 transition-colors"
+					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Manufacturing
 				</button>
 				<button
 					onClick={() => onViewMissions?.(planet.metadata.id)}
-					className="rounded bg-purple-700/30 px-3 py-1 text-sm text-white hover:bg-purple-700/50 transition-colors"
+					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Missions
 				</button>

@@ -8,6 +8,7 @@ interface SectorDetailWindowProps {
 	sector: SectorMetadata;
 	planets: PlanetView[];
 	onClose: () => void;
+	onMinimized: () => void;
 	onActivated: () => void;
 	filter: FilterType;
 	onViewPlanet: (
@@ -21,6 +22,7 @@ const SectorDetailWindow: React.FC<SectorDetailWindowProps> = ({
 	sector,
 	planets,
 	onActivated,
+	onMinimized,
 	onClose,
 	onViewPlanet,
 }) => {
@@ -44,6 +46,7 @@ const SectorDetailWindow: React.FC<SectorDetailWindowProps> = ({
 		<DraggableWindow
 			title={sector.name}
 			onClose={onClose}
+			onMinimized={onMinimized}
 			onActivated={onActivated}
 			initialPosition={{ x: 100, y: 100 }}
 			zIndex={20}
