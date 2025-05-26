@@ -1,10 +1,15 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
+import { DefenceOverview } from "./DefenceOverview";
 import DraggableWindow from "./DraggableWindow";
+import { FleetsOverview } from "./FleetsOverview";
+import { ViewWindowViewType } from "./GameScreen";
+import { ManufacturingOverview } from "./ManufacturingOverview";
+import { MissionsOverview } from "./MissionsOverview";
 
 interface ViewWindowProps {
 	planet: PlanetView;
-	viewType: "fleets" | "defence" | "manufacturing" | "missions";
+	viewType: ViewWindowViewType;
 	onClose: () => void;
 	onMinimized: () => void;
 	onActivated: () => void;
@@ -19,31 +24,27 @@ const ViewWindow: React.FC<ViewWindowProps> = ({
 }) => {
 	return (
 		<DraggableWindow
-			title={`${viewType.charAt(0).toUpperCase() + viewType.slice(1)} View`}
+			title={`${planet.metadata.name}`}
 			onClose={onClose}
 			onActivated={onActivated}
 			onMinimized={onMinimized}
 			initialPosition={{ x: 150, y: 150 }}
 			zIndex={30}
 		>
-			<div className="pr-2 text-gray-300">
-				<p className="py-8 text-center italic">
-					{(() => {
-						switch (viewType) {
-							case "fleets":
-								return `Fleets information for planet ${planet.metadata.name}`;
-							case "defence":
-								return `Defence information for planet ${planet.metadata.name}`;
-							case "manufacturing":
-								return `Manufacturing information for planet ${planet.metadata.name}`;
-							case "missions":
-								return `Missions information for planet ${planet.metadata.name}`;
-							default:
-								return "Unknown view type";
-						}
-					})()}
-				</p>
-			</div>
+			{(() => {
+				switch (viewType) {
+					case "fleets":
+						return <FleetsOverview planet={planet} />;
+					case "defence":
+						return <DefenceOverview planet={planet} />;
+					case "manufacturing":
+						return <ManufacturingOverview planet={planet} />;
+					case "missions":
+						return <MissionsOverview planet={planet} />;
+					default:
+						return "Unknown view type";
+				}
+			})()}
 		</DraggableWindow>
 	);
 };

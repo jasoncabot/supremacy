@@ -18,7 +18,7 @@ export type MinimizedWindowType = {
 	sectorId?: string;
 	// For view windows we need both sectorId and planetId plus the view type
 	planetId?: string;
-	viewType?: "fleets" | "defence" | "manufacturing" | "missions";
+	viewType?: ViewWindowViewType;
 };
 
 // Define view window type that will be used in GameContent and GameScreen

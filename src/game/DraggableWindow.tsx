@@ -114,14 +114,16 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 			}}
 			onMouseDown={onMouseDown}
-			className={`max-w-[90vw] min-w-[320px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 p-6 shadow-2xl ${
+			className={`max-w-[90vw] min-w-[320px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${
 				dragging ? "cursor-grabbing" : "cursor-grab"
 			}`}
 		>
-			<div className="mb-4 flex items-center justify-between border-b border-purple-700/30 pb-2">
-				<h2 className="flex-1 text-xl font-semibold text-white">{title}</h2>
+			<div className="flex border-b border-purple-700/30">
+				<h2 className="ml-2 flex-1 py-2 text-xl font-semibold text-white">
+					{title}
+				</h2>
 
-				<div className="flex items-center space-x-2">
+				<div className="mr-2 flex items-center space-x-2">
 					<button
 						onClick={onMinimized}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"

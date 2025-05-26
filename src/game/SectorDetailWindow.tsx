@@ -3,6 +3,7 @@ import { PlanetView, SectorMetadata } from "../../worker/api";
 import DraggableWindow from "./DraggableWindow";
 import { FilterType } from "./Filters";
 import PlanetOverview from "./PlanetOverview";
+import { ViewWindowViewType } from "./GameScreen";
 
 interface SectorDetailWindowProps {
 	sector: SectorMetadata;
@@ -14,7 +15,7 @@ interface SectorDetailWindowProps {
 	onViewPlanet: (
 		sectorId: string,
 		planetId: string,
-		viewType: "fleets" | "defence" | "manufacturing" | "missions",
+		viewType: ViewWindowViewType,
 	) => void;
 }
 
@@ -51,7 +52,7 @@ const SectorDetailWindow: React.FC<SectorDetailWindowProps> = ({
 			initialPosition={{ x: 100, y: 100 }}
 			zIndex={20}
 		>
-			<div className="pr-2">
+			<div className="p-4">
 				{planets.map((planet) => (
 					<PlanetOverview
 						key={planet.metadata.id}
