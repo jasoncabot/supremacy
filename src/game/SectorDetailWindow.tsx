@@ -10,10 +10,10 @@ interface SectorDetailWindowProps {
 	onClose: () => void;
 	onActivated: () => void;
 	filter: FilterType;
-	onViewPlanet?: (
+	onViewPlanet: (
+		sectorId: string,
 		planetId: string,
 		viewType: "fleets" | "defence" | "manufacturing" | "missions",
-		title: string,
 	) => void;
 }
 
@@ -25,39 +25,19 @@ const SectorDetailWindow: React.FC<SectorDetailWindowProps> = ({
 	onViewPlanet,
 }) => {
 	const handleViewFleets = (planetId: string) => {
-		const planet = planets.find((p) => p.metadata.id === planetId);
-		onViewPlanet?.(
-			planetId,
-			"fleets",
-			`${planet?.metadata.name || "Planet"} - Fleets`,
-		);
+		onViewPlanet(sector.id, planetId, "fleets");
 	};
 
 	const handleViewDefence = (planetId: string) => {
-		const planet = planets.find((p) => p.metadata.id === planetId);
-		onViewPlanet?.(
-			planetId,
-			"defence",
-			`${planet?.metadata.name || "Planet"} - Defence`,
-		);
+		onViewPlanet(sector.id, planetId, "defence");
 	};
 
 	const handleViewManufacturing = (planetId: string) => {
-		const planet = planets.find((p) => p.metadata.id === planetId);
-		onViewPlanet?.(
-			planetId,
-			"manufacturing",
-			`${planet?.metadata.name || "Planet"} - Manufacturing`,
-		);
+		onViewPlanet(sector.id, planetId, "manufacturing");
 	};
 
 	const handleViewMissions = (planetId: string) => {
-		const planet = planets.find((p) => p.metadata.id === planetId);
-		onViewPlanet?.(
-			planetId,
-			"missions",
-			`${planet?.metadata.name || "Planet"} - Missions`,
-		);
+		onViewPlanet(sector.id, planetId, "missions");
 	};
 
 	return (

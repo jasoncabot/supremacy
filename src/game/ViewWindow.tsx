@@ -1,24 +1,23 @@
 import React from "react";
+import { PlanetView } from "../../worker/api";
 import DraggableWindow from "./DraggableWindow";
 
 interface ViewWindowProps {
-	title: string;
+	planet: PlanetView;
+	viewType: "fleets" | "defence" | "manufacturing" | "missions";
 	onClose: () => void;
 	onActivated: () => void;
-	planetId: string;
-	viewType: "fleets" | "defence" | "manufacturing" | "missions";
 }
 
 const ViewWindow: React.FC<ViewWindowProps> = ({
-	title,
+	planet,
+	viewType,
 	onClose,
 	onActivated,
-	planetId,
-	viewType,
 }) => {
 	return (
 		<DraggableWindow
-			title={title}
+			title={`${viewType.charAt(0).toUpperCase() + viewType.slice(1)} View`}
 			onClose={onClose}
 			onActivated={onActivated}
 			initialPosition={{ x: 150, y: 150 }}
@@ -26,7 +25,20 @@ const ViewWindow: React.FC<ViewWindowProps> = ({
 		>
 			<div className="pr-2 text-gray-300">
 				<p className="py-8 text-center italic">
-					TODO: Implement {viewType} data for planet {planetId}
+					{(() => {
+						switch (viewType) {
+							case "fleets":
+								return `Fleets information for planet ${planet.metadata.name}`;
+							case "defence":
+								return `Defence information for planet ${planet.metadata.name}`;
+							case "manufacturing":
+								return `Manufacturing information for planet ${planet.metadata.name}`;
+							case "missions":
+								return `Missions information for planet ${planet.metadata.name}`;
+							default:
+								return "Unknown view type";
+						}
+					})()}
 				</p>
 			</div>
 		</DraggableWindow>

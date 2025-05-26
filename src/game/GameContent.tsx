@@ -13,10 +13,10 @@ interface GameContentProps {
 }
 
 type ViewWindowType = {
-	id: string; // Unique identifier for this view
+	id: string;
+	sectorId: string;
 	planetId: string;
 	viewType: "fleets" | "defence" | "manufacturing" | "missions";
-	title: string;
 };
 
 const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
@@ -40,9 +40,9 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 	};
 
 	const handleViewPlanet = (
+		sectorId: string,
 		planetId: string,
 		viewType: "fleets" | "defence" | "manufacturing" | "missions",
-		title: string,
 	) => {
 		const viewId = `${planetId}-${viewType}`;
 
@@ -50,13 +50,16 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 		if (!openViewWindows.some((view) => view.id === viewId)) {
 			setOpenViewWindows((prev) => [
 				...prev,
-				{ id: viewId, planetId, viewType, title },
+				{ id: viewId, sectorId, planetId, viewType } as ViewWindowType,
 			]);
 		} else {
 			// Bring to front if already open (similar to sector handling)
 			setOpenViewWindows((prev) => {
 				const others = prev.filter((view) => view.id !== viewId);
-				return [...others, { id: viewId, planetId, viewType, title }];
+				return [
+					...others,
+					{ id: viewId, sectorId, planetId, viewType } as ViewWindowType,
+				];
 			});
 		}
 	};
@@ -128,9 +131,12 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 				openViewWindows.map((view) => (
 					<ViewWindow
 						key={view.id}
-						planetId={view.planetId}
+						planet={
+							(planetsBySector[view.sectorId] || []).find(
+								(p) => p.metadata.id === view.planetId,
+							)!
+						}
 						viewType={view.viewType}
-						title={view.title}
 						onActivated={() => {
 							setOpenViewWindows((prev) => {
 								const others = prev.filter((v) => v.id !== view.id);
