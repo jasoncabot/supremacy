@@ -47,14 +47,15 @@ const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
 	return (
 		<div
-			className={`flex h-full flex-col overflow-x-hidden transition-all duration-300 ${
+			className={`relative flex h-full flex-col overflow-hidden transition-all duration-300 ${
 				isExpanded
 					? "w-64 border-r border-purple-700/30 bg-gradient-to-b from-slate-900 to-gray-900 shadow-xl"
 					: "w-12 bg-slate-900/80"
 			}`}
 		>
+			{/* Fixed width toggle button that stays in the same position */}
 			<button
-				className="flex h-12 w-12 cursor-pointer items-center justify-center text-purple-300 transition-colors hover:text-purple-100"
+				className="relative z-20 flex h-12 w-12 cursor-pointer items-center justify-center text-purple-300 transition-colors hover:text-purple-100"
 				onClick={onToggleExpand}
 				aria-label={isExpanded ? "Collapse menu" : "Expand menu"}
 			>
@@ -76,8 +77,16 @@ const SideMenu: React.FC<SideMenuProps> = ({
 				</span>
 			</button>
 
-			{isExpanded ? (
-				<div className="p-4">
+			{/* Expanded menu content - always rendered but hidden when collapsed */}
+			<div
+				className={`absolute top-0 right-0 bottom-0 left-0 flex w-64 flex-col transition-all duration-300 ease-out ${
+					isExpanded
+						? "translate-x-0 opacity-100"
+						: "pointer-events-none -translate-x-4 opacity-0"
+				}`}
+			>
+				<div className="h-12 w-full"></div> {/* Spacer for the toggle button */}
+				<div className="flex-1 overflow-y-auto p-4">
 					{/* Main Navigation Options */}
 					<div className="mb-6 space-y-2">
 						<button
@@ -87,6 +96,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 									: "text-purple-200 hover:bg-purple-900/40"
 							}`}
 							onClick={() => onChangeView("sectorOverview")}
+							disabled={!isExpanded}
 						>
 							<div className="flex items-center">
 								<GlobeAltIcon className="mr-2 h-5 w-5" />
@@ -94,7 +104,10 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							</div>
 						</button>
 
-						<button className="w-full rounded-lg px-3 py-2 text-left text-purple-200 transition-colors">
+						<button
+							className="w-full rounded-lg px-3 py-2 text-left text-purple-200 transition-colors"
+							disabled={!isExpanded}
+						>
 							<div className="flex items-center">
 								<div className="relative mr-2">
 									<WindowIcon className="h-5 w-5" />
@@ -116,6 +129,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 										key={window.id}
 										className="w-full cursor-pointer rounded-lg px-3 py-1 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
 										onClick={() => onMaximizeWindow(window.id)}
+										disabled={!isExpanded}
 									>
 										{window.type === "sector" && (
 											<SparklesIcon className="mr-2 inline h-4 w-4" />
@@ -136,6 +150,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 									: "text-purple-200 hover:bg-purple-900/40"
 							}`}
 							onClick={() => onChangeView("notifications")}
+							disabled={!isExpanded}
 						>
 							<div className="flex items-center">
 								<BellAlertIcon className="mr-2 h-5 w-5" />
@@ -150,6 +165,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 									: "text-purple-200 hover:bg-purple-900/40"
 							}`}
 							onClick={() => onChangeView("finder")}
+							disabled={!isExpanded}
 						>
 							<div className="flex items-center">
 								<MagnifyingGlassIcon className="mr-2 h-5 w-5" />
@@ -164,6 +180,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 									: "text-purple-200 hover:bg-purple-900/40"
 							}`}
 							onClick={() => onChangeView("encyclopaedia")}
+							disabled={!isExpanded}
 						>
 							<div className="flex items-center">
 								<BookOpenIcon className="mr-2 h-5 w-5" />
@@ -180,6 +197,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 						<button
 							className="w-full cursor-pointer rounded-lg px-3 py-2 text-left text-purple-200 transition-colors hover:bg-purple-900/40"
 							onClick={onExitGame}
+							disabled={!isExpanded}
 						>
 							<div className="flex items-center">
 								<ArrowLeftEndOnRectangleIcon className="mr-2 h-5 w-5" />
@@ -188,8 +206,17 @@ const SideMenu: React.FC<SideMenuProps> = ({
 						</button>
 					</div>
 				</div>
-			) : (
-				// Collapsed menu - only show icons
+			</div>
+
+			{/* Collapsed menu icons - always rendered but hidden when expanded */}
+			<div
+				className={`absolute top-0 bottom-0 left-0 flex w-12 flex-col transition-all duration-300 ease-out ${
+					isExpanded
+						? "pointer-events-none translate-x-4 opacity-0"
+						: "translate-x-0 opacity-100"
+				}`}
+			>
+				<div className="h-12 w-full"></div> {/* Spacer for the toggle button */}
 				<div className="mt-4 flex flex-col items-center space-y-2">
 					<Menu>
 						<MenuButton
@@ -200,6 +227,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							}`}
 							title="Sector Overview"
 							onClick={() => onChangeView("sectorOverview")}
+							disabled={isExpanded}
 						>
 							<GlobeAltIcon className="h-5 w-5" />
 						</MenuButton>
@@ -212,7 +240,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 									: "cursor-not-allowed text-purple-300 hover:text-purple-100"
 							}`}
 							title="Windows"
-							disabled={minimizedWindows.length === 0}
+							disabled={minimizedWindows.length === 0 || isExpanded}
 						>
 							<div className="relative">
 								<WindowIcon className="h-5 w-5" />
@@ -251,6 +279,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							}`}
 							title="Notifications"
 							onClick={() => onChangeView("notifications")}
+							disabled={isExpanded}
 						>
 							<BellAlertIcon className="h-5 w-5" />
 						</MenuButton>
@@ -265,6 +294,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							}`}
 							title="Finder"
 							onClick={() => onChangeView("finder")}
+							disabled={isExpanded}
 						>
 							<MagnifyingGlassIcon className="h-5 w-5" />
 						</MenuButton>
@@ -279,6 +309,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							}`}
 							title="Encyclopaedia"
 							onClick={() => onChangeView("encyclopaedia")}
+							disabled={isExpanded}
 						>
 							<BookOpenIcon className="h-5 w-5" />
 						</MenuButton>
@@ -291,12 +322,13 @@ const SideMenu: React.FC<SideMenuProps> = ({
 							className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100"
 							title="Exit Game"
 							onClick={onExitGame}
+							disabled={isExpanded}
 						>
 							<ArrowLeftEndOnRectangleIcon className="h-5 w-5" />
 						</MenuButton>
 					</Menu>
 				</div>
-			)}
+			</div>
 		</div>
 	);
 };
