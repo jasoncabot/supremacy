@@ -1,11 +1,11 @@
 import { createContext } from "react";
 
 import type {
+	GameAction,
 	GameView,
+	Notification,
 	PlanetView,
 	SectorMetadata,
-	Notification,
-	GameAction,
 } from "../../worker/api";
 
 type SectorPlanetMap = Record<string, PlanetView[]>;

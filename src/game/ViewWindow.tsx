@@ -3,9 +3,9 @@ import { PlanetView } from "../../worker/api";
 import { DefenceOverview } from "./DefenceOverview";
 import DraggableWindow from "./DraggableWindow";
 import { FleetsOverview } from "./FleetsOverview";
-import { ViewWindowViewType } from "./types/WindowTypes";
 import { ManufacturingOverview } from "./ManufacturingOverview";
 import { MissionsOverview } from "./MissionsOverview";
+import { ViewWindowViewType } from "./types/WindowTypes";
 
 interface ViewWindowProps {
 	planet: PlanetView;

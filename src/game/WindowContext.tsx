@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
-import { MenuView } from "./SideMenu";
 import { MinimizedWindowType, ViewWindowType, ViewWindowViewType } from "./types/WindowTypes";
 
 interface WindowContextType {

@@ -16,7 +16,7 @@ const GameScreenContent: React.FC = () => {
 	const [menuExpanded, setMenuExpanded] = useState(false);
 	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
 
-	const { 
+	const {
 		minimizedWindows,
 		handleMaximizeWindow,
 		handleMinimizeWindow,
@@ -25,9 +25,9 @@ const GameScreenContent: React.FC = () => {
 		handleOpenSector,
 		handleViewPlanet,
 		handleCloseViewWindow,
-		handleCloseSector
+		handleCloseSector,
 	} = useWindowContext();
-	
+
 	const { game, loading, submitActions } = useGame();
 	const navigate = useNavigate();
 

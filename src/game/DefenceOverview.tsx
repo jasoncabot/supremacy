@@ -1,10 +1,10 @@
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
+	BoltIcon,
+	RocketLaunchIcon,
 	ShieldCheckIcon,
 	UserGroupIcon,
 	UsersIcon,
-	BoltIcon,
-	RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { PlanetView } from "../../worker/api";
@@ -33,8 +33,7 @@ export const DefenceOverview: React.FC<{
 }> = ({ planet }) => {
 	// We're tracking the selected category for future use but not currently using the variable directly
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [_, setSelectedCategory] =
-		useState<DefenceCategory>("personnel");
+	const [_, setSelectedCategory] = useState<DefenceCategory>("personnel");
 
 	// This would normally come from the planet data
 	// For now we'll create placeholder data
