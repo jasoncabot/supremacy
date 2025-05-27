@@ -33,7 +33,7 @@ export const DefenceOverview: React.FC<{
 }> = ({ planet }) => {
 	// We're tracking the selected category for future use but not currently using the variable directly
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [selectedCategory, setSelectedCategory] =
+	const [_, setSelectedCategory] =
 		useState<DefenceCategory>("personnel");
 
 	// This would normally come from the planet data

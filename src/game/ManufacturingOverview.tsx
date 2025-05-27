@@ -35,7 +35,7 @@ export const ManufacturingOverview: React.FC<{
 }> = ({ planet }) => {
 	// We're tracking the selected category for future use but not currently using the variable directly
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [selectedCategory, setSelectedCategory] =
+	const [_, setSelectedCategory] =
 		useState<ManufacturingCategory>("manufacturing");
 
 	// This would normally come from the planet data
