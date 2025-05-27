@@ -3,7 +3,7 @@ import { PlanetView, SectorMetadata } from "../../worker/api";
 import DraggableWindow from "./DraggableWindow";
 import { FilterType } from "./Filters";
 import PlanetOverview from "./PlanetOverview";
-import { ViewWindowViewType } from "./GameScreen";
+import { ViewWindowViewType } from "./types/WindowTypes";
 
 interface SectorDetailWindowProps {
 	sector: SectorMetadata;

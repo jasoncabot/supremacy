@@ -1,46 +1,34 @@
 import React from "react";
 import { FilterType } from "./Filters";
-import {
-	MinimizedWindowType,
-	ViewWindowType,
-	ViewWindowViewType,
-} from "./GameScreen";
 import Notifications from "./Notifications";
 import SectorDetailWindow from "./SectorDetailWindow";
 import SectorOverview from "./SectorOverview";
 import { MenuView } from "./SideMenu";
 import ViewWindow from "./ViewWindow";
+import { useWindowContext } from "./WindowContext";
 import { useGame } from "./useGame";
 
 interface GameContentProps {
 	activeView: MenuView;
 	filter: FilterType;
-	onMinimizeWindow: (windowInfo: MinimizedWindowType) => void;
-	openSectors: string[];
-	openViewWindows: ViewWindowType[];
-	onOpenSector: (sectorId: string) => void;
-	onViewPlanet: (
-		sectorId: string,
-		planetId: string,
-		viewType: ViewWindowViewType,
-	) => void;
-	onCloseViewWindow: (viewId: string) => void;
-	onCloseSector: (sectorId: string) => void;
 }
 
 const GameContent: React.FC<GameContentProps> = ({
 	activeView,
-	filter,
-	onMinimizeWindow,
-	openSectors,
-	openViewWindows,
-	onOpenSector,
-	onViewPlanet,
-	onCloseViewWindow,
-	onCloseSector,
+	filter
 }) => {
 	const { sectors, planetsBySector, notifications, markNotificationAsRead } =
 		useGame();
+	
+	const {
+		openSectors,
+		openViewWindows,
+		handleOpenSector,
+		handleViewPlanet,
+		handleMinimizeWindow,
+		handleCloseViewWindow,
+		handleCloseSector
+	} = useWindowContext();
 
 	return (
 		<div className="mx-auto w-full flex-1 select-none">
@@ -49,7 +37,7 @@ const GameContent: React.FC<GameContentProps> = ({
 					sectors={sectors}
 					planetsBySector={planetsBySector}
 					filter={filter}
-					onOpenSector={onOpenSector}
+					onOpenSector={handleOpenSector}
 				/>
 			)}
 
@@ -88,13 +76,13 @@ const GameContent: React.FC<GameContentProps> = ({
 						planets={planetsBySector[sectorId] || []}
 						onActivated={() => {
 							// Bring sector to front
-							onOpenSector(sectorId);
+							handleOpenSector(sectorId);
 						}}
 						onMinimized={function (): void {
 							// Get the sector data to keep minimal info for later maximizing
 							const sector = sectors.find((s) => s.id === sectorId);
 							if (sector) {
-								onMinimizeWindow({
+								handleMinimizeWindow({
 									id: sectorId,
 									title: sector.name,
 									type: "sector",
@@ -102,13 +90,13 @@ const GameContent: React.FC<GameContentProps> = ({
 								});
 							}
 							// Remove from open sectors
-							onCloseSector(sectorId);
+							handleCloseSector(sectorId);
 						}}
 						onClose={function (): void {
-							onCloseSector(sectorId);
+							handleCloseSector(sectorId);
 						}}
 						filter={filter}
-						onViewPlanet={onViewPlanet}
+						onViewPlanet={handleViewPlanet}
 					/>
 				))}
 
@@ -125,10 +113,10 @@ const GameContent: React.FC<GameContentProps> = ({
 						viewType={view.viewType}
 						onActivated={() => {
 							// Bring window to front
-							onViewPlanet(view.sectorId, view.planetId, view.viewType);
+							handleViewPlanet(view.sectorId, view.planetId, view.viewType);
 						}}
 						onMinimized={() => {
-							onMinimizeWindow({
+							handleMinimizeWindow({
 								id: view.id,
 								title: `${view.planetId} - ${view.viewType}`,
 								type: "view",
@@ -136,9 +124,9 @@ const GameContent: React.FC<GameContentProps> = ({
 								planetId: view.planetId,
 								viewType: view.viewType,
 							});
-							onCloseViewWindow(view.id);
+							handleCloseViewWindow(view.id);
 						}}
-						onClose={() => onCloseViewWindow(view.id)}
+						onClose={() => handleCloseViewWindow(view.id)}
 					/>
 				))}
 		</div>

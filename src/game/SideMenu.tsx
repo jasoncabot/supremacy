@@ -18,7 +18,7 @@ import {
 	MenuSeparator,
 } from "@headlessui/react";
 import React from "react";
-import { MinimizedWindowType } from "./GameScreen";
+import { MinimizedWindowType } from "./types/WindowTypes";
 
 export type MenuView =
 	| "sectorOverview"
