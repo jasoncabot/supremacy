@@ -8,26 +8,13 @@ import { GameProvider } from "./GameContext";
 import SideMenu, { MenuView } from "./SideMenu";
 import StatusBar from "./StatusBar";
 import { useGame } from "./useGame";
-import { WindowProvider, useWindowContext } from "./WindowContext";
+import { WindowProvider } from "./WindowContext";
 
 // Inner component that uses the game and window contexts
 const GameScreenContent: React.FC = () => {
 	const [filter, setFilter] = useState<FilterType>("OFF");
 	const [menuExpanded, setMenuExpanded] = useState(false);
 	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
-
-	const {
-		minimizedWindows,
-		handleMaximizeWindow,
-		handleMinimizeWindow,
-		openSectors,
-		openViewWindows,
-		handleOpenSector,
-		handleViewPlanet,
-		handleCloseViewWindow,
-		handleCloseSector,
-	} = useWindowContext();
-
 	const { game, loading, submitActions } = useGame();
 	const navigate = useNavigate();
 
@@ -64,24 +51,12 @@ const GameScreenContent: React.FC = () => {
 					activeView={activeView}
 					onChangeView={handleChangeView}
 					onExitGame={handleExitGame}
-					minimizedWindows={minimizedWindows}
-					onMaximizeWindow={handleMaximizeWindow}
 				/>
 
 				<div className="flex flex-1 flex-col">
 					<StatusBar turn={game.turn} resources={game.faction.resources} />
 
-					<GameContent
-						activeView={activeView}
-						filter={filter}
-						onMinimizeWindow={handleMinimizeWindow}
-						openSectors={openSectors}
-						openViewWindows={openViewWindows}
-						onOpenSector={handleOpenSector}
-						onViewPlanet={handleViewPlanet}
-						onCloseViewWindow={handleCloseViewWindow}
-						onCloseSector={handleCloseSector}
-					/>
+					<GameContent activeView={activeView} filter={filter} />
 
 					<div className="flex flex-row justify-between border-t border-purple-700/30 bg-gray-800/50 p-4 backdrop-blur-md">
 						<Filters filter={filter} onChange={setFilter} />

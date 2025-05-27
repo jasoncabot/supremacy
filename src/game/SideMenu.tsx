@@ -1,4 +1,11 @@
 import {
+	Menu,
+	MenuButton,
+	MenuItem,
+	MenuItems,
+	MenuSeparator,
+} from "@headlessui/react";
+import {
 	ArrowLeftEndOnRectangleIcon,
 	Bars3Icon,
 	BellAlertIcon,
@@ -9,16 +16,8 @@ import {
 	WindowIcon,
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
-
-import {
-	Menu,
-	MenuButton,
-	MenuItem,
-	MenuItems,
-	MenuSeparator,
-} from "@headlessui/react";
 import React from "react";
-import { MinimizedWindowType } from "./types/WindowTypes";
+import { useWindowContext } from "./WindowContext";
 
 export type MenuView =
 	| "sectorOverview"
@@ -32,8 +31,6 @@ interface SideMenuProps {
 	activeView: MenuView;
 	onChangeView: (view: MenuView) => void;
 	onExitGame: () => void;
-	minimizedWindows: MinimizedWindowType[];
-	onMaximizeWindow: (windowId: string) => void;
 }
 
 const SideMenu: React.FC<SideMenuProps> = ({
@@ -42,9 +39,9 @@ const SideMenu: React.FC<SideMenuProps> = ({
 	activeView,
 	onChangeView,
 	onExitGame,
-	minimizedWindows,
-	onMaximizeWindow,
 }) => {
+	const { minimizedWindows, handleMaximizeWindow } = useWindowContext();
+
 	return (
 		<div
 			className={`relative flex h-full flex-col overflow-hidden transition-all duration-300 ${
@@ -128,7 +125,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 									<button
 										key={window.id}
 										className="w-full cursor-pointer rounded-lg px-3 py-1 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
-										onClick={() => onMaximizeWindow(window.id)}
+										onClick={() => handleMaximizeWindow(window.id)}
 										disabled={!isExpanded}
 									>
 										{window.type === "sector" && (
@@ -261,7 +258,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 								<MenuItem key={window.id}>
 									<button
 										className="w-full cursor-pointer rounded-sm p-3 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
-										onClick={() => onMaximizeWindow(window.id)}
+										onClick={() => handleMaximizeWindow(window.id)}
 									>
 										{window.title}
 									</button>
