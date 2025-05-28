@@ -112,7 +112,7 @@ const Filters: React.FC<FiltersProps> = ({ filter, onChange }) => {
 
 	return (
 		<div className="flex flex-1 items-center gap-3">
-			<label className="flex items-center gap-1 font-semibold text-slate-300">
+			<label className="hidden items-center gap-1 font-semibold text-slate-300 sm:flex">
 				<FunnelIcon className="animate-spin-slow h-5 w-5 text-purple-400" />
 			</label>
 			<Listbox value={filter} onChange={onChange}>

@@ -17,7 +17,7 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React from "react";
-import { useWindowContext } from "./WindowContext";
+import { useWindowContext } from "../hooks/useWindowContext";
 
 export type MenuView =
 	| "sectorOverview"
@@ -44,7 +44,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 
 	return (
 		<div
-			className={`relative flex h-full flex-col overflow-hidden transition-all duration-300 ${
+			className={`fixed top-0 left-0 bottom-0 z-30 flex h-screen flex-col overflow-hidden transform-gpu transition-all duration-300 ease-in-out ${
 				isExpanded
 					? "w-64 border-r border-purple-700/30 bg-gradient-to-b from-slate-900 to-gray-900 shadow-xl"
 					: "w-12 bg-slate-900/80"
@@ -121,20 +121,38 @@ const SideMenu: React.FC<SideMenuProps> = ({
 						{/* List of minimized windows */}
 						{minimizedWindows.length > 0 && (
 							<div className="ml-4 space-y-2">
-								{minimizedWindows.map((window) => (
+								{minimizedWindows.map((minimizedWindow) => (
 									<button
-										key={window.id}
+										key={minimizedWindow.id}
 										className="w-full cursor-pointer rounded-lg px-3 py-1 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
-										onClick={() => handleMaximizeWindow(window.id)}
+										onClick={() => handleMaximizeWindow(minimizedWindow)}
 										disabled={!isExpanded}
 									>
-										{window.type === "sector" && (
-											<SparklesIcon className="mr-2 inline h-4 w-4" />
-										)}
-										{window.type === "view" && (
-											<GlobeAltIcon className="mr-2 inline h-4 w-4" />
-										)}
-										{window.title}
+										{(() => {
+											switch (minimizedWindow.type) {
+												case "sector":
+													return (
+														<SparklesIcon className="mr-2 inline h-4 w-4" />
+													);
+												case "fleets":
+													return (
+														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
+													);
+												case "defence":
+													return (
+														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
+													);
+												case "manufacturing":
+													return (
+														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
+													);
+												case "missions":
+													return (
+														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
+													);
+											}
+										})()}
+										{minimizedWindow.title}
 									</button>
 								))}
 							</div>
@@ -258,7 +276,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 								<MenuItem key={window.id}>
 									<button
 										className="w-full cursor-pointer rounded-sm p-3 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
-										onClick={() => handleMaximizeWindow(window.id)}
+										onClick={() => handleMaximizeWindow(window)}
 									>
 										{window.title}
 									</button>

@@ -1,12 +1,12 @@
 import React from "react";
 import { PlanetView, SectorMetadata } from "../../worker/api";
 import { FilterType } from "./Filters";
+import { useWindowContext } from "../hooks/useWindowContext";
 
 interface SectorOverviewProps {
 	sectors: SectorMetadata[];
 	planetsBySector: Record<string, PlanetView[]>;
 	filter: FilterType;
-	onOpenSector: (sectorId: string) => void;
 }
 
 const getStarSize = (planet: PlanetView, filter: FilterType) => {
@@ -150,43 +150,59 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 	sectors,
 	planetsBySector,
 	filter,
-	onOpenSector,
-}) => (
-	<div className="flex flex-wrap justify-center gap-8">
-		{sectors.map((sector) => {
-			const planets = planetsBySector[sector.id] || [];
-			const isInnerRim = sector.isInnerRim;
+}) => {
+	const { handleOpenWindow } = useWindowContext();
+	return (
+		<div className="flex flex-wrap justify-center gap-8 p-4 pb-16">
+			{sectors.map((sector) => {
+				const planets = planetsBySector[sector.id] || ([] as PlanetView[]);
+				const isInnerRim = sector.isInnerRim;
 
-			return (
-				<div
-					key={sector.id}
-					title={`View ${sector.name}`}
-					className={`relative min-w-[200px] cursor-pointer rounded-xl border bg-gradient-to-br from-slate-900 to-gray-900 p-6 shadow-xl ${
-						isInnerRim ? "border-yellow-500/40" : "border-purple-700/30"
-					} transition hover:border-purple-400`}
-					onClick={() => onOpenSector(sector.id)}
-				>
-					<div className="mb-3 flex items-center justify-between font-bold text-white">
-						<span className="text-lg tracking-wide [text-shadow:_0_0_8px_theme(colors.purple.700)]">
-							{sector.name}
-						</span>
-					</div>
-					<div className="flex flex-wrap justify-center gap-2">
-						{planets.map((planet) => (
-							<span
-								key={planet.metadata.id}
-								className={`inline-block drop-shadow-lg ${getStarColor(planet, filter)} animate-pulse-slow`}
-								style={{ fontSize: getStarSize(planet, filter) }}
-								title={planet.metadata.name}
-							>
-								★
+				return (
+					<div
+						key={sector.id}
+						title={`View ${sector.name}`}
+						className={`relative min-w-[200px] cursor-pointer rounded-xl border bg-gradient-to-br from-slate-900 to-gray-900 p-6 shadow-xl ${
+							isInnerRim ? "border-yellow-500/40" : "border-purple-700/30"
+						} transition hover:border-purple-400`}
+						onClick={(e) => {
+							// Calculate position relative to viewport
+							const position = {
+								x: e.clientX - 150, // Center window horizontally near click
+								y: e.clientY - 50,  // Position window vertically near click with offset for header
+							};
+							
+							handleOpenWindow({
+								id: `sector-${sector.id}`,
+								title: sector.name,
+								type: "sector",
+								sectorId: sector.id,
+								position: position, // Pass the click position
+							});
+						}}
+					>
+						<div className="mb-3 flex items-center justify-between font-bold text-white">
+							<span className="text-lg tracking-wide [text-shadow:_0_0_8px_theme(colors.purple.700)]">
+								{sector.name}
 							</span>
-						))}
+						</div>
+						<div className="flex flex-wrap justify-center gap-2">
+							{planets.map((planet) => (
+								<span
+									key={planet.metadata.id}
+									className={`inline-block drop-shadow-lg ${getStarColor(planet, filter)} animate-pulse-slow`}
+									style={{ fontSize: getStarSize(planet, filter) }}
+									title={planet.metadata.name}
+								>
+									★
+								</span>
+							))}
+						</div>
 					</div>
-				</div>
-			);
-		})}
-	</div>
-);
+				);
+			})}
+		</div>
+	);
+};
 
 export default SectorOverview;

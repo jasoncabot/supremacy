@@ -1,21 +1,79 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
+import { useWindowContext } from "../hooks/useWindowContext";
 
 interface PlanetOverviewProps {
 	planet: PlanetView;
-	onViewFleets?: (planetId: string) => void;
-	onViewDefence?: (planetId: string) => void;
-	onViewManufacturing?: (planetId: string) => void;
-	onViewMissions?: (planetId: string) => void;
 }
 
-const PlanetOverview: React.FC<PlanetOverviewProps> = ({
-	planet,
-	onViewFleets,
-	onViewDefence,
-	onViewManufacturing,
-	onViewMissions,
-}) => {
+const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
+	const { handleOpenWindow } = useWindowContext();
+
+	const handleViewFleets = (e: React.MouseEvent) => {
+		// Get the click position
+		const position = {
+			x: e.clientX - 150, // Center window horizontally near click
+			y: e.clientY - 50,  // Position window vertically near click with offset for header
+		};
+		
+		handleOpenWindow({
+			id: `fleets-${planet.metadata.id}`,
+			title: `Fleets on ${planet.metadata.name}`,
+			type: "fleets",
+			planetId: planet.metadata.id,
+			sectorId: planet.metadata.sectorId,
+			position: position, // Pass the click position
+		});
+	};
+
+	const handleViewDefence = (e: React.MouseEvent) => {
+		const position = {
+			x: e.clientX - 150,
+			y: e.clientY - 50,
+		};
+		
+		handleOpenWindow({
+			id: `defence-${planet.metadata.id}`,
+			title: `Defence Overview for ${planet.metadata.name}`,
+			type: "defence",
+			planetId: planet.metadata.id,
+			sectorId: planet.metadata.sectorId,
+			position: position,
+		});
+	};
+
+	const handleViewManufacturing = (e: React.MouseEvent) => {
+		const position = {
+			x: e.clientX - 150,
+			y: e.clientY - 50,
+		};
+		
+		handleOpenWindow({
+			id: `manufacturing-${planet.metadata.id}`,
+			title: `Manufacturing Overview for ${planet.metadata.name}`,
+			type: "manufacturing",
+			planetId: planet.metadata.id,
+			sectorId: planet.metadata.sectorId,
+			position: position,
+		});
+	};
+
+	const handleViewMissions = (e: React.MouseEvent) => {
+		const position = {
+			x: e.clientX - 150,
+			y: e.clientY - 50,
+		};
+		
+		handleOpenWindow({
+			id: `missions-${planet.metadata.id}`,
+			title: `Missions on ${planet.metadata.name}`,
+			type: "missions",
+			planetId: planet.metadata.id,
+			sectorId: planet.metadata.sectorId,
+			position: position,
+		});
+	};
+
 	return (
 		<div className="mb-6 border-b border-purple-700/30 pb-4 last:border-b-0">
 			<h3 className="mb-2 text-xl font-semibold text-white">
@@ -79,25 +137,25 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({
 
 			<div className="mt-4 flex flex-wrap gap-2">
 				<button
-					onClick={() => onViewFleets?.(planet.metadata.id)}
+					onClick={handleViewFleets}
 					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Fleets
 				</button>
 				<button
-					onClick={() => onViewDefence?.(planet.metadata.id)}
+					onClick={handleViewDefence}
 					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Defence
 				</button>
 				<button
-					onClick={() => onViewManufacturing?.(planet.metadata.id)}
+					onClick={handleViewManufacturing}
 					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Manufacturing
 				</button>
 				<button
-					onClick={() => onViewMissions?.(planet.metadata.id)}
+					onClick={handleViewMissions}
 					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
 				>
 					View Missions

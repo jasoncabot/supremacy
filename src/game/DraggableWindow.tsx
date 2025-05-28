@@ -1,30 +1,59 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
+import { useWindowContext } from "../hooks/useWindowContext";
+import { WindowInfo } from "./WindowInfo";
 
 export interface DraggableWindowProps {
-	title: string;
-	onClose: () => void;
-	onMinimized: () => void;
-	onActivated: () => void;
+	windowInfo: WindowInfo;
 	children: ReactNode;
 	initialPosition?: { x: number; y: number };
 	zIndex?: number;
 }
 
 const DraggableWindow: React.FC<DraggableWindowProps> = ({
-	title,
-	onClose,
-	onMinimized,
-	onActivated,
+	windowInfo,
 	children,
 	initialPosition = { x: 100, y: 100 },
-	zIndex = 20,
+	zIndex = 100, // Higher z-index to ensure it's above menus
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
-	const [position, setPosition] = useState(initialPosition);
+	
+	// Function to ensure the window opens within the viewport
+	const ensureWithinViewport = (pos: { x: number; y: number }) => {
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+		const windowWidth = 280; // Minimum width from CSS
+		const windowHeight = 200; // Approximate minimum height
+		
+		// Ensure window is not positioned outside the right edge
+		const x = Math.min(pos.x, viewportWidth - windowWidth);
+		
+		// Ensure window is not positioned outside the bottom edge
+		const y = Math.min(pos.y, viewportHeight - windowHeight);
+		
+		// Ensure window is not positioned outside the left edge
+		const finalX = Math.max(x, 0);
+		
+		// Ensure window is not positioned outside the top edge
+		const finalY = Math.max(y, 0);
+		
+		return { x: finalX, y: finalY };
+	};
+	
+	// Use the position from windowInfo if available, otherwise use initialPosition
+	const [position, setPosition] = useState(() => {
+		// If position is provided in the windowInfo, ensure it's within viewport
+		if (windowInfo.position) {
+			return ensureWithinViewport(windowInfo.position);
+		}
+		return initialPosition;
+	});
 	const [dragging, setDragging] = useState(false);
 	const dragOffset = useRef({ x: 0, y: 0 });
 	const dragAnimationRef = useRef<number | undefined>(undefined);
+
+	const { handleOpenWindow, handleMinimizeWindow, handleCloseWindow } =
+		useWindowContext();
 
 	const handleDragStart = (clientX: number, clientY: number) => {
 		if (nodeRef.current) {
@@ -42,7 +71,10 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			};
 
 			setDragging(true);
-			onActivated();
+			handleOpenWindow({...windowInfo, position});
+			
+			// Dispatch custom event for the TouchBlockingOverlay
+			window.dispatchEvent(new CustomEvent('window-drag-start'));
 		}
 	};
 
@@ -66,24 +98,28 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			// If close or minimize buttons were touched, don't activate dragging
 			return;
 		}
-		
+
 		// Check if the touch started on a scrollable element
 		const targetElement = e.target as HTMLElement;
 		const isScrollableElement = (element: HTMLElement): boolean => {
 			if (!element) return false;
-			
+
 			const computedStyle = window.getComputedStyle(element);
 			const overflowY = computedStyle.overflowY;
 			const overflowX = computedStyle.overflowX;
-			
+
 			// Check if element has scrollable content
 			const hasVerticalScroll = element.scrollHeight > element.clientHeight;
 			const hasHorizontalScroll = element.scrollWidth > element.clientWidth;
-			
-			return ((overflowY === 'auto' || overflowY === 'scroll') && hasVerticalScroll) || 
-				   ((overflowX === 'auto' || overflowX === 'scroll') && hasHorizontalScroll);
+
+			return (
+				((overflowY === "auto" || overflowY === "scroll") &&
+					hasVerticalScroll) ||
+				((overflowX === "auto" || overflowX === "scroll") &&
+					hasHorizontalScroll)
+			);
 		};
-		
+
 		// Check if touch is within a scrollable area
 		let currentElement: HTMLElement | null = targetElement;
 		while (currentElement && currentElement !== nodeRef.current) {
@@ -96,6 +132,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 
 		// Prevent default to avoid scrolling while dragging
 		e.preventDefault();
+		e.stopPropagation();
 
 		const touch = e.touches[0];
 		handleDragStart(touch.clientX, touch.clientY);
@@ -105,14 +142,17 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		// Add Tailwind classes to the body to prevent scrolling when dragging
 		const preventBodyScroll = () => {
 			if (dragging) {
-				document.body.classList.add('overflow-hidden', 'touch-none', 'overscroll-none');
+				// Use the custom CSS class defined in index.css
+				document.documentElement.classList.add("overflow-hidden");
+				document.body.classList.add("window-dragging");
 			} else {
-				document.body.classList.remove('overflow-hidden', 'touch-none', 'overscroll-none');
+				document.documentElement.classList.remove("overflow-hidden");
+				document.body.classList.remove("window-dragging");
 			}
 		};
-		
+
 		preventBodyScroll();
-		
+
 		const handleMove = (clientX: number, clientY: number) => {
 			if (!dragging) return;
 
@@ -143,8 +183,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 
 		const onTouchMove = (e: TouchEvent) => {
 			if (!dragging) return;
-			
+
 			e.preventDefault(); // Prevent scrolling during drag
+			e.stopPropagation(); // Stop event from propagating to parent elements
 			const touch = e.touches[0];
 			handleMove(touch.clientX, touch.clientY);
 		};
@@ -155,6 +196,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			if (dragAnimationRef.current) {
 				cancelAnimationFrame(dragAnimationRef.current);
 			}
+			
+			// Dispatch custom event for the TouchBlockingOverlay
+			window.dispatchEvent(new CustomEvent('window-drag-end'));
 		};
 
 		const onMouseUp = () => {
@@ -184,7 +228,8 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				cancelAnimationFrame(dragAnimationRef.current);
 			}
 			// Ensure body scrolling is re-enabled when component unmounts
-			document.body.classList.remove('overflow-hidden', 'touch-none', 'overscroll-none');
+			document.documentElement.classList.remove("overflow-hidden");
+			document.body.classList.remove("window-dragging");
 		};
 	}, [dragging]);
 
@@ -195,33 +240,34 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
 				zIndex,
 				willChange: dragging ? "transform" : "auto",
-				position: "absolute",
+				position: "fixed", // Fixed position relative to viewport
 				left: 0,
 				top: 0,
+				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`max-w-[90vw] min-w-[320px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${
-				dragging ? "cursor-grabbing" : ""
+			className={`max-w-[95vw] min-w-[280px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl sm:max-w-[90vw] sm:min-w-[320px] ${
+				dragging ? "cursor-grabbing touch-none select-none" : ""
 			}`}
 		>
 			<div className="flex border-b border-purple-700/30">
-				<h2 
-					className="ml-2 flex-1 py-2 text-xl font-semibold text-white cursor-move"
+				<h2
+					className="ml-2 flex-1 cursor-move py-2 text-xl font-semibold text-white select-none touch-none"
 					onMouseDown={onMouseDown}
 					onTouchStart={onTouchStart}
 				>
-					{title}
+					{windowInfo.title}
 				</h2>
 
 				<div className="mr-2 flex items-center space-x-2">
 					<button
-						onClick={onMinimized}
+						onClick={() => handleMinimizeWindow({ ...windowInfo, position })}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
 						aria-label="Minimize"
 					>
 						<span className="text-sm">_</span>
 					</button>
 					<button
-						onClick={onClose}
+						onClick={() => handleCloseWindow(windowInfo)}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
 						aria-label="Close"
 					>
@@ -230,7 +276,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				</div>
 			</div>
 
-			<div className="max-h-[70vh] overflow-y-auto">{children}</div>
+			<div className="max-h-[50vh] overflow-y-auto overscroll-contain sm:max-h-[70vh]">
+				{children}
+			</div>
 		</div>
 	);
 };

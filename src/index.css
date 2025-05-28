@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+/* Prevent body scroll when dragging windows on mobile */
+body.window-dragging {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-overflow-scrolling: none;
+  overscroll-behavior: none;
+}

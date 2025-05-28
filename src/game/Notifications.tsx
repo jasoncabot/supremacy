@@ -12,7 +12,7 @@ const Notifications: React.FC<NotificationsProps> = ({
 	onMarkRead,
 	className = "",
 }) => (
-	<div className={`rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 p-5 shadow-xl ${className}`}>
+	<div className={`m-4 mb-24 sm:mb-16 rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 p-5 shadow-xl ${className}`}>
 		<div className="mb-3 flex items-center gap-2">
 			<h3 className="text-lg font-bold tracking-wide text-purple-300 [text-shadow:_0_0_8px_theme(colors.purple.700)]">
 				Notifications

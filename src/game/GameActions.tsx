@@ -1,6 +1,6 @@
 import React from "react";
 import { GameAction } from "../../worker/api";
-import { useGame } from "./useGame";
+import { useGame } from "../hooks/useGame";
 
 interface GameActionsProps {
 	onEndTurn: () => void;
@@ -26,10 +26,10 @@ const GameActions: React.FC<GameActionsProps> = ({ onEndTurn }) => {
 	return (
 		<div className="flex">
 			<button
-				className="cursor-pointer rounded-lg bg-purple-700 px-4 py-2 font-bold text-white shadow-lg transition-all hover:bg-purple-600"
+				className="cursor-pointer rounded-lg bg-purple-700 px-3 py-2 font-bold text-white shadow-lg transition-all hover:bg-purple-600 sm:px-4"
 				onClick={handleEndTurn}
 			>
-				End Turn {game?.turn}
+				<span className="">End Turn {game?.turn}</span>
 			</button>
 		</div>
 	);
