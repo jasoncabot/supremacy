@@ -7,6 +7,8 @@ import GameActions from "./GameActions";
 import GameContent from "./GameContent";
 import { GameProvider } from "./GameContext";
 import MobileMenu from "./MobileMenu";
+import SelectionOptions from "./SelectionOptions";
+import { SelectionProvider } from "./SelectionContext";
 import SideMenu, { MenuView } from "./SideMenu";
 import StatusBar from "./StatusBar";
 import TouchBlockingOverlay from "./TouchBlockingOverlay";
@@ -45,7 +47,7 @@ const GameScreenContent: React.FC = () => {
 			<div className="absolute inset-0 bg-[url('/stars-bg.jpg')] bg-cover opacity-50"></div>
 			<div className="absolute inset-0 bg-gradient-to-br from-indigo-950/40 via-slate-950/60 to-purple-950/40"></div>
 			<div className="absolute bottom-0 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl"></div>
-			
+
 			{/* Touch blocking overlay for mobile drag operations */}
 			<TouchBlockingOverlay />
 
@@ -87,8 +89,16 @@ const GameScreenContent: React.FC = () => {
 
 					{/* Action bar at the bottom - fixed on mobile, part of flow on desktop */}
 					<div className="fixed right-0 bottom-0 left-0 z-20 border-t border-purple-700/30 bg-gray-800/80 p-2 pb-2 shadow-lg backdrop-blur-md sm:p-4 sm:pb-4 md:static md:z-auto">
-						<div className="flex flex-row justify-between">
+						{/* Mobile: Selection options as separate row */}
+						<div className="mb-2 md:hidden">
+							<SelectionOptions className="justify-center" />
+						</div>
+						<div className="flex flex-row items-center justify-between">
 							<Filters filter={filter} onChange={setFilter} />
+							{/* Desktop: Selection options in the same row */}
+							<div className="hidden md:flex md:flex-1 md:justify-center">
+								<SelectionOptions className="justify-center" />
+							</div>
 							<GameActions onEndTurn={handleEndTurn} />
 						</div>
 					</div>
@@ -105,7 +115,9 @@ const GameScreen: React.FC = () => {
 	return (
 		<GameProvider>
 			<WindowProvider>
-				<GameScreenContent />
+				<SelectionProvider>
+					<GameScreenContent />
+				</SelectionProvider>
 			</WindowProvider>
 		</GameProvider>
 	);
