@@ -215,7 +215,7 @@ export class TokensDurableObject extends DurableObject<Env> {
 
 		const id = this.env.USERS.idFromString(userId);
 		const user = this.env.USERS.get(id) as unknown as UsersDurableObject;
-		const hasScope = user.hasScope(scope);
+		const hasScope = await user.hasScope(scope);
 		if (!hasScope) {
 			return {
 				error: new ApiError(

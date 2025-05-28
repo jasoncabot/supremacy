@@ -84,7 +84,7 @@ const authRouter = Router<IRequest, [Env, ExecutionContext]>({
 		);
 
 		if (result.error || !result.tokens) {
-			return error(result.error?.status || 401, {
+			return error(result.error?.status || 500, {
 				error: result.error?.message || "Login failed",
 			});
 		}
@@ -111,7 +111,7 @@ const authRouter = Router<IRequest, [Env, ExecutionContext]>({
 			clientId,
 		);
 		if (result.error || !result.tokens) {
-			return error(result.error?.status || 401, {
+			return error(result.error?.status || 500, {
 				error: result.error?.message || "Refresh token failed",
 			});
 		}

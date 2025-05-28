@@ -23,9 +23,20 @@ interface ApiHook<TResponse> {
 }
 
 // Standard headers that should be included in all API requests
+function getClientId(): string {
+	const key = "supremacy:client:id";
+	let clientId = localStorage.getItem(key);
+	if (!clientId) {
+		const randomPart = Math.random().toString(36).substring(2, 7);
+		clientId = `web${randomPart}`;
+		localStorage.setItem(key, clientId);
+	}
+	return clientId;
+}
+
 const standardHeaders = {
 	"Content-Type": "application/json",
-	"X-Client-ID": "web",
+	"X-Client-ID": getClientId(),
 };
 
 // Keep a global pending refresh promise to handle concurrent requests
@@ -279,8 +290,10 @@ export function useApi<TResponse = unknown>(): ApiHook<TResponse> {
 
 				// Handle non-2xx responses
 				if (!response.ok) {
-					// Handle 401/403 errors by clearing tokens if they still fail after refresh
-					if ((response.status === 401 || response.status === 403) && tokens) {
+					// Handle 401 errors by clearing tokens if they still fail after refresh
+					// We don't clear tokens for 403 errors since those indicate permission issues,
+					// not authentication issues
+					if (response.status === 401 && tokens) {
 						clearTokens();
 					}
 

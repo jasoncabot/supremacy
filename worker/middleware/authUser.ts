@@ -34,7 +34,7 @@ export function withAuthUser(scope: AuthScope = "none") {
 
 		const result = await tokenStub.verifyAccessToken(token, clientId, scope);
 		if (result.error || !result.user) {
-			return error(result.error?.status || 401, {
+			return error(result.error?.status ?? 401, {
 				error: result.error?.message || "Unauthorized",
 			});
 		}
