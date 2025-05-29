@@ -6,6 +6,6 @@ export { default as GameScreen } from "./GameScreen";
 export { default as Notifications } from "./Notifications";
 export { default as SectorOverview } from "./SectorOverview";
 export { default as SelectionOptions } from "./SelectionOptions";
-export { SelectionProvider, useSelection } from "./SelectionContext";
+export { SelectionProvider } from "./SelectionContext";
 export { default as SideMenu } from "./SideMenu";
 export { default as StatusBar } from "./StatusBar";

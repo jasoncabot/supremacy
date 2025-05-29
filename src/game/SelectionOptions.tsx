@@ -1,6 +1,9 @@
 import React from "react";
 import { HandRaisedIcon, StarIcon } from "@heroicons/react/24/outline";
-import { useSelection, SelectionMode } from "./SelectionContext";
+import {
+	useSelectionContext,
+	SelectionKind,
+} from "../hooks/useSelectionContext";
 
 interface SelectionOptionsProps {
 	className?: string;
@@ -9,9 +12,9 @@ interface SelectionOptionsProps {
 const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	className = "",
 }) => {
-	const { selectionMode, toggleSelectionMode } = useSelection();
+	const { selectionMode, toggleSelectionKind } = useSelectionContext();
 
-	const getButtonClasses = (mode: SelectionMode) => {
+	const getButtonClasses = (mode: SelectionKind) => {
 		const baseClasses = "flex items-center gap-1 rounded px-2 py-1 text-sm";
 		const activeClasses = "bg-indigo-600 text-white";
 		const inactiveClasses =
@@ -24,7 +27,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 		<div className={`flex gap-2 ${className}`}>
 			<button
 				className={getButtonClasses("single")}
-				onClick={() => toggleSelectionMode("single")}
+				onClick={() => toggleSelectionKind("single")}
 				title="Select Single Item"
 			>
 				<HandRaisedIcon className="h-8 w-8 p-1" />
@@ -32,7 +35,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 
 			<button
 				className={getButtonClasses("multiple")}
-				onClick={() => toggleSelectionMode("multiple")}
+				onClick={() => toggleSelectionKind("multiple")}
 				title="Select Multiple Items"
 			>
 				<div className="relative">
