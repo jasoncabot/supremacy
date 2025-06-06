@@ -5,6 +5,10 @@
 	"compatibility_date": "2025-05-08",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"workers_dev": false,
+	"assets": {
+		"not_found_handling": "single-page-application",
+		"binding": "ASSETS",
+	},
 	"env": {
 		"dev": {
 			"name": "supremacy-dev",

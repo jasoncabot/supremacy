@@ -3,6 +3,9 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useWindowContext } from "../hooks/useWindowContext";
 import { WindowInfo } from "./WindowInfo";
 
+// Global counter for z-index across all windows
+let globalHighestZIndex = 1000; // Start at 1000 to be safely above other UI elements
+
 export interface DraggableWindowProps {
 	windowInfo: WindowInfo;
 	children: ReactNode;
@@ -14,46 +17,51 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	windowInfo,
 	children,
 	initialPosition = { x: 100, y: 100 },
-	zIndex = 100, // Higher z-index to ensure it's above menus
+	zIndex = 50,
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
-	
+	const [windowZIndex, setWindowZIndex] = useState(zIndex);
+
+	// Function to bring window to front - simplified and always works
+	const bringToFront = () => {
+		// Increment the global highest z-index
+		globalHighestZIndex += 10; // Increment by 10 to leave space between windows
+		setWindowZIndex(globalHighestZIndex);
+	};
+
 	// Function to ensure the window opens within the viewport
 	const ensureWithinViewport = (pos: { x: number; y: number }) => {
 		const viewportWidth = window.innerWidth;
 		const viewportHeight = window.innerHeight;
 		const windowWidth = 280; // Minimum width from CSS
 		const windowHeight = 200; // Approximate minimum height
-		
+
 		// Ensure window is not positioned outside the right edge
 		const x = Math.min(pos.x, viewportWidth - windowWidth);
-		
+
 		// Ensure window is not positioned outside the bottom edge
 		const y = Math.min(pos.y, viewportHeight - windowHeight);
-		
+
 		// Ensure window is not positioned outside the left edge
 		const finalX = Math.max(x, 0);
-		
+
 		// Ensure window is not positioned outside the top edge
 		const finalY = Math.max(y, 0);
-		
+
 		return { x: finalX, y: finalY };
 	};
-	
+
 	// Use the position from windowInfo if available, otherwise use initialPosition
 	const [position, setPosition] = useState(() => {
 		// If position is provided in the windowInfo, ensure it's within viewport
-		if (windowInfo.position) {
-			return ensureWithinViewport(windowInfo.position);
-		}
-		return initialPosition;
+		const posToUse = windowInfo.position || initialPosition;
+		return ensureWithinViewport(posToUse);
 	});
 	const [dragging, setDragging] = useState(false);
 	const dragOffset = useRef({ x: 0, y: 0 });
 	const dragAnimationRef = useRef<number | undefined>(undefined);
 
-	const { handleOpenWindow, handleMinimizeWindow, handleCloseWindow } =
-		useWindowContext();
+	const { handleMinimizeWindow, handleCloseWindow } = useWindowContext();
 
 	const handleDragStart = (clientX: number, clientY: number) => {
 		if (nodeRef.current) {
@@ -71,10 +79,12 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			};
 
 			setDragging(true);
-			handleOpenWindow({...windowInfo, position});
-			
+
+			// Always bring window to front when starting to drag
+			bringToFront();
+
 			// Dispatch custom event for the TouchBlockingOverlay
-			window.dispatchEvent(new CustomEvent('window-drag-start'));
+			window.dispatchEvent(new CustomEvent("window-drag-start"));
 		}
 	};
 
@@ -87,6 +97,8 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			return;
 		}
 
+		// Bring window to front when mouse down on title bar
+		bringToFront();
 		handleDragStart(e.clientX, e.clientY);
 	};
 
@@ -133,6 +145,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		// Prevent default to avoid scrolling while dragging
 		e.preventDefault();
 		e.stopPropagation();
+
+		// Bring window to front when touch on title bar
+		bringToFront();
 
 		const touch = e.touches[0];
 		handleDragStart(touch.clientX, touch.clientY);
@@ -196,9 +211,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			if (dragAnimationRef.current) {
 				cancelAnimationFrame(dragAnimationRef.current);
 			}
-			
+
 			// Dispatch custom event for the TouchBlockingOverlay
-			window.dispatchEvent(new CustomEvent('window-drag-end'));
+			window.dispatchEvent(new CustomEvent("window-drag-end"));
 		};
 
 		const onMouseUp = () => {
@@ -233,32 +248,39 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		};
 	}, [dragging]);
 
+	// When component mounts, bring it to front initially
+	useEffect(() => {
+		bringToFront();
+	}, []);
+
 	return (
 		<div
 			ref={nodeRef}
 			style={{
 				transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
-				zIndex,
+				zIndex: windowZIndex,
 				willChange: dragging ? "transform" : "auto",
 				position: "fixed", // Fixed position relative to viewport
 				left: 0,
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`max-w-[95vw] min-w-[280px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl sm:max-w-[90vw] sm:min-w-[320px] ${
+			className={`min-h-[50vh] max-w-[95vw] min-w-[280px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl sm:max-w-[90vw] sm:min-w-[320px] ${
 				dragging ? "cursor-grabbing touch-none select-none" : ""
 			}`}
+			// Bring window to front when clicking anywhere in the window
+			onClick={bringToFront}
 		>
 			<div className="flex border-b border-purple-700/30">
 				<h2
-					className="ml-2 flex-1 cursor-move py-2 text-xl font-semibold text-white select-none touch-none"
+					className="ml-2 flex-1 cursor-move touch-none py-2 text-xl font-semibold text-white select-none"
 					onMouseDown={onMouseDown}
 					onTouchStart={onTouchStart}
 				>
 					{windowInfo.title}
 				</h2>
 
-				<div className="mr-2 flex items-center space-x-2">
+				<div className="mx-2 flex items-center space-x-2">
 					<button
 						onClick={() => handleMinimizeWindow({ ...windowInfo, position })}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
@@ -276,7 +298,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				</div>
 			</div>
 
-			<div className="max-h-[50vh] overflow-y-auto overscroll-contain sm:max-h-[70vh]">
+			<div className="max-h-[50vh] flex-1 overflow-y-auto overscroll-contain sm:max-h-[70vh]">
 				{children}
 			</div>
 		</div>

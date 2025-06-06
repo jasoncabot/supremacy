@@ -1,14 +1,7 @@
 import React from "react";
 import { useGame } from "../hooks/useGame";
-import { useWindowContext } from "../hooks/useWindowContext";
-import { DefenceOverview } from "./DefenceOverview";
-import DraggableWindow from "./DraggableWindow";
 import { FilterType } from "./Filters";
-import { FleetsOverview } from "./FleetsOverview";
-import { ManufacturingOverview } from "./ManufacturingOverview";
-import { MissionsOverview } from "./MissionsOverview";
 import Notifications from "./Notifications";
-import SectorDetailWindow from "./SectorDetailWindow";
 import SectorOverview from "./SectorOverview";
 import { MenuView } from "./SideMenu";
 
@@ -20,8 +13,6 @@ interface GameContentProps {
 const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 	const { sectors, planetsBySector, notifications, markNotificationAsRead } =
 		useGame();
-
-	const { openWindows } = useWindowContext();
 
 	return (
 		<div className="mx-auto h-full min-h-0 w-full select-none overscroll-none">
@@ -59,45 +50,6 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 						</p>
 					</div>
 				)}
-
-				{/* Overlay everything with the set of sectors we have open  */}
-				{openWindows.length > 0 &&
-					openWindows.map((info) => (
-						<DraggableWindow
-							key={info.id}
-							windowInfo={info}
-							// Only use default position if not provided in the info
-							initialPosition={info.position || { x: 150, y: 150 }}
-							zIndex={100} // Higher z-index to ensure it's above all UI elements
-						>
-							{(() => {
-								const planets = info.sectorId
-									? planetsBySector[info.sectorId]
-									: [];
-
-								const planet = planets.find(
-									(p) => p.metadata.id === info.planetId,
-								)!;
-
-								switch (info.type) {
-									case "sector":
-										return (
-											<SectorDetailWindow planets={planets} filter={filter} />
-										);
-									case "fleets":
-										return <FleetsOverview planet={planet} />;
-									case "defence":
-										return <DefenceOverview planet={planet} />;
-									case "manufacturing":
-										return <ManufacturingOverview planet={planet} />;
-									case "missions":
-										return <MissionsOverview planet={planet} />;
-									default:
-										return "Unknown view type";
-								}
-							})()}
-						</DraggableWindow>
-					))}
 			</div>
 		</div>
 	);

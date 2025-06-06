@@ -5,7 +5,7 @@ import { VersionResponse } from "./api";
 
 type Args = [Env, ExecutionContext];
 
-const router = AutoRouter<IRequest, Args>({ base: "/api" })
+const apiRouter = AutoRouter<IRequest, Args>({ base: "/api" })
 	.get(
 		"/version",
 		() => ({ version: import.meta.env.VITE_VERSION }) as VersionResponse,
@@ -13,6 +13,11 @@ const router = AutoRouter<IRequest, Args>({ base: "/api" })
 	.get("/health", () => json({ status: "ok" }))
 	.all("/auth/*", authRouter.fetch)
 	.all("/games/*", gameRouter.fetch);
+
+const router = AutoRouter<IRequest, Args>()
+	.all("/api/*", apiRouter.fetch)
+	.all("*", (req, env) => env.ASSETS.fetch(req.url))
+	.notFound(() => error(404, "Not found"));
 
 export default {
 	fetch(request, env, ctx) {

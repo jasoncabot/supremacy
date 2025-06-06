@@ -1,11 +1,4 @@
 import {
-	Menu,
-	MenuButton,
-	MenuItem,
-	MenuItems,
-	MenuSeparator,
-} from "@headlessui/react";
-import {
 	ArrowLeftEndOnRectangleIcon,
 	Bars3Icon,
 	BellAlertIcon,
@@ -42,306 +35,164 @@ const SideMenu: React.FC<SideMenuProps> = ({
 }) => {
 	const { minimizedWindows, handleMaximizeWindow } = useWindowContext();
 
+	const renderMenuButton = (
+		icon: React.ComponentType<{ className?: string }>,
+		label: string,
+		view: MenuView | null = null,
+		onClick?: () => void,
+		isActive = false,
+	) => {
+		const Icon = icon;
+		const handleClick =
+			onClick || (view ? () => onChangeView(view) : undefined);
+
+		return (
+			<button
+				className={`group flex h-12 w-full cursor-pointer items-center rounded-lg px-3 py-2 transition-colors duration-200 ${
+					isActive
+						? "bg-purple-800 text-white"
+						: "text-purple-300 hover:bg-purple-900/40 hover:text-purple-100"
+				}`}
+				onClick={handleClick}
+				title={!isExpanded ? label : undefined}
+			>
+				<div
+					className={`flex items-center ${isExpanded ? "w-full" : "w-full justify-center"}`}
+				>
+					<Icon className="h-5 w-5 flex-shrink-0" />
+					{isExpanded && <span className="ml-3 truncate">{label}</span>}
+				</div>
+			</button>
+		);
+	};
+
 	return (
 		<div
-			className={`fixed top-0 left-0 bottom-0 z-30 flex h-screen flex-col overflow-hidden transform-gpu transition-all duration-300 ease-in-out ${
+			className={`fixed top-0 bottom-0 left-0 z-30 flex h-screen transform-gpu flex-col overflow-hidden bg-slate-900 transition-[width] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
 				isExpanded
 					? "w-64 border-r border-purple-700/30 bg-gradient-to-b from-slate-900 to-gray-900 shadow-xl"
-					: "w-12 bg-slate-900/80"
+					: "w-12"
 			}`}
 		>
-			{/* Fixed width toggle button that stays in the same position */}
-			<button
-				className="relative z-20 flex h-12 w-12 cursor-pointer items-center justify-center text-purple-300 transition-colors hover:text-purple-100"
-				onClick={onToggleExpand}
-				aria-label={isExpanded ? "Collapse menu" : "Expand menu"}
-			>
-				<span className="relative inline-block h-6 w-6">
-					<Bars3Icon
-						className={`absolute top-0 left-0 h-6 w-6 transition-all duration-300 ${
-							isExpanded
-								? "scale-90 rotate-45 opacity-0"
-								: "scale-100 rotate-0 opacity-100"
-						}`}
-					/>
-					<XMarkIcon
-						className={`absolute top-0 left-0 h-6 w-6 transition-all duration-300 ${
-							isExpanded
-								? "scale-100 rotate-0 opacity-100"
-								: "scale-90 -rotate-45 opacity-0"
-						}`}
-					/>
-				</span>
-			</button>
+			{/* Toggle button */}
+			<div className="flex h-12 w-full items-center border-b border-purple-700/20">
+				<button
+					className="flex h-12 w-12 cursor-pointer items-center justify-center text-purple-300 transition-colors duration-200 hover:text-purple-100"
+					onClick={onToggleExpand}
+					aria-label={isExpanded ? "Collapse menu" : "Expand menu"}
+				>
+					{isExpanded ? (
+						<XMarkIcon className="h-5 w-5" />
+					) : (
+						<Bars3Icon className="h-5 w-5" />
+					)}
+				</button>
+				{isExpanded && (
+					<span className="ml-2 text-sm font-medium text-purple-200"></span>
+				)}
+			</div>
 
-			{/* Expanded menu content - always rendered but hidden when collapsed */}
-			<div
-				className={`absolute top-0 right-0 bottom-0 left-0 flex w-64 flex-col transition-all duration-300 ease-out ${
-					isExpanded
-						? "translate-x-0 opacity-100"
-						: "pointer-events-none -translate-x-4 opacity-0"
-				}`}
-			>
-				<div className="h-12 w-full"></div> {/* Spacer for the toggle button */}
-				<div className="flex-1 overflow-y-auto p-4">
-					{/* Main Navigation Options */}
-					<div className="mb-6 space-y-2">
-						<button
-							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
-								activeView === "sectorOverview"
-									? "bg-purple-800/60 text-white"
-									: "text-purple-200 hover:bg-purple-900/40"
-							}`}
-							onClick={() => onChangeView("sectorOverview")}
-							disabled={!isExpanded}
-						>
-							<div className="flex items-center">
-								<GlobeAltIcon className="mr-2 h-5 w-5" />
-								Sector Overview
-							</div>
-						</button>
+			{/* Menu content */}
+			<div className={`flex-1 overflow-hidden p-1`}>
+				<div className="flex h-full flex-col space-y-1 overflow-y-auto">
+					{/* Main Navigation */}
+					{renderMenuButton(
+						GlobeAltIcon,
+						"Sector Overview",
+						"sectorOverview",
+						undefined,
+						activeView === "sectorOverview",
+					)}
 
-						<button
-							className="w-full rounded-lg px-3 py-2 text-left text-purple-200 transition-colors"
-							disabled={!isExpanded}
-						>
-							<div className="flex items-center">
-								<div className="relative mr-2">
-									<WindowIcon className="h-5 w-5" />
+					{/* Windows section */}
+					<div className="relative">
+						{renderMenuButton(
+							({ className }) => (
+								<div className="relative">
+									<WindowIcon className={className} />
 									{minimizedWindows.length > 0 && (
 										<span className="absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center rounded-full bg-purple-600 text-xs font-medium">
 											{minimizedWindows.length}
 										</span>
 									)}
 								</div>
-								Windows
-							</div>
-						</button>
+							),
+							"Windows",
+							null,
+							undefined,
+							false,
+						)}
 
-						{/* List of minimized windows */}
-						{minimizedWindows.length > 0 && (
-							<div className="ml-4 space-y-2">
-								{minimizedWindows.map((minimizedWindow) => (
+						{/* Minimized windows list - only show when expanded */}
+						{isExpanded && minimizedWindows.length > 0 && (
+							<div className="mt-1 ml-6 space-y-1">
+								{minimizedWindows.map((window) => (
 									<button
-										key={minimizedWindow.id}
-										className="w-full cursor-pointer rounded-lg px-3 py-1 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
-										onClick={() => handleMaximizeWindow(minimizedWindow)}
-										disabled={!isExpanded}
+										key={window.id}
+										className="flex w-full cursor-pointer items-center rounded-md px-2 py-2 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
+										onClick={() => handleMaximizeWindow(window)}
 									>
 										{(() => {
-											switch (minimizedWindow.type) {
+											switch (window.type) {
 												case "sector":
 													return (
-														<SparklesIcon className="mr-2 inline h-4 w-4" />
+														<SparklesIcon className="mr-2 h-4 w-4 flex-shrink-0" />
 													);
 												case "fleets":
-													return (
-														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
-													);
 												case "defence":
-													return (
-														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
-													);
 												case "manufacturing":
-													return (
-														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
-													);
 												case "missions":
 													return (
-														<GlobeAltIcon className="mr-2 inline h-4 w-4" />
+														<GlobeAltIcon className="mr-2 h-4 w-4 flex-shrink-0" />
 													);
+												default:
+													return null;
 											}
 										})()}
-										{minimizedWindow.title}
+										<span className="truncate">{window.title}</span>
 									</button>
 								))}
 							</div>
 						)}
-
-						<button
-							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
-								activeView === "notifications"
-									? "bg-purple-800/60 text-white"
-									: "text-purple-200 hover:bg-purple-900/40"
-							}`}
-							onClick={() => onChangeView("notifications")}
-							disabled={!isExpanded}
-						>
-							<div className="flex items-center">
-								<BellAlertIcon className="mr-2 h-5 w-5" />
-								Notifications
-							</div>
-						</button>
-
-						<button
-							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
-								activeView === "finder"
-									? "bg-purple-800/60 text-white"
-									: "text-purple-200 hover:bg-purple-900/40"
-							}`}
-							onClick={() => onChangeView("finder")}
-							disabled={!isExpanded}
-						>
-							<div className="flex items-center">
-								<MagnifyingGlassIcon className="mr-2 h-5 w-5" />
-								Finder
-							</div>
-						</button>
-
-						<button
-							className={`w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
-								activeView === "encyclopaedia"
-									? "bg-purple-800/60 text-white"
-									: "text-purple-200 hover:bg-purple-900/40"
-							}`}
-							onClick={() => onChangeView("encyclopaedia")}
-							disabled={!isExpanded}
-						>
-							<div className="flex items-center">
-								<BookOpenIcon className="mr-2 h-5 w-5" />
-								Encyclopaedia
-							</div>
-						</button>
 					</div>
 
-					{/* Horizontal Rule */}
-					<div className="my-4 h-px bg-purple-700/30"></div>
+					{renderMenuButton(
+						BellAlertIcon,
+						"Notifications",
+						"notifications",
+						undefined,
+						activeView === "notifications",
+					)}
 
-					{/* Game Options */}
-					<div className="space-y-2">
-						<button
-							className="w-full cursor-pointer rounded-lg px-3 py-2 text-left text-purple-200 transition-colors hover:bg-purple-900/40"
-							onClick={onExitGame}
-							disabled={!isExpanded}
-						>
-							<div className="flex items-center">
-								<ArrowLeftEndOnRectangleIcon className="mr-2 h-5 w-5" />
-								Exit Game
-							</div>
-						</button>
-					</div>
-				</div>
-			</div>
+					{renderMenuButton(
+						MagnifyingGlassIcon,
+						"Finder",
+						"finder",
+						undefined,
+						activeView === "finder",
+					)}
 
-			{/* Collapsed menu icons - always rendered but hidden when expanded */}
-			<div
-				className={`absolute top-0 bottom-0 left-0 flex w-12 flex-col transition-all duration-300 ease-out ${
-					isExpanded
-						? "pointer-events-none translate-x-4 opacity-0"
-						: "translate-x-0 opacity-100"
-				}`}
-			>
-				<div className="h-12 w-full"></div> {/* Spacer for the toggle button */}
-				<div className="mt-4 flex flex-col items-center space-y-2">
-					<Menu>
-						<MenuButton
-							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-								activeView === "sectorOverview"
-									? "bg-purple-800 text-white"
-									: "text-purple-300 hover:text-purple-100"
-							}`}
-							title="Sector Overview"
-							onClick={() => onChangeView("sectorOverview")}
-							disabled={isExpanded}
-						>
-							<GlobeAltIcon className="h-5 w-5" />
-						</MenuButton>
-					</Menu>
-					<Menu>
-						<MenuButton
-							className={`flex h-10 w-10 items-center justify-center rounded-md text-purple-300 hover:text-purple-100 ${
-								minimizedWindows.length > 0
-									? "cursor-pointer"
-									: "cursor-not-allowed text-purple-300 hover:text-purple-100"
-							}`}
-							title="Windows"
-							disabled={minimizedWindows.length === 0 || isExpanded}
-						>
-							<div className="relative">
-								<WindowIcon className="h-5 w-5" />
-								{minimizedWindows.length > 0 && (
-									<span className="absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center rounded-full bg-purple-600 text-xs font-medium">
-										{minimizedWindows.length}
-									</span>
-								)}
-							</div>
-						</MenuButton>
+					{renderMenuButton(
+						BookOpenIcon,
+						"Encyclopaedia",
+						"encyclopaedia",
+						undefined,
+						activeView === "encyclopaedia",
+					)}
 
-						<MenuItems
-							transition
-							anchor="left start"
-							className="z-50 flex w-52 origin-top-right flex-col rounded-sm border border-white/5 bg-gray-900 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:--spacing(1)] focus:outline-none data-closed:scale-95 data-closed:opacity-0"
-						>
-							{minimizedWindows.map((window) => (
-								<MenuItem key={window.id}>
-									<button
-										className="w-full cursor-pointer rounded-sm p-3 text-left text-sm text-purple-200 transition-colors hover:bg-purple-900/40"
-										onClick={() => handleMaximizeWindow(window)}
-									>
-										{window.title}
-									</button>
-								</MenuItem>
-							))}
-						</MenuItems>
-					</Menu>
+					{/* Spacer */}
+					<div className="flex-1" />
 
-					<Menu>
-						<MenuButton
-							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-								activeView === "notifications"
-									? "bg-purple-800 text-white"
-									: "text-purple-300 hover:text-purple-100"
-							}`}
-							title="Notifications"
-							onClick={() => onChangeView("notifications")}
-							disabled={isExpanded}
-						>
-							<BellAlertIcon className="h-5 w-5" />
-						</MenuButton>
-					</Menu>
+					{/* Separator */}
+					<div className={`${isExpanded ? "h-px bg-purple-700/30" : "h-2"}`} />
 
-					<Menu>
-						<MenuButton
-							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-								activeView === "finder"
-									? "bg-purple-800 text-white"
-									: "text-purple-300 hover:text-purple-100"
-							}`}
-							title="Finder"
-							onClick={() => onChangeView("finder")}
-							disabled={isExpanded}
-						>
-							<MagnifyingGlassIcon className="h-5 w-5" />
-						</MenuButton>
-					</Menu>
-
-					<Menu>
-						<MenuButton
-							className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-md ${
-								activeView === "encyclopaedia"
-									? "bg-purple-800 text-white"
-									: "text-purple-300 hover:text-purple-100"
-							}`}
-							title="Encyclopaedia"
-							onClick={() => onChangeView("encyclopaedia")}
-							disabled={isExpanded}
-						>
-							<BookOpenIcon className="h-5 w-5" />
-						</MenuButton>
-					</Menu>
-
-					<MenuSeparator className="h-6 w-px bg-purple-700/30" />
-
-					<Menu>
-						<MenuButton
-							className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-md text-purple-300 hover:text-purple-100"
-							title="Exit Game"
-							onClick={onExitGame}
-							disabled={isExpanded}
-						>
-							<ArrowLeftEndOnRectangleIcon className="h-5 w-5" />
-						</MenuButton>
-					</Menu>
+					{/* Exit Game */}
+					{renderMenuButton(
+						ArrowLeftEndOnRectangleIcon,
+						"Exit Game",
+						null,
+						onExitGame,
+					)}
 				</div>
 			</div>
 		</div>

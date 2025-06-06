@@ -53,7 +53,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
 	const hasMinimizedWindows = minimizedWindows.length > 0;
 	return (
-		<div className="sticky top-0 z-20 flex h-12 w-full items-center justify-between border-b border-purple-700/30 bg-gray-900/90 px-2 backdrop-blur">
+		<div className="flex h-12 w-full items-center justify-between border-b border-purple-700/30 bg-gray-900/90 px-2 backdrop-blur">
 			{/* Main horizontal menu items */}
 			<div className="flex flex-1 items-center gap-1 overflow-x-auto px-1">
 				{mainMenuItems.map((item) => (
