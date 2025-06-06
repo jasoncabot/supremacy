@@ -21,7 +21,7 @@ const router = AutoRouter<IRequest, Args>()
 
 export default {
 	fetch(request, env, ctx) {
-		return router.fetch(request, env, ctx).catch((err) => {
+		return router.fetch(request, env, ctx).catch((err: unknown) => {
 			console.warn("error in router", err);
 			return error(500, "Internal server error");
 		});
