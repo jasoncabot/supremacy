@@ -1,10 +1,8 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useWindowContext } from "../hooks/useWindowContext";
+import { useZIndex } from "../hooks/useZIndexContext";
 import { WindowInfo } from "./WindowInfo";
-
-// Global counter for z-index across all windows
-let globalHighestZIndex = 1000; // Start at 1000 to be safely above other UI elements
 
 export interface DraggableWindowProps {
 	windowInfo: WindowInfo;
@@ -21,12 +19,13 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
 	const [windowZIndex, setWindowZIndex] = useState(zIndex);
+	const { getNextZIndex } = useZIndex();
 
 	// Function to bring window to front - simplified and always works
 	const bringToFront = () => {
-		// Increment the global highest z-index
-		globalHighestZIndex += 10; // Increment by 10 to leave space between windows
-		setWindowZIndex(globalHighestZIndex);
+		// Get the next highest z-index from our context
+		const nextZIndex = getNextZIndex();
+		setWindowZIndex(nextZIndex);
 	};
 
 	// Function to ensure the window opens within the viewport
@@ -160,9 +159,13 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				// Use the custom CSS class defined in index.css
 				document.documentElement.classList.add("overflow-hidden");
 				document.body.classList.add("window-dragging");
+				// Apply cursor-grabbing globally when dragging
+				document.body.style.cursor = "grabbing";
 			} else {
 				document.documentElement.classList.remove("overflow-hidden");
 				document.body.classList.remove("window-dragging");
+				// Reset cursor
+				document.body.style.cursor = "";
 			}
 		};
 
@@ -245,12 +248,15 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			// Ensure body scrolling is re-enabled when component unmounts
 			document.documentElement.classList.remove("overflow-hidden");
 			document.body.classList.remove("window-dragging");
+			// Reset cursor on cleanup
+			document.body.style.cursor = "";
 		};
 	}, [dragging]);
 
 	// When component mounts, bring it to front initially
 	useEffect(() => {
 		bringToFront();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (
@@ -265,15 +271,13 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`min-h-[50vh] max-w-[95vw] min-w-[280px] rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl sm:max-w-[90vw] sm:min-w-[320px] ${
-				dragging ? "cursor-grabbing touch-none select-none" : ""
-			}`}
+			className="min-h-[50vh] w-[280px] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl"
 			// Bring window to front when clicking anywhere in the window
 			onClick={bringToFront}
 		>
 			<div className="flex border-b border-purple-700/30">
 				<h2
-					className="ml-2 flex-1 cursor-move touch-none py-2 text-xl font-semibold text-white select-none"
+					className={`ml-2 flex-1 ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none py-2 text-xl font-semibold text-white select-none`}
 					onMouseDown={onMouseDown}
 					onTouchStart={onTouchStart}
 				>

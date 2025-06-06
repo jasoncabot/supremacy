@@ -18,8 +18,12 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			clearSelection();
 		} else {
 			setSelectionKind(mode);
-			// Clear selection when switching modes
-			clearSelection();
+			// Handle mode transitions
+			if (mode === "single" && selectedItems.length > 1) {
+				// When switching from multiple to single, keep only the first selected item
+				setSelectedItems([selectedItems[0]]);
+			}
+			// When switching from single to multiple, preserve the existing selection
 		}
 	};
 

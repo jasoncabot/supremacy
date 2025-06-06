@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSelectionContext, SelectableItem } from '../hooks/useSelectionContext';
 
 interface ImagePair {
   foreground: string; // URL or path to foreground image
@@ -8,16 +9,40 @@ interface ImagePair {
 interface MiniCardViewProps {
   imagePairs: ImagePair[];
   displayText: string;
+  selectableItem?: SelectableItem; // Optional - if provided, makes the card selectable
 }
 
-const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText }) => {
+const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText, selectableItem }) => {
+  const { selectionMode, selectItem, deselectItem, isSelected } = useSelectionContext();
+  
+  const handleClick = () => {
+    if (!selectableItem || selectionMode === 'none') return;
+    
+    const selected = isSelected(selectableItem.id);
+    if (selected) {
+      deselectItem(selectableItem.id);
+    } else {
+      selectItem(selectableItem);
+    }
+  };
+
+  const isCardSelected = selectableItem ? isSelected(selectableItem.id) : false;
+  const isClickable = selectableItem && selectionMode !== 'none';
+
   return (
-    <div className="flex flex-col items-center">
+    <div 
+      className={`flex flex-col items-center ${isClickable ? 'cursor-pointer' : ''} ${
+        isCardSelected ? 'transform scale-105' : ''
+      } transition-transform duration-150`}
+      onClick={handleClick}
+    >
       <div className="flex flex-wrap justify-center gap-2">
         {imagePairs.map((pair, index) => (
           <div
             key={index}
-            className="relative h-[30px] w-[70px] rounded overflow-hidden"
+            className={`relative h-[30px] w-[70px] rounded overflow-hidden ${
+              isCardSelected ? 'ring-2 ring-blue-400 ring-offset-1 ring-offset-slate-900' : ''
+            }`}
             style={{
               backgroundImage: `url(${pair.background})`,
               backgroundSize: 'cover',
@@ -29,10 +54,23 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText }) 
               alt={`Foreground ${index + 1}`}
               className="absolute inset-0 h-full w-full object-contain"
             />
+            {isCardSelected && (
+              <div className="absolute inset-0 bg-blue-400/20 flex items-center justify-center">
+                <div className="w-4 h-4 bg-blue-400 rounded-full flex items-center justify-center">
+                  <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
-      {displayText && <span className="mt-2 text-sm text-slate-400">{displayText}</span>}
+      {displayText && (
+        <span className={`mt-2 text-sm ${isCardSelected ? 'text-blue-300' : 'text-slate-400'}`}>
+          {displayText}
+        </span>
+      )}
     </div>
   );
 };

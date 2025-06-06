@@ -57,8 +57,8 @@ const getBackgroundImage = (resource: CategoryResource): string => {
 export const DefenceOverview: React.FC<{
 	planet: PlanetView;
 }> = ({ planet }) => {
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [_, setSelectedCategory] = useState<DefenceCategory>("personnel");
+	const [selectedCategory, setSelectedCategory] =
+		useState<DefenceCategory>("personnel");
 
 	const resources: Record<DefenceCategory, CategoryResource[]> = {
 		personnel: [
@@ -208,7 +208,10 @@ export const DefenceOverview: React.FC<{
 	return (
 		<div className="flex h-full rounded-lg bg-slate-900 p-2 text-slate-200">
 			<TabGroup
-				className="w-full"
+				className="flex w-full flex-col"
+				selectedIndex={categories.findIndex(
+					(cat) => cat.id === selectedCategory,
+				)}
 				onChange={(index) => setSelectedCategory(categories[index].id)}
 			>
 				<TabList className="flex space-x-1 rounded-md bg-slate-800 p-1">
@@ -226,7 +229,7 @@ export const DefenceOverview: React.FC<{
 									`flex w-full items-center justify-center rounded-lg py-2 text-sm ${
 										selected
 											? "bg-slate-700 text-white shadow"
-											: "text-slate-400 hover:bg-slate-800 hover:text-white"
+											: "cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white"
 									} ${!hasResources && !selected ? "opacity-50" : ""} ${
 										owner === "Empire" && hasResources ? "text-blue-300" : ""
 									} ${
@@ -257,11 +260,23 @@ export const DefenceOverview: React.FC<{
 														},
 													];
 
+													// Create selectable item data
+													const selectableItem = {
+														id: resource.id,
+														type: category.id, // defence category
+														name: resource.name,
+														status: resource.status,
+														injured: resource.injured,
+														imprisoned: resource.imprisoned,
+														category: category.id,
+													};
+
 													return (
 														<MiniCardView
 															key={resource.id}
 															imagePairs={imagePairs}
 															displayText={resource.name}
+															selectableItem={selectableItem}
 														/>
 													);
 												},
