@@ -10,12 +10,13 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	const { handleOpenWindow } = useWindowContext();
 
 	const handleViewFleets = (e: React.MouseEvent) => {
+		e.stopPropagation(); // Prevent event from bubbling to parent window
 		// Get the click position
 		const position = {
 			x: e.clientX - 150, // Center window horizontally near click
-			y: e.clientY - 50,  // Position window vertically near click with offset for header
+			y: e.clientY - 50, // Position window vertically near click with offset for header
 		};
-		
+
 		handleOpenWindow({
 			id: `fleets-${planet.metadata.id}`,
 			title: `Fleets on ${planet.metadata.name}`,
@@ -27,11 +28,12 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	};
 
 	const handleViewDefence = (e: React.MouseEvent) => {
+		e.stopPropagation(); // Prevent event from bubbling to parent window
 		const position = {
 			x: e.clientX - 150,
 			y: e.clientY - 50,
 		};
-		
+
 		handleOpenWindow({
 			id: `defence-${planet.metadata.id}`,
 			title: `Defence Overview for ${planet.metadata.name}`,
@@ -43,11 +45,12 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	};
 
 	const handleViewManufacturing = (e: React.MouseEvent) => {
+		e.stopPropagation(); // Prevent event from bubbling to parent window
 		const position = {
 			x: e.clientX - 150,
 			y: e.clientY - 50,
 		};
-		
+
 		handleOpenWindow({
 			id: `manufacturing-${planet.metadata.id}`,
 			title: `Manufacturing Overview for ${planet.metadata.name}`,
@@ -59,11 +62,12 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	};
 
 	const handleViewMissions = (e: React.MouseEvent) => {
+		e.stopPropagation(); // Prevent event from bubbling to parent window
 		const position = {
 			x: e.clientX - 150,
 			y: e.clientY - 50,
 		};
-		
+
 		handleOpenWindow({
 			id: `missions-${planet.metadata.id}`,
 			title: `Missions on ${planet.metadata.name}`,

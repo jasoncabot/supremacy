@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { MinimizedWindowInfo, WindowContext } from "../hooks/useWindowContext";
 import { WindowInfo } from "./WindowInfo";
 
@@ -88,6 +88,30 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 		);
 	}, []);
 
+	// Close all windows - remove from both open and minimized windows
+	const handleCloseAllWindows = useCallback(() => {
+		setOpenWindows([]);
+		setMinimizedWindows([]);
+	}, []);
+
+	// Simple z-index management - last window in array is topmost
+	const isTopmost = useCallback((windowId: string) => {
+		if (openWindows.length === 0) return false;
+		return openWindows[openWindows.length - 1].id === windowId;
+	}, [openWindows]);
+
+	// Move window to front by moving it to end of array
+	const bringToFront = useCallback((windowId: string) => {
+		setOpenWindows((current) => {
+			const windowIndex = current.findIndex(w => w.id === windowId);
+			if (windowIndex === -1) return current; // Window not found
+			
+			const window = current[windowIndex];
+			const filtered = current.filter(w => w.id !== windowId);
+			return [...filtered, window];
+		});
+	}, []);
+
 	const value = {
 		openWindows,
 		minimizedWindows,
@@ -96,6 +120,10 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 		handleMinimizeWindow,
 		handleMaximizeWindow,
 		handleCloseWindow,
+		handleCloseAllWindows,
+		
+		isTopmost,
+		bringToFront,
 	};
 
 	return (

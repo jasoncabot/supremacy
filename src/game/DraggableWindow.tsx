@@ -19,11 +19,19 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const [windowZIndex, setWindowZIndex] = useState(100);
 	const { getNextZIndex } = useZIndex();
 
-	// Function to bring window to front - simplified and always works
-	const bringToFront = () => {
+	const {
+		handleMinimizeWindow,
+		handleCloseWindow,
+		bringToFront,
+	} = useWindowContext();
+
+	// Function to bring window to front - now uses the context method
+	const bringWindowToFront = () => {
 		// Get the next highest z-index from our context
 		const nextZIndex = getNextZIndex();
 		setWindowZIndex(nextZIndex);
+		// Update the context to move this window to front of array
+		bringToFront(windowInfo.id);
 	};
 
 	// Function to ensure the window opens within the viewport
@@ -47,8 +55,6 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const dragOffset = useRef({ x: 0, y: 0 });
 	const dragAnimationRef = useRef<number | undefined>(undefined);
 
-	const { handleMinimizeWindow, handleCloseWindow } = useWindowContext();
-
 	const handleDragStart = (clientX: number, clientY: number) => {
 		if (nodeRef.current) {
 			// Get the current computed transform matrix
@@ -65,9 +71,8 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			};
 
 			setDragging(true);
-
 			// Always bring window to front when starting to drag
-			bringToFront();
+			bringWindowToFront();
 
 			// Dispatch custom event for the TouchBlockingOverlay
 			window.dispatchEvent(new CustomEvent("window-drag-start"));
@@ -84,7 +89,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		}
 
 		// Bring window to front when mouse down on title bar
-		bringToFront();
+		bringWindowToFront();
 		handleDragStart(e.clientX, e.clientY);
 	};
 
@@ -133,7 +138,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		e.stopPropagation();
 
 		// Bring window to front when touch on title bar
-		bringToFront();
+		bringWindowToFront();
 
 		const touch = e.touches[0];
 		handleDragStart(touch.clientX, touch.clientY);
@@ -242,7 +247,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 
 	// When component mounts, bring it to front initially
 	useEffect(() => {
-		bringToFront();
+		bringWindowToFront();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -260,7 +265,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			}}
 			className={`min-h-[50vh] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
 			// Bring window to front when clicking anywhere in the window
-			onClick={bringToFront}
+			onClick={bringWindowToFront}
 		>
 			<div className="flex border-b border-purple-700/30">
 				<h2

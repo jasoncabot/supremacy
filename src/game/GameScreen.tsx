@@ -14,6 +14,7 @@ import SideMenu, { MenuView } from "./SideMenu";
 import StatusBar from "./StatusBar";
 import TouchBlockingOverlay from "./TouchBlockingOverlay";
 import { WindowProvider } from "./WindowProvider";
+import { GlobalKeyboardHandler } from "./GlobalKeyboardHandler";
 
 // Inner component that uses the game and window contexts
 const GameScreenContent: React.FC = () => {
@@ -120,6 +121,16 @@ const GameScreen: React.FC = () => {
 	return (
 		<GameProvider>
 			<WindowProvider>
+				<GlobalKeyboardHandler 
+					onGlobalSearch={() => {
+						// TODO: Implement global search functionality
+						console.log("Global search triggered");
+					}}
+					onNavigateToFinder={() => {
+						// TODO: Implement navigation to finder route
+						console.log("Navigate to finder triggered");
+					}}
+				/>
 				<SelectionProvider>
 					<GameScreenContent />
 				</SelectionProvider>

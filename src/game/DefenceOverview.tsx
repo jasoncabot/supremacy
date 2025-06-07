@@ -10,21 +10,7 @@ import React, { useState } from "react"; // Added React import
 import { DefenceCategory, DefenseResource, PlanetView } from "../../worker/api";
 import MiniCardView from "./MiniCardView";
 import { SelectableItem } from "../hooks/useSelectionContext";
-
-// Helper function to get foreground image based on defense type
-const getForegroundImage = (resource: DefenseResource): string => {
-	switch (resource.type) {
-		case "personnel":
-			switch (resource.subtype) {
-				case "characters":
-					// lookup based on id
-					return "/path/to/personnel_characters_fg.png";
-			}
-			return "/path/to/personnel_fg.png";
-		default:
-			return "/path/to/default_fg.png"; // Fallback image
-	}
-};
+import { getCardImage } from "../cards";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: DefenseResource): string => {
@@ -54,11 +40,6 @@ export const DefenceOverview: React.FC<{
 		shields: [],
 		batteries: [],
 	};
-
-	// Debug log to see what defenses we have
-	console.log("Planet defenses:", planetDefenses);
-	console.log("Planet owner:", planet.state?.owner);
-	console.log("Planet discovered:", planet.discovered);
 
 	const resources: Record<DefenceCategory, DefenseResource[]> = {
 		personnel: planetDefenses.personnel,
@@ -143,7 +124,7 @@ export const DefenceOverview: React.FC<{
 													const imagePairs = [
 														{
 															overlay: getOverlayImage(resource),
-															foreground: getForegroundImage(resource),
+															foreground: getCardImage(resource),
 															background: getBackgroundImage(resource),
 														},
 													];

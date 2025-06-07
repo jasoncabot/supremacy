@@ -14,6 +14,11 @@ interface WindowContextType {
 	handleMinimizeWindow: (windowInfo: MinimizedWindowInfo) => void;
 	handleMaximizeWindow: (window: WindowInfo) => void;
 	handleCloseWindow: (info: WindowInfo) => void;
+	handleCloseAllWindows: () => void;
+	
+	// Z-index management
+	isTopmost: (windowId: string) => boolean;
+	bringToFront: (windowId: string) => void;
 }
 
 export const WindowContext = createContext<WindowContextType | undefined>(

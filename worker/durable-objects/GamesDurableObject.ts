@@ -13,10 +13,27 @@ import {
 	PlanetState,
 	PlanetView,
 	SectorMetadata,
+	CharacterIdentifiers,
+	PersonnelSubtype,
+	TroopSubtype,
+	SquadronSubtype,
+	ShieldSubtype,
+	BatterySubtype,
 } from "../api";
+import {
+	characterNames,
+	personnelNames,
+	troopNames,
+	squadronNames,
+	shieldNames,
+	batteryNames,
+} from "../names";
 
 // Helper function to generate random defense resources for a planet
-function generateDefenses(planetOwner: FactionMetadata | "Neutral"): PlanetDefenses {
+function generateDefenses(
+	planetOwner: FactionMetadata | "Neutral",
+	usedCharacters: Set<CharacterIdentifiers> = new Set(),
+): PlanetDefenses {
 	const defenses: PlanetDefenses = {
 		personnel: [],
 		troops: [],
@@ -30,97 +47,192 @@ function generateDefenses(planetOwner: FactionMetadata | "Neutral"): PlanetDefen
 		return defenses;
 	}
 
-	// Generate personnel
-	const personnelTypes = [
-		"Security Forces",
-		"Military Police", 
-		"Elite Guards",
-		"Intelligence Officers",
-		"Medical Staff"
-	];
-	
+	// Generate personnel (mix of characters and regular personnel)
+	const availableCharacters: CharacterIdentifiers[] =
+		planetOwner === "Empire"
+			? [
+					"darth_vader",
+					"thrawn",
+					"piett",
+					"veers",
+					"pellaeon",
+					"ozzel",
+					"needa",
+					"screed",
+				]
+			: [
+					"luke_skywalker",
+					"leia_organa",
+					"han_solo",
+					"chewbacca",
+					"ackbar",
+					"mon_mothma",
+					"wedge_antilles",
+					"lando_calrissian",
+				];
+
+	const regularPersonnelTypes: PersonnelSubtype[] =
+		planetOwner === "Empire"
+			? [
+					"imperial_commandos",
+					"imperial_espionage_droid",
+					"imperial_probe_droid",
+					"noghri_death_commandos",
+				]
+			: [
+					"bothan_spies",
+					"guerillas",
+					"infiltrators",
+					"longprobe_y_wing_recon_team",
+				];
+
+	// Maybe add one character (low chance)
+	if (Math.random() < 0.2) {
+		const unusedCharacters = availableCharacters.filter(
+			(char) => !usedCharacters.has(char),
+		);
+		if (unusedCharacters.length > 0) {
+			const character =
+				unusedCharacters[Math.floor(Math.random() * unusedCharacters.length)];
+			usedCharacters.add(character);
+
+			defenses.personnel.push({
+				id: character,
+				name: characterNames[character],
+				type: "personnel",
+				subtype: "characters",
+				injured: Math.random() < 0.05, // Characters less likely to be injured
+				imprisoned: false,
+				status: Math.random() < 0.8 ? "active" : "en-route",
+			});
+		}
+	}
+
+	// Add regular personnel
 	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+		const personnelType =
+			regularPersonnelTypes[
+				Math.floor(Math.random() * regularPersonnelTypes.length)
+			];
+
 		defenses.personnel.push({
-			id: `personnel-${i + 1}`,
-			name: personnelTypes[Math.floor(Math.random() * personnelTypes.length)],
+			id: `${personnelType}-${i + 1}`,
+			name: personnelNames[personnelType],
 			type: "personnel",
+			subtype: personnelType,
 			injured: Math.random() < 0.1,
 			imprisoned: Math.random() < 0.05,
-			status: Math.random() < 0.7 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+			status:
+				Math.random() < 0.7
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
 		});
 	}
 
 	// Generate troops
-	const troopTypes = [
-		"Infantry",
-		"Armored Division",
-		"Special Forces",
-		"Assault Division",
-		"Heavy Artillery"
-	];
-	
+	const troopTypes: TroopSubtype[] =
+		planetOwner === "Empire"
+			? [
+					"imperial_army_regiment",
+					"imperial_fleet_regiment",
+					"stormtrooper_regiment",
+					"dark_trooper_regiment",
+					"war_droid_regiment",
+				]
+			: [
+					"alliance_army_regiment",
+					"alliance_fleet_regiment",
+					"mon_calamari_regiment",
+					"sullustan_regiment",
+					"wookie_regiment",
+				];
+
 	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+		const troopType = troopTypes[Math.floor(Math.random() * troopTypes.length)];
 		defenses.troops.push({
-			id: `troops-${i + 1}`,
-			name: troopTypes[Math.floor(Math.random() * troopTypes.length)],
+			id: `${troopType}-${i + 1}`,
+			name: troopNames[troopType],
 			type: "troop",
-			injured: Math.random() < 0.15,
-			imprisoned: false,
-			status: Math.random() < 0.6 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+			subtype: troopType,
+			status:
+				Math.random() < 0.6
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
 		});
 	}
 
 	// Generate squadrons
-	const squadronTypes = planetOwner === "Empire" 
-		? ["TIE Fighter Squadron", "TIE Bomber Squadron", "TIE Interceptor Squadron"]
-		: ["X-Wing Squadron", "Y-Wing Squadron", "A-Wing Squadron"];
-	
+	const squadronTypes: SquadronSubtype[] =
+		planetOwner === "Empire"
+			? ["tie_fighter", "tie_bomber", "tie_interceptor", "tie_defender"]
+			: ["x_wing", "y_wing", "a_wing", "b_wing"];
+
 	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		const squadronType =
+			squadronTypes[Math.floor(Math.random() * squadronTypes.length)];
 		defenses.squadrons.push({
-			id: `squadron-${i + 1}`,
-			name: squadronTypes[Math.floor(Math.random() * squadronTypes.length)],
+			id: `${squadronType}-${i + 1}`,
+			name: squadronNames[squadronType],
 			type: "squadrons",
-			injured: false,
-			imprisoned: false,
-			status: Math.random() < 0.5 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+			subtype: squadronType,
+			status:
+				Math.random() < 0.5
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
 		});
 	}
 
 	// Generate shields
-	const shieldTypes = [
-		"Planetary Shield",
-		"Shield Generator",
-		"Deflector Shield",
-		"Energy Shield"
+	const shieldTypes: ShieldSubtype[] = [
+		"gen_core_level_i",
+		"gen_core_level_ii",
+		"death_star_shield",
 	];
-	
+
 	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		const shieldType =
+			shieldTypes[Math.floor(Math.random() * shieldTypes.length)];
 		defenses.shields.push({
-			id: `shield-${i + 1}`,
-			name: shieldTypes[Math.floor(Math.random() * shieldTypes.length)],
+			id: `${shieldType}-${i + 1}`,
+			name: shieldNames[shieldType],
 			type: "shields",
-			injured: false,
-			imprisoned: false,
-			status: Math.random() < 0.4 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+			subtype: shieldType,
+			status:
+				Math.random() < 0.4
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
 		});
 	}
 
 	// Generate batteries
-	const batteryTypes = [
-		"Ion Cannon",
-		"Laser Battery",
-		"Turbolaser Battery",
-		"Heavy Cannon"
+	const batteryTypes: BatterySubtype[] = [
+		"kdy_150",
+		"lnr_series_i",
+		"lnr_series_ii",
 	];
-	
+
 	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		const batteryType =
+			batteryTypes[Math.floor(Math.random() * batteryTypes.length)];
 		defenses.batteries.push({
-			id: `battery-${i + 1}`,
-			name: batteryTypes[Math.floor(Math.random() * batteryTypes.length)],
+			id: `${batteryType}-${i + 1}`,
+			name: batteryNames[batteryType],
 			type: "batteries",
-			injured: false,
-			imprisoned: false,
-			status: Math.random() < 0.3 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+			subtype: batteryType,
+			status:
+				Math.random() < 0.3
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
 		});
 	}
 
@@ -160,6 +272,8 @@ export class GamesDurableObject extends DurableObject<Env> {
 		const planets: Record<string, PlanetState> = {};
 
 		// Generate sectors and planets
+		const usedCharacters = new Set<CharacterIdentifiers>();
+
 		for (let i = 0; i < sectorCount; i++) {
 			const sectorId = `sector-${i + 1}`;
 			const isInnerRim = i < sectorCount / 3; // First third are inner rim
@@ -195,7 +309,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 				};
 
 				// Create planet state
-				const owner: FactionMetadata | "Neutral" = 
+				const owner: FactionMetadata | "Neutral" =
 					Math.random() < 0.2
 						? "Empire"
 						: Math.random() < 0.5
@@ -213,7 +327,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 					general: null,
 					commander: null,
 					isDiscovered: isInnerRim, // Inner rim planets start discovered
-					defenses: generateDefenses(owner),
+					defenses: generateDefenses(owner, usedCharacters),
 				};
 
 				planets[planetId] = planetState;
