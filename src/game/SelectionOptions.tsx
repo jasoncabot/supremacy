@@ -19,8 +19,16 @@ interface SelectionOptionsProps {
 const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	className = "",
 }) => {
-	const { selectionMode, selectedItems, toggleSelectionKind, clearSelection } =
-		useSelectionContext();
+	const { 
+		selectionMode, 
+		selectedItems, 
+		selectionState, 
+		currentAction, 
+		toggleSelectionKind, 
+		clearSelection,
+		startTargetSelection,
+		cancelTargetSelection
+	} = useSelectionContext();
 
 	const getButtonClasses = (mode: SelectionKind) => {
 		const baseClasses =
@@ -30,6 +38,17 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 			"bg-slate-700/50 text-slate-300 hover:bg-slate-700 hover:text-white";
 
 		return `${baseClasses} ${selectionMode === mode ? activeClasses : inactiveClasses}`;
+	};
+
+	// Actions that require target selection
+	const actionsRequiringTarget = [
+		"move-personnel",
+		"move-troops", 
+		"deploy-squadrons"
+	];
+
+	const doesActionRequireTarget = (actionId: string): boolean => {
+		return actionsRequiringTarget.includes(actionId);
 	};
 
 	// Get contextual actions based on selected items
@@ -115,39 +134,73 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	};
 
 	const handleAction = (actionId: string) => {
-		// Placeholder action handling
-		console.log(`Executing action: ${actionId} on items:`, selectedItems);
-
-		// Reset selection after action
-		clearSelection();
+		if (doesActionRequireTarget(actionId)) {
+			// Start target selection mode
+			startTargetSelection(actionId);
+		} else {
+			// Execute action immediately (no target required)
+			console.log(`Executing action: ${actionId} on items:`, selectedItems);
+			clearSelection();
+		}
 	};
 
 	const contextualActions = getContextualActions();
 
 	return (
 		<div className={`flex items-center gap-2 ${className}`}>
-			{/* Selection mode buttons */}
-			<button
-				className={getButtonClasses("single")}
-				onClick={() => toggleSelectionKind("single")}
-				title="Select Single Item"
-			>
-				<HandRaisedIcon className="size-8 p-1" />
-			</button>
-
-			<button
-				className={getButtonClasses("multiple")}
-				onClick={() => toggleSelectionKind("multiple")}
-				title="Select Multiple Items"
-			>
-				<div className="relative">
-					<HandRaisedIcon className="size-8 p-1" />
-					<StarIcon className="absolute -top-0.5 -right-0.5 size-3" />
+			{/* Target selection mode indicator */}
+			{selectionState === "awaiting-target" && (
+				<div className="flex items-center gap-2 rounded bg-orange-600/20 px-3 py-1 text-sm text-orange-300">
+					<span>Select target for: {currentAction}</span>
+					<button
+						onClick={cancelTargetSelection}
+						className="text-orange-400 hover:text-orange-200"
+						title="Cancel target selection"
+					>
+						<XMarkIcon className="size-4" />
+					</button>
 				</div>
-			</button>
+			)}
 
-			{/* Selection count indicator */}
-			{selectedItems.length > 0 && (
+			{/* Selection mode buttons - hidden during target selection */}
+			{selectionState === "idle" && (
+				<>
+					<button
+						className={getButtonClasses("single")}
+						onClick={() => toggleSelectionKind("single")}
+						title="Select Single Item"
+					>
+						<HandRaisedIcon className="size-8 p-1" />
+					</button>
+
+					<button
+						className={getButtonClasses("multiple")}
+						onClick={() => toggleSelectionKind("multiple")}
+						title="Select Multiple Items"
+					>
+						<div className="relative">
+							<HandRaisedIcon className="size-8 p-1" />
+							<StarIcon className="absolute -top-0.5 -right-0.5 size-3" />
+						</div>
+					</button>
+				</>
+			)}
+
+			{/* Target selection button */}
+			{selectionState === "awaiting-target" && (
+				<button
+					className={getButtonClasses("target")}
+					title="Target Selection Mode (Active)"
+				>
+					<div className="relative">
+						<HandRaisedIcon className="size-8 p-1" />
+						<ArrowRightIcon className="absolute -top-0.5 -right-0.5 size-3" />
+					</div>
+				</button>
+			)}
+
+			{/* Selection count indicator - only show during idle state */}
+			{selectionState === "idle" && selectedItems.length > 0 && (
 				<div className="flex items-center gap-2 rounded bg-blue-600/20 px-2 py-1 text-sm text-blue-300">
 					<span className="hidden sm:inline">
 						{selectedItems.length} selected
@@ -156,8 +209,8 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 				</div>
 			)}
 
-			{/* Contextual actions menu */}
-			{contextualActions.length > 0 && (
+			{/* Contextual actions menu - only show during idle state */}
+			{selectionState === "idle" && contextualActions.length > 0 && (
 				<Popover className="relative">
 					<PopoverButton className="flex cursor-pointer items-center gap-1 rounded bg-green-600 px-2 py-1 text-sm text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-none">
 						<EllipsisHorizontalIcon className="size-4" />

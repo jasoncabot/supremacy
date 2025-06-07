@@ -3,6 +3,7 @@ import {
     SelectableItem,
     SelectionContext,
     SelectionKind,
+    SelectionState,
 } from "../hooks/useSelectionContext";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
@@ -10,6 +11,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
 	const [selectedItems, setSelectedItems] = useState<SelectableItem[]>([]);
 	const [selectionMode, setSelectionKind] = useState<SelectionKind>("none");
+	const [selectionState, setSelectionState] = useState<SelectionState>("idle");
+	const [currentAction, setCurrentAction] = useState<string | null>(null);
+	const [targetItem, setTargetItem] = useState<SelectableItem | null>(null);
 
 	const toggleSelectionKind = (mode: SelectionKind) => {
 		if (mode === selectionMode) {
@@ -30,6 +34,12 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const selectItem = (item: SelectableItem) => {
 		if (selectionMode === "none") return;
 
+		if (selectionMode === "target") {
+			// In target mode, select the target
+			selectTarget(item);
+			return;
+		}
+
 		if (selectionMode === "single") {
 			setSelectedItems([item]);
 		} else if (selectionMode === "multiple") {
@@ -46,10 +56,52 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 
 	const clearSelection = () => {
 		setSelectedItems([]);
+		setSelectionState("idle");
+		setCurrentAction(null);
+		setTargetItem(null);
+		setSelectionKind("none");
 	};
 
 	const isSelected = (itemId: string) => {
 		return selectedItems.some((item) => item.id === itemId);
+	};
+
+	const startTargetSelection = (actionId: string) => {
+		setCurrentAction(actionId);
+		setSelectionState("awaiting-target");
+		setSelectionKind("target");
+		setTargetItem(null);
+	};
+
+	const selectTarget = (target: SelectableItem) => {
+		setTargetItem(target);
+		// Automatically execute the action when target is selected
+		executeActionWithTarget(target);
+	};
+
+	const executeActionWithTarget = (target: SelectableItem) => {
+		if (currentAction && selectedItems.length > 0) {
+			console.log(
+				`Selected items ${selectedItems.map(item => `${item.type}:${item.id}`).join(', ')} performing action ${currentAction} on target ${target.type}:${target.id}`
+			);
+		}
+		clearSelection();
+	};
+
+	const executeAction = () => {
+		if (currentAction && selectedItems.length > 0 && targetItem) {
+			console.log(
+				`Selected items ${selectedItems.map(item => `${item.type}:${item.id}`).join(', ')} performing action ${currentAction} on target ${targetItem.type}:${targetItem.id}`
+			);
+		}
+		clearSelection();
+	};
+
+	const cancelTargetSelection = () => {
+		setSelectionState("idle");
+		setCurrentAction(null);
+		setTargetItem(null);
+		setSelectionKind("multiple"); // Return to previous selection mode
 	};
 
 	return (
@@ -57,11 +109,18 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			value={{
 				selectedItems,
 				selectionMode,
+				selectionState,
+				currentAction,
+				targetItem,
 				toggleSelectionKind,
 				selectItem,
 				deselectItem,
 				clearSelection,
 				isSelected,
+				startTargetSelection,
+				selectTarget,
+				executeAction,
+				cancelTargetSelection,
 			}}
 		>
 			{children}

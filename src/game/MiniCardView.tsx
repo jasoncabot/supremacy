@@ -13,10 +13,16 @@ interface MiniCardViewProps {
 }
 
 const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText, selectableItem }) => {
-  const { selectionMode, selectItem, deselectItem, isSelected } = useSelectionContext();
+  const { selectionMode, selectionState, selectItem, deselectItem, isSelected } = useSelectionContext();
   
   const handleClick = () => {
     if (!selectableItem || selectionMode === 'none') return;
+    
+    // In target selection mode, don't allow deselecting
+    if (selectionState === "awaiting-target") {
+      selectItem(selectableItem);
+      return;
+    }
     
     const selected = isSelected(selectableItem.id);
     if (selected) {
@@ -28,12 +34,15 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText, se
 
   const isCardSelected = selectableItem ? isSelected(selectableItem.id) : false;
   const isClickable = selectableItem && selectionMode !== 'none';
+  const isTargetMode = selectionState === "awaiting-target";
 
   return (
     <div 
       className={`flex flex-col items-center ${isClickable ? 'cursor-pointer' : ''} ${
         isCardSelected ? 'transform scale-105' : ''
-      } transition-transform duration-150`}
+      } ${
+        isTargetMode ? 'ring-2 ring-orange-400 ring-offset-1 ring-offset-slate-900 bg-orange-400/10' : ''
+      } transition-all duration-150 rounded p-1`}
       onClick={handleClick}
     >
       <div className="flex flex-wrap justify-center gap-2">
@@ -67,7 +76,11 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText, se
         ))}
       </div>
       {displayText && (
-        <span className={`mt-2 text-sm ${isCardSelected ? 'text-blue-300' : 'text-slate-400'}`}>
+        <span className={`mt-2 text-sm ${
+          isCardSelected ? 'text-blue-300' : 
+          isTargetMode ? 'text-orange-300' : 
+          'text-slate-400'
+        }`}>
           {displayText}
         </span>
       )}
