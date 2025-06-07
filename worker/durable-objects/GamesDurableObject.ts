@@ -8,11 +8,124 @@ import {
 	FactionView,
 	GameState,
 	GameView,
+	PlanetDefenses,
 	PlanetMetadata,
 	PlanetState,
 	PlanetView,
 	SectorMetadata,
 } from "../api";
+
+// Helper function to generate random defense resources for a planet
+function generateDefenses(planetOwner: FactionMetadata | "Neutral"): PlanetDefenses {
+	const defenses: PlanetDefenses = {
+		personnel: [],
+		troops: [],
+		squadrons: [],
+		shields: [],
+		batteries: [],
+	};
+
+	// Only generate defenses for owned planets
+	if (planetOwner === "Neutral") {
+		return defenses;
+	}
+
+	// Generate personnel
+	const personnelTypes = [
+		"Security Forces",
+		"Military Police", 
+		"Elite Guards",
+		"Intelligence Officers",
+		"Medical Staff"
+	];
+	
+	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+		defenses.personnel.push({
+			id: `personnel-${i + 1}`,
+			name: personnelTypes[Math.floor(Math.random() * personnelTypes.length)],
+			type: "personnel",
+			injured: Math.random() < 0.1,
+			imprisoned: Math.random() < 0.05,
+			status: Math.random() < 0.7 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+		});
+	}
+
+	// Generate troops
+	const troopTypes = [
+		"Infantry",
+		"Armored Division",
+		"Special Forces",
+		"Assault Division",
+		"Heavy Artillery"
+	];
+	
+	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+		defenses.troops.push({
+			id: `troops-${i + 1}`,
+			name: troopTypes[Math.floor(Math.random() * troopTypes.length)],
+			type: "troop",
+			injured: Math.random() < 0.15,
+			imprisoned: false,
+			status: Math.random() < 0.6 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+		});
+	}
+
+	// Generate squadrons
+	const squadronTypes = planetOwner === "Empire" 
+		? ["TIE Fighter Squadron", "TIE Bomber Squadron", "TIE Interceptor Squadron"]
+		: ["X-Wing Squadron", "Y-Wing Squadron", "A-Wing Squadron"];
+	
+	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		defenses.squadrons.push({
+			id: `squadron-${i + 1}`,
+			name: squadronTypes[Math.floor(Math.random() * squadronTypes.length)],
+			type: "squadrons",
+			injured: false,
+			imprisoned: false,
+			status: Math.random() < 0.5 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+		});
+	}
+
+	// Generate shields
+	const shieldTypes = [
+		"Planetary Shield",
+		"Shield Generator",
+		"Deflector Shield",
+		"Energy Shield"
+	];
+	
+	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		defenses.shields.push({
+			id: `shield-${i + 1}`,
+			name: shieldTypes[Math.floor(Math.random() * shieldTypes.length)],
+			type: "shields",
+			injured: false,
+			imprisoned: false,
+			status: Math.random() < 0.4 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+		});
+	}
+
+	// Generate batteries
+	const batteryTypes = [
+		"Ion Cannon",
+		"Laser Battery",
+		"Turbolaser Battery",
+		"Heavy Cannon"
+	];
+	
+	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		defenses.batteries.push({
+			id: `battery-${i + 1}`,
+			name: batteryTypes[Math.floor(Math.random() * batteryTypes.length)],
+			type: "batteries",
+			injured: false,
+			imprisoned: false,
+			status: Math.random() < 0.3 ? "active" : Math.random() < 0.5 ? "en-route" : "under-construction",
+		});
+	}
+
+	return defenses;
+}
 
 export class GamesDurableObject extends DurableObject<Env> {
 	state: DurableObjectState;
@@ -82,15 +195,17 @@ export class GamesDurableObject extends DurableObject<Env> {
 				};
 
 				// Create planet state
+				const owner: FactionMetadata | "Neutral" = 
+					Math.random() < 0.2
+						? "Empire"
+						: Math.random() < 0.5
+							? "Rebellion"
+							: "Neutral";
+
 				const planetState: PlanetState = {
 					metadata: planetMetadata,
 					loyalty: Math.floor(Math.random() * 100),
-					owner:
-						Math.random() < 0.2
-							? "Empire"
-							: Math.random() < 0.5
-								? "Rebellion"
-								: "Neutral",
+					owner,
 					energySpots: Math.floor(Math.random() * 10),
 					naturalResources: Math.floor(Math.random() * 10),
 					garrisonRequirement: Math.floor(Math.random() * 5) + 1,
@@ -98,6 +213,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 					general: null,
 					commander: null,
 					isDiscovered: isInnerRim, // Inner rim planets start discovered
+					defenses: generateDefenses(owner),
 				};
 
 				planets[planetId] = planetState;
@@ -169,6 +285,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 							inUprising: isOwner ? planetState.inUprising : undefined,
 							general: isOwner ? planetState.general : undefined,
 							commander: isOwner ? planetState.commander : undefined,
+							defenses: isOwner ? planetState.defenses : undefined,
 						};
 					}
 
@@ -215,6 +332,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 							inUprising: isOwner ? planetState.inUprising : undefined,
 							general: isOwner ? planetState.general : undefined,
 							commander: isOwner ? planetState.commander : undefined,
+							defenses: isOwner ? planetState.defenses : undefined,
 						};
 					}
 

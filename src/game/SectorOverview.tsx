@@ -167,17 +167,16 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 						} transition hover:border-purple-400`}
 						onClick={(e) => {
 							// Calculate position relative to viewport
-							const position = {
-								x: e.clientX - 150, // Center window horizontally near click
-								y: e.clientY - 50,  // Position window vertically near click with offset for header
-							};
-							
+							const isMobile = window.innerWidth < 768;
 							handleOpenWindow({
 								id: `sector-${sector.id}`,
 								title: sector.name,
 								type: "sector",
 								sectorId: sector.id,
-								position: position, // Pass the click position
+								position: {
+									x: isMobile ? 0 : e.clientX - 150, // Fixed on mobile, centered near click otherwise
+									y: 100,
+								},
 							});
 						}}
 					>

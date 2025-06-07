@@ -5,7 +5,7 @@ export type WindowInfo = {
 	id: string;
 	title: string;
 	type: WindowInfoType;
-	position?: { x: number; y: number }; // Optional position for opening at click point
+	position: { x: number; y: number };
 };
 
 // Define view window type that will be used in GameContent and GameScreen

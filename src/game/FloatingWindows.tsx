@@ -43,8 +43,6 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 					<div key={info.id} className="pointer-events-auto">
 						<DraggableWindow
 							windowInfo={info}
-							initialPosition={info.position || { x: 150, y: 150 }}
-							zIndex={100} // Much higher z-index
 							className={getWindowClassName(info.type)}
 						>
 							{(() => {

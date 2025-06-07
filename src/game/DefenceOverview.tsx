@@ -7,41 +7,27 @@ import {
 	UsersIcon,
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react"; // Added React import
-import { PlanetView } from "../../worker/api";
+import { DefenceCategory, DefenseResource, PlanetView } from "../../worker/api";
 import MiniCardView from "./MiniCardView";
+import { SelectableItem } from "../hooks/useSelectionContext";
 
-// Define the defence categories
-type DefenceCategory =
-	| "personnel"
-	| "troops"
-	| "squadrons"
-	| "shields"
-	| "batteries";
-
-// Define resources for each category (placeholder data)
-interface CategoryResource {
-	id: string;
-	name: string;
-	icon: React.ElementType;
-	injured: boolean;
-	imprisoned: boolean;
-	status: "active" | "en-route" | "under-construction";
-}
-
-// Helper function to get foreground image based on icon
-const getForegroundImage = (icon: React.ElementType): string => {
-	if (icon === UsersIcon) return "/path/to/personnel_fg.png";
-	if (icon === UserGroupIcon) return "/path/to/troops_fg.png";
-	if (icon === RocketLaunchIcon) return "/path/to/squadron_fg.png";
-	if (icon === ShieldCheckIcon) return "/path/to/shield_fg.png";
-	if (icon === BoltIcon) return "/path/to/battery_fg.png";
-	return "/path/to/default_fg.png";
+// Helper function to get foreground image based on defense type
+const getForegroundImage = (resource: DefenseResource): string => {
+	switch (resource.type) {
+		case "personnel":
+			switch (resource.subtype) {
+				case "characters":
+					// lookup based on id
+					return "/path/to/personnel_characters_fg.png";
+			}
+			return "/path/to/personnel_fg.png";
+		default:
+			return "/path/to/default_fg.png"; // Fallback image
+	}
 };
 
 // Helper function to get background image based on resource state
-const getBackgroundImage = (resource: CategoryResource): string => {
-	if (resource.injured) return "/path/to/injured_bg.png";
-	if (resource.imprisoned) return "/path/to/imprisoned_bg.png";
+const getBackgroundImage = (resource: DefenseResource): string => {
 	switch (resource.status) {
 		case "active":
 			return "/path/to/active_bg.png";
@@ -60,137 +46,26 @@ export const DefenceOverview: React.FC<{
 	const [selectedCategory, setSelectedCategory] =
 		useState<DefenceCategory>("personnel");
 
-	const resources: Record<DefenceCategory, CategoryResource[]> = {
-		personnel: [
-			{
-				id: "security-forces",
-				name: "Security Forces",
-				icon: UsersIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-			{
-				id: "military-police",
-				name: "Military Police",
-				icon: UsersIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-			{
-				id: "elite-guards",
-				name: "Elite Guards",
-				icon: UsersIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-		],
-		troops: [
-			{
-				id: "infantry",
-				name: "Infantry",
-				icon: UserGroupIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-			{
-				id: "armored-division",
-				name: "Armored Division",
-				icon: UserGroupIcon,
-				injured: false,
-				imprisoned: false,
-				status: "en-route",
-			},
-			{
-				id: "special-forces",
-				name: "Special Forces",
-				icon: UserGroupIcon,
-				injured: false,
-				imprisoned: false,
-				status: "under-construction",
-			},
-		],
-		squadrons: [
-			{
-				id: "x-wing-squadron",
-				name: "X-Wing Squadron",
-				icon: RocketLaunchIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-			{
-				id: "tie-fighter-squadron",
-				name: "TIE Fighter Squadron",
-				icon: RocketLaunchIcon,
-				injured: false,
-				imprisoned: false,
-				status: "en-route",
-			},
-			{
-				id: "bomber-squadron",
-				name: "Bomber Squadron",
-				icon: RocketLaunchIcon,
-				injured: false,
-				imprisoned: false,
-				status: "under-construction",
-			},
-		],
-		shields: [
-			{
-				id: "planetary-shield",
-				name: "Planetary Shield",
-				icon: ShieldCheckIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-			{
-				id: "shield-generator",
-				name: "Shield Generator",
-				icon: ShieldCheckIcon,
-				injured: false,
-				imprisoned: false,
-				status: "en-route",
-			},
-			{
-				id: "deflector-shield",
-				name: "Deflector Shield",
-				icon: ShieldCheckIcon,
-				injured: false,
-				imprisoned: false,
-				status: "under-construction",
-			},
-		],
-		batteries: [
-			{
-				id: "ion-cannon",
-				name: "Ion Cannon",
-				icon: BoltIcon,
-				injured: false,
-				imprisoned: false,
-				status: "active",
-			},
-			{
-				id: "laser-battery",
-				name: "Laser Battery",
-				icon: BoltIcon,
-				injured: false,
-				imprisoned: false,
-				status: "en-route",
-			},
-			{
-				id: "turbolaser-battery",
-				name: "Turbolaser Battery",
-				icon: BoltIcon,
-				injured: false,
-				imprisoned: false,
-				status: "under-construction",
-			},
-		],
+	// Get defenses from planet data, or use empty arrays if no defenses
+	const planetDefenses = planet.state?.defenses || {
+		personnel: [],
+		troops: [],
+		squadrons: [],
+		shields: [],
+		batteries: [],
+	};
+
+	// Debug log to see what defenses we have
+	console.log("Planet defenses:", planetDefenses);
+	console.log("Planet owner:", planet.state?.owner);
+	console.log("Planet discovered:", planet.discovered);
+
+	const resources: Record<DefenceCategory, DefenseResource[]> = {
+		personnel: planetDefenses.personnel,
+		troop: planetDefenses.troops,
+		squadron: planetDefenses.squadrons,
+		shield: planetDefenses.shields,
+		battery: planetDefenses.batteries,
 	};
 
 	const categories: {
@@ -199,11 +74,25 @@ export const DefenceOverview: React.FC<{
 		icon: React.ElementType;
 	}[] = [
 		{ id: "personnel", name: "Personnel", icon: UsersIcon },
-		{ id: "troops", name: "Trooper Regiments", icon: UserGroupIcon },
-		{ id: "squadrons", name: "Fighter Squadrons", icon: RocketLaunchIcon },
-		{ id: "shields", name: "Planetary Shields", icon: ShieldCheckIcon },
-		{ id: "batteries", name: "Planetary Batteries", icon: BoltIcon },
+		{ id: "troop", name: "Trooper Regiments", icon: UserGroupIcon },
+		{ id: "squadron", name: "Fighter Squadrons", icon: RocketLaunchIcon },
+		{ id: "shield", name: "Planetary Shields", icon: ShieldCheckIcon },
+		{ id: "battery", name: "Planetary Batteries", icon: BoltIcon },
 	];
+
+	function getOverlayImage(resource: DefenseResource) {
+		if (resource.type !== "personnel" || resource.subtype !== "characters") {
+			return ""; // No overlay for non-personnel resources
+		}
+		// if the resource is injured or imprisoned, return an overlay image
+		if (resource.injured) {
+			return "/path/to/injured_overlay.png";
+		}
+		if (resource.imprisoned) {
+			return "/path/to/imprisoned_overlay.png";
+		}
+		return ""; // No overlay
+	}
 
 	return (
 		<div className="flex h-full rounded-lg bg-slate-900 p-2 text-slate-200">
@@ -224,7 +113,6 @@ export const DefenceOverview: React.FC<{
 							<Tab
 								key={category.id}
 								title={category.name}
-								disabled={!hasResources}
 								className={({ selected }) =>
 									`flex w-full items-center justify-center rounded-lg py-2 text-sm ${
 										selected
@@ -251,11 +139,11 @@ export const DefenceOverview: React.FC<{
 									{resources[category.id].length > 0 ? (
 										<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
 											{resources[category.id].map(
-												(resource: CategoryResource) => {
-													// Added type for resource
+												(resource: DefenseResource) => {
 													const imagePairs = [
 														{
-															foreground: getForegroundImage(resource.icon),
+															overlay: getOverlayImage(resource),
+															foreground: getForegroundImage(resource),
 															background: getBackgroundImage(resource),
 														},
 													];
@@ -264,12 +152,11 @@ export const DefenceOverview: React.FC<{
 													const selectableItem = {
 														id: resource.id,
 														type: category.id, // defence category
+														subtype: resource.subtype,
 														name: resource.name,
 														status: resource.status,
-														injured: resource.injured,
-														imprisoned: resource.imprisoned,
 														category: category.id,
-													};
+													} as SelectableItem;
 
 													return (
 														<MiniCardView
@@ -284,9 +171,12 @@ export const DefenceOverview: React.FC<{
 										</div>
 									) : (
 										<div className="flex h-full items-center justify-center">
-											<p className="text-slate-400">
-												No {category.name.toLowerCase()} available on this
-												planet.
+											<p className="text-center text-slate-400">
+												{planet.state?.owner === "Neutral"
+													? `This neutral planet has no ${category.name.toLowerCase()}.`
+													: planet.state?.owner
+														? `No ${category.name.toLowerCase()} deployed on this planet.`
+														: `Planet details not available. You may need to control this planet to see its defenses.`}
 											</p>
 										</div>
 									)}

@@ -1,7 +1,9 @@
 import { createContext, useContext } from "react";
 import { WindowInfo } from "../game/WindowInfo";
 
-export type MinimizedWindowInfo = WindowInfo & { position: { x: number; y: number } };
+export type MinimizedWindowInfo = WindowInfo & {
+	position: { x: number; y: number };
+};
 
 interface WindowContextType {
 	openWindows: WindowInfo[];

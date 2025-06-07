@@ -69,6 +69,189 @@ export interface GameAction {
 	targetId?: string;
 }
 
+export type ResourceStatus = "active" | "en-route" | "under-construction";
+export interface ResourceBase {
+	id: string;
+	name: string;
+	status: ResourceStatus;
+}
+
+export type CharacterIdentifiers =
+	| "ackbar"
+	| "adar_tallon"
+	| "afyon"
+	| "bane_nothos"
+	| "bevel_lemelisk"
+	| "bin_essada"
+	| "borsk_feylya"
+	| "brandei"
+	| "bren_derlin"
+	| "carlist_rieekan"
+	| "chewbacca"
+	| "covell"
+	| "crix_madine"
+	| "daala"
+	| "darth_vader"
+	| "dorja"
+	| "drayson"
+	| "emperor_palpatine"
+	| "garindan"
+	| "garm_bel_iblis"
+	| "grammel"
+	| "griff"
+	| "han_solo"
+	| "huoba_neva"
+	| "jan_dodonna"
+	| "jerjerrod"
+	| "kaiya_andrimetrum"
+	| "klev"
+	| "labansat"
+	| "lando_calrissian"
+	| "leia_organa"
+	| "luke_skywalker"
+	| "mawshiye"
+	| "mazer_rackus"
+	| "menndo"
+	| "mon_mothma"
+	| "narra"
+	| "needa"
+	| "niles_ferrier"
+	| "noval_garaint"
+	| "orlok"
+	| "orrimaarko"
+	| "ozzel"
+	| "page"
+	| "pellaeon"
+	| "piett"
+	| "pter_thanas"
+	| "roget_jiriss"
+	| "sarin_virgilio"
+	| "screed"
+	| "shenir_rix"
+	| "syub_snunb"
+	| "talon_karrde"
+	| "thrawn"
+	| "tura_raftican"
+	| "vanden_willard"
+	| "veers"
+	| "villar"
+	| "wedge_antilles"
+	| "zuggs";
+
+export type BatterySubtype = "kdy_150" | "lnr_series_i" | "lnr_series_ii";
+export type PersonnelSubtype =
+	| "characters" // 'special' type for named characters
+	| "bothan_spies"
+	| "guerillas"
+	| "infiltrators"
+	| "longprobe_y_wing_recon_team"
+	| "imperial_commandos"
+	| "imperial_espionage_droid"
+	| "imperial_probe_droid"
+	| "noghri_death_commandos";
+export type ShieldSubtype =
+	| "death_star_shield"
+	| "gen_core_level_i"
+	| "gen_core_level_ii";
+export type SquadronSubtype =
+	| "a_wing"
+	| "b_wing"
+	| "x_wing"
+	| "y_wing"
+	| "tie_bomber"
+	| "tie_defender"
+	| "tie_fighter"
+	| "tie_interceptor";
+export type TroopSubtype =
+	| "alliance_army_regiment"
+	| "alliance_fleet_regiment"
+	| "mon_calamari_regiment"
+	| "sullustan_regiment"
+	| "wookie_regiment"
+	| "dark_trooper_regiment"
+	| "imperial_army_regiment"
+	| "imperial_fleet_regiment"
+	| "stormtrooper_regiment"
+	| "war_droid_regiment";
+
+export type DefenceCategory =
+	| "personnel"
+	| "troop"
+	| "squadron"
+	| "shield"
+	| "battery";
+
+export type ManufacturingCategory =
+	| "shipyard"
+	| "training_facility"
+	| "construction_yard"
+	| "refinery"
+	| "mine";
+
+export type ShipyardSubtype = "orbital_shipyard" | "advanced_shipyard";
+export type TrainingFacilitySubtype =
+	| "training_facility"
+	| "advanced_training_facility";
+export type ConstructionYardSubtype =
+	| "construction_yard"
+	| "advanced_construction_yard";
+export type RefinerySubtype = "refinery";
+export type MineSubtype = "mine";
+
+export type ManufacturingResource =
+	| (ResourceBase & {
+			type: "shipyard";
+			subtype: ShipyardSubtype;
+	  })
+	| (ResourceBase & {
+			type: "training_facility";
+			subtype: TrainingFacilitySubtype;
+	  })
+	| (ResourceBase & {
+			type: "construction_yard";
+			subtype: ConstructionYardSubtype;
+	  })
+	| (ResourceBase & {
+			type: "refinery";
+			subtype: RefinerySubtype;
+	  })
+	| (ResourceBase & {
+			type: "mine";
+			subtype: MineSubtype;
+	  });
+
+export type DefenseResource =
+	| (ResourceBase & {
+			type: "personnel";
+			subtype: PersonnelSubtype;
+			injured: boolean;
+			imprisoned: boolean;
+	  })
+	| (ResourceBase & {
+			type: "troop";
+			subtype: TroopSubtype;
+	  })
+	| (ResourceBase & {
+			type: "squadrons";
+			subtype: SquadronSubtype;
+	  })
+	| (ResourceBase & {
+			type: "shields";
+			subtype: ShieldSubtype;
+	  })
+	| (ResourceBase & {
+			type: "batteries";
+			subtype: BatterySubtype;
+	  });
+
+export interface PlanetDefenses {
+	personnel: DefenseResource[];
+	troops: DefenseResource[];
+	squadrons: DefenseResource[];
+	shields: DefenseResource[];
+	batteries: DefenseResource[];
+}
+
 // Metadata: Static data that never changes and is known to all players
 export interface PlanetMetadata {
 	id: string;
@@ -91,6 +274,7 @@ export interface PlanetState {
 	general: string | null;
 	commander: string | null;
 	isDiscovered: boolean;
+	defenses: PlanetDefenses;
 }
 
 // View: What a specific faction knows or believes
@@ -105,6 +289,7 @@ export interface PlanetView {
 		inUprising?: boolean;
 		general?: string | null;
 		commander?: string | null;
+		defenses?: PlanetDefenses;
 	};
 	discovered: boolean;
 }

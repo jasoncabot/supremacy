@@ -7,20 +7,16 @@ import { WindowInfo } from "./WindowInfo";
 export interface DraggableWindowProps {
 	windowInfo: WindowInfo;
 	children: ReactNode;
-	initialPosition?: { x: number; y: number };
-	zIndex?: number;
 	className?: string;
 }
 
 const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	windowInfo,
 	children,
-	initialPosition = { x: 100, y: 100 },
-	zIndex = 50,
 	className = "",
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
-	const [windowZIndex, setWindowZIndex] = useState(zIndex);
+	const [windowZIndex, setWindowZIndex] = useState(100);
 	const { getNextZIndex } = useZIndex();
 
 	// Function to bring window to front - simplified and always works
@@ -33,30 +29,19 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	// Function to ensure the window opens within the viewport
 	const ensureWithinViewport = (pos: { x: number; y: number }) => {
 		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight;
 		const windowWidth = 280; // Minimum width from CSS
-		const windowHeight = 200; // Approximate minimum height
 
 		// Ensure window is not positioned outside the right edge
 		const x = Math.min(pos.x, viewportWidth - windowWidth);
 
-		// Ensure window is not positioned outside the bottom edge
-		const y = Math.min(pos.y, viewportHeight - windowHeight);
-
 		// Ensure window is not positioned outside the left edge
 		const finalX = Math.max(x, 0);
-
-		// Ensure window is not positioned outside the top edge
-		const finalY = Math.max(y, 0);
-
-		return { x: finalX, y: finalY };
+		return { x: finalX, y: pos.y };
 	};
 
 	// Use the position from windowInfo if available, otherwise use initialPosition
 	const [position, setPosition] = useState(() => {
-		// If position is provided in the windowInfo, ensure it's within viewport
-		const posToUse = windowInfo.position || initialPosition;
-		return ensureWithinViewport(posToUse);
+		return ensureWithinViewport(windowInfo.position);
 	});
 	const [dragging, setDragging] = useState(false);
 	const dragOffset = useRef({ x: 0, y: 0 });
@@ -273,7 +258,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`min-h-[50vh] w-[280px] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
+			className={`min-h-[50vh] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
 			// Bring window to front when clicking anywhere in the window
 			onClick={bringToFront}
 		>
