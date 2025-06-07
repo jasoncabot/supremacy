@@ -2,6 +2,7 @@ import { IRequest, json, Router } from "itty-router";
 import {
 	CreateGameRequest,
 	CreateGameResponse,
+	DeleteGameResponse,
 	SavedGameResponse,
 } from "../api";
 import {
@@ -78,6 +79,22 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 			const { games } = await userStub.getUserGames();
 
 			return json({ games } satisfies { games: SavedGameResponse[] });
+		},
+	)
+	.delete(
+		"/:id",
+		withAuthUser("game:delete"),
+		async (req: AuthenticatedRequest, env: Env) => {
+			const gameId = req.params.id;
+			const userId = req.user;
+
+			// Get the user's durable object to delete the game
+			const userStub = env.USERS.get(userId) as unknown as UsersDurableObject;
+
+			// Delete the game from the user's saved games
+			await userStub.deleteGame(gameId);
+
+			return json({ success: true } satisfies DeleteGameResponse);
 		},
 	);
 

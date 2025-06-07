@@ -52,6 +52,7 @@ export class UsersDurableObject extends DurableObject<Env> {
 			"game:create",
 			"game:view",
 			"game:list",
+			"game:delete",
 		];
 		return availableScopes.includes(scope);
 	}
@@ -104,5 +105,16 @@ export class UsersDurableObject extends DurableObject<Env> {
 
 		// Save updated games list
 		await this.ctx.storage.put("games", userGames);
+	}
+
+	async deleteGame(gameId: string): Promise<void> {
+		// Get current list of games
+		const userGames = (await this.ctx.storage.get<UserGame[]>("games")) || [];
+
+		// Filter out the game to delete
+		const updatedGames = userGames.filter((game) => game.id !== gameId);
+
+		// Save updated games list
+		await this.ctx.storage.put("games", updatedGames);
 	}
 }

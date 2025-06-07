@@ -28,6 +28,7 @@ import {
 	shieldNames,
 	batteryNames,
 } from "../names";
+import { randomUUID } from "crypto";
 
 // Helper function to generate random defense resources for a planet
 function generateDefenses(
@@ -97,7 +98,7 @@ function generateDefenses(
 			usedCharacters.add(character);
 
 			defenses.personnel.push({
-				id: character,
+				id: `personnel:character:${character}`,
 				name: characterNames[character],
 				type: "personnel",
 				subtype: "characters",
@@ -116,7 +117,7 @@ function generateDefenses(
 			];
 
 		defenses.personnel.push({
-			id: `${personnelType}-${i + 1}`,
+			id: `personnel:${personnelType}:${randomUUID()}`,
 			name: personnelNames[personnelType],
 			type: "personnel",
 			subtype: personnelType,
@@ -152,7 +153,7 @@ function generateDefenses(
 	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
 		const troopType = troopTypes[Math.floor(Math.random() * troopTypes.length)];
 		defenses.troops.push({
-			id: `${troopType}-${i + 1}`,
+			id: `troop:${troopType}:${randomUUID()}`,
 			name: troopNames[troopType],
 			type: "troop",
 			subtype: troopType,
@@ -175,9 +176,9 @@ function generateDefenses(
 		const squadronType =
 			squadronTypes[Math.floor(Math.random() * squadronTypes.length)];
 		defenses.squadrons.push({
-			id: `${squadronType}-${i + 1}`,
+			id: `squadron:${squadronType}:${randomUUID()}`,
 			name: squadronNames[squadronType],
-			type: "squadrons",
+			type: "squadron",
 			subtype: squadronType,
 			status:
 				Math.random() < 0.5
@@ -199,9 +200,9 @@ function generateDefenses(
 		const shieldType =
 			shieldTypes[Math.floor(Math.random() * shieldTypes.length)];
 		defenses.shields.push({
-			id: `${shieldType}-${i + 1}`,
+			id: `shield:${shieldType}:${randomUUID()}`,
 			name: shieldNames[shieldType],
-			type: "shields",
+			type: "shield",
 			subtype: shieldType,
 			status:
 				Math.random() < 0.4
@@ -223,9 +224,9 @@ function generateDefenses(
 		const batteryType =
 			batteryTypes[Math.floor(Math.random() * batteryTypes.length)];
 		defenses.batteries.push({
-			id: `${batteryType}-${i + 1}`,
+			id: `battery:${batteryType}:${randomUUID()}`,
 			name: batteryNames[batteryType],
-			type: "batteries",
+			type: "battery",
 			subtype: batteryType,
 			status:
 				Math.random() < 0.3

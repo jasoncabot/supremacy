@@ -1,10 +1,16 @@
 import { createContext, useContext } from "react";
+import {
+	DefenseResource,
+	FleetResource,
+	ManufacturingResource,
+	ShipResource,
+} from "../../worker/api";
 
-export type SelectableItem = {
-	id: string;
-	type: string; // TODO: better types here e.g 'PLANET', 'PERSONNEL', 'SPECIAL_FORCES', 'TROOPS', 'FIGHTERS', 'SHIELD', 'BATTERY', 'SHIPYARD', 'TRAINING', 'CONSTRUCTION', 'MINE', 'REFINERY'
-	[key: string]: unknown;
-};
+export type SelectableItem =
+	| DefenseResource
+	| ManufacturingResource
+	| ShipResource
+	| FleetResource;
 
 export type SelectionKind = "none" | "single" | "multiple" | "target";
 

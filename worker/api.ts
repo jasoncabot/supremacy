@@ -45,6 +45,10 @@ export interface SavedGameResponse {
 	faction: FactionMetadata;
 }
 
+export interface DeleteGameResponse {
+	success: boolean;
+}
+
 export type FactionMetadata = "Empire" | "Rebellion";
 export type DifficultyMetadata = "Easy" | "Medium" | "Hard";
 export type GalaxySizeMetadata = "Small" | "Medium" | "Large";
@@ -188,6 +192,51 @@ export type ManufacturingCategory =
 	| "refinery"
 	| "mine";
 
+export type ShipType = "capital_ship";
+
+export type CapitalShipSubtype =
+	| "alliance_dreadnaught"
+	| "alliance_escort_carrier"
+	| "assault_frigate"
+	| "assault_transport"
+	| "bulk_cruiser"
+	| "bulk_transport"
+	| "bulwark_battlecruiser"
+	| "carrack_light_cruiser"
+	| "cc_7700_frigate"
+	| "cc_9600_frigate"
+	| "corellian_corvette"
+	| "corellian_gunship"
+	| "dauntless_cruiser"
+	| "death_star"
+	| "galleon"
+	| "imperial_dreadnaught"
+	| "imperial_escort_carrier"
+	| "imperial_ii_star_destroyer"
+	| "imperial_star_destroyer"
+	| "interdictor_cruiser"
+	| "lancer_frigate"
+	| "liberator_cruiser"
+	| "medium_transport"
+	| "mon_calamari_cruiser"
+	| "nebulon_b_frigate"
+	| "star_galleon"
+	| "strike_cruiser"
+	| "super_star_destroyer"
+	| "victory_destroyer"
+	| "victory_ii_star_destroyer";
+
+export type ShipResource = ResourceBase & {
+	type: "capital_ship";
+	subtype: CapitalShipSubtype;
+	damage: "low" | "medium" | "high";
+};
+
+export type FleetResource = ResourceBase & {
+	type: "fleet";
+	subtype: "fleet";
+};
+
 export type ShipyardSubtype = "orbital_shipyard" | "advanced_shipyard";
 export type TrainingFacilitySubtype =
 	| "training_facility"
@@ -220,6 +269,30 @@ export type ManufacturingResource =
 			subtype: MineSubtype;
 	  });
 
+export type MissionType =
+	| "abduction"
+	| "assassination"
+	| "death_star_sabotage"
+	| "diplomacy"
+	| "espionage"
+	| "facility_design_research"
+	| "incite_uprising"
+	| "jedi_training"
+	| "reconnaissance"
+	| "recruitment"
+	| "rescue"
+	| "sabotage"
+	| "ship_design_research"
+	| "subdue_uprising"
+	| "troop_training_research";
+
+export type MissionResource = ResourceBase & {
+	type: "mission";
+	subtype: MissionType;
+};
+
+export type ActionableResource = "mission" | "personnel" | "troop" | "squadron" | "shield" | "battery" | "capital_ship" | "fleet" | "shipyard" | "training_facility" | "construction_yard" | "refinery" | "mine";
+
 export type DefenseResource =
 	| (ResourceBase & {
 			type: "personnel";
@@ -232,15 +305,15 @@ export type DefenseResource =
 			subtype: TroopSubtype;
 	  })
 	| (ResourceBase & {
-			type: "squadrons";
+			type: "squadron";
 			subtype: SquadronSubtype;
 	  })
 	| (ResourceBase & {
-			type: "shields";
+			type: "shield";
 			subtype: ShieldSubtype;
 	  })
 	| (ResourceBase & {
-			type: "batteries";
+			type: "battery";
 			subtype: BatterySubtype;
 	  });
 

@@ -76,97 +76,90 @@ export const DefenceOverview: React.FC<{
 	}
 
 	return (
-		<div className="flex h-full rounded-lg bg-slate-900 p-2 text-slate-200">
-			<TabGroup
-				className="flex w-full flex-col"
-				selectedIndex={categories.findIndex(
-					(cat) => cat.id === selectedCategory,
-				)}
-				onChange={(index) => setSelectedCategory(categories[index].id)}
-			>
-				<TabList className="flex space-x-1 rounded-md bg-slate-800 p-1">
-					{categories.map((category) => {
-						const CategoryIcon = category.icon;
-						const hasResources = resources[category.id].length > 0;
-						const owner = planet.state?.owner || "Neutral";
+		<TabGroup
+			className="flex w-full flex-col"
+			selectedIndex={categories.findIndex((cat) => cat.id === selectedCategory)}
+			onChange={(index) => setSelectedCategory(categories[index].id)}
+		>
+			<TabList className="flex space-x-1 rounded-md bg-slate-800 p-1">
+				{categories.map((category) => {
+					const CategoryIcon = category.icon;
+					const hasResources = resources[category.id].length > 0;
+					const owner = planet.state?.owner || "Neutral";
 
-						return (
-							<Tab
-								key={category.id}
-								title={category.name}
-								className={({ selected }) =>
-									`flex w-full items-center justify-center rounded-lg py-2 text-sm ${
-										selected
-											? "bg-slate-700 text-white shadow"
-											: "cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white"
-									} ${!hasResources && !selected ? "opacity-50" : ""} ${
-										owner === "Empire" && hasResources ? "text-blue-300" : ""
-									} ${
-										owner === "Rebellion" && hasResources ? "text-red-300" : ""
-									} transition-all duration-100 ease-in-out`
-								}
-							>
-								<CategoryIcon className="h-10 w-10" />
-							</Tab>
-						);
-					})}
-				</TabList>
+					return (
+						<Tab
+							key={category.id}
+							title={category.name}
+							className={({ selected }) =>
+								`flex w-full items-center justify-center rounded-lg py-2 text-sm ${
+									selected
+										? "bg-slate-700 text-white shadow"
+										: "cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white"
+								} ${!hasResources && !selected ? "opacity-50" : ""} ${
+									owner === "Empire" && hasResources ? "text-blue-300" : ""
+								} ${
+									owner === "Rebellion" && hasResources ? "text-red-300" : ""
+								} transition-all duration-100 ease-in-out`
+							}
+						>
+							<CategoryIcon className="h-10 w-10" />
+						</Tab>
+					);
+				})}
+			</TabList>
 
-				<TabPanels className="mt-2 flex-grow">
-					{categories.map((category) => (
-						<TabPanel key={category.id} className="h-full rounded-md p-1">
-							<div className="flex h-full flex-col">
-								<div className="flex-grow overflow-auto">
-									{resources[category.id].length > 0 ? (
-										<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-											{resources[category.id].map(
-												(resource: DefenseResource) => {
-													const imagePairs = [
-														{
-															overlay: getOverlayImage(resource),
-															foreground: getCardImage(resource),
-															background: getBackgroundImage(resource),
-														},
-													];
-
-													// Create selectable item data
-													const selectableItem = {
-														id: resource.id,
-														type: category.id, // defence category
-														subtype: resource.subtype,
-														name: resource.name,
-														status: resource.status,
-														category: category.id,
-													} as SelectableItem;
-
-													return (
-														<MiniCardView
-															key={resource.id}
-															imagePairs={imagePairs}
-															displayText={resource.name}
-															selectableItem={selectableItem}
-														/>
-													);
+			<TabPanels className="mt-2 flex-1 flex-grow">
+				{categories.map((category) => (
+					<TabPanel key={category.id} className="rounded-md p-1">
+						<div className="flex flex-col">
+							<div className="flex-grow overflow-auto">
+								{resources[category.id].length > 0 ? (
+									<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+										{resources[category.id].map((resource: DefenseResource) => {
+											const imagePairs = [
+												{
+													overlay: getOverlayImage(resource),
+													foreground: getCardImage(resource),
+													background: getBackgroundImage(resource),
 												},
-											)}
-										</div>
-									) : (
-										<div className="flex h-full items-center justify-center">
-											<p className="text-center text-slate-400">
-												{planet.state?.owner === "Neutral"
-													? `This neutral planet has no ${category.name.toLowerCase()}.`
-													: planet.state?.owner
-														? `No ${category.name.toLowerCase()} deployed on this planet.`
-														: `Planet details not available. You may need to control this planet to see its defenses.`}
-											</p>
-										</div>
-									)}
-								</div>
+											];
+
+											// Create selectable item data
+											const selectableItem = {
+												id: resource.id,
+												type: category.id, // defence category
+												subtype: resource.subtype,
+												name: resource.name,
+												status: resource.status,
+											} as SelectableItem;
+
+											return (
+												<MiniCardView
+													key={resource.id}
+													imagePairs={imagePairs}
+													displayText={resource.name}
+													selectableItem={selectableItem}
+												/>
+											);
+										})}
+									</div>
+								) : (
+									<div className="flex flex-1 items-center justify-center">
+										<p className="text-center text-slate-400">
+											{planet.state?.owner === "Neutral"
+												? `This neutral planet has no ${category.name.toLowerCase()}.`
+												: planet.state?.owner
+													? `No ${category.name.toLowerCase()} deployed on this planet.`
+													: `Planet details not available. You may need to control this planet to see its defenses.`}
+										</p>
+									</div>
+								)}
 							</div>
-						</TabPanel>
-					))}
-				</TabPanels>
-			</TabGroup>
-		</div>
+						</div>
+					</TabPanel>
+				))}
+			</TabPanels>
+		</TabGroup>
 	);
 };

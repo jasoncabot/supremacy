@@ -7,7 +7,7 @@ export interface AuthenticatedRequest extends IRequest {
 	user: DurableObjectId;
 }
 
-export type AuthScope = "none" | "game:create" | "game:view" | "game:list";
+export type AuthScope = "none" | "game:create" | "game:view" | "game:list" | "game:delete";
 
 export const anonymousUser = { id: "anonymous" };
 

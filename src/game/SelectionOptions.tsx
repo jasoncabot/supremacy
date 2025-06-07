@@ -6,11 +6,12 @@ import {
 	XMarkIcon,
 	EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
-import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
 	useSelectionContext,
 	SelectionKind,
 } from "../hooks/useSelectionContext";
+import { getAvailableActions, type ActionDefinition } from "./types/actions";
 
 interface SelectionOptionsProps {
 	className?: string;
@@ -19,15 +20,15 @@ interface SelectionOptionsProps {
 const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	className = "",
 }) => {
-	const { 
-		selectionMode, 
-		selectedItems, 
-		selectionState, 
-		currentAction, 
-		toggleSelectionKind, 
+	const {
+		selectionMode,
+		selectedItems,
+		selectionState,
+		currentAction,
+		toggleSelectionKind,
 		clearSelection,
 		startTargetSelection,
-		cancelTargetSelection
+		cancelTargetSelection,
 	} = useSelectionContext();
 
 	const getButtonClasses = (mode: SelectionKind) => {
@@ -40,111 +41,21 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 		return `${baseClasses} ${selectionMode === mode ? activeClasses : inactiveClasses}`;
 	};
 
-	// Actions that require target selection
-	const actionsRequiringTarget = [
-		"move-personnel",
-		"move-troops", 
-		"deploy-squadrons"
-	];
-
-	const doesActionRequireTarget = (actionId: string): boolean => {
-		return actionsRequiringTarget.includes(actionId);
-	};
-
-	// Get contextual actions based on selected items
-	const getContextualActions = () => {
-		if (selectedItems.length === 0) return [];
-
-		// Group selected items by type
-		const itemsByType = selectedItems.reduce(
-			(acc, item) => {
-				if (!acc[item.type]) acc[item.type] = [];
-				acc[item.type].push(item);
-				return acc;
-			},
-			{} as Record<string, typeof selectedItems>,
-		);
-
-		const actions = [];
-
-		// Personnel-specific actions
-		if (itemsByType.personnel) {
-			const personnelItems = itemsByType.personnel;
-			const activePersonnel = personnelItems.filter(
-				(item) => item.status === "active",
-			);
-
-			if (activePersonnel.length > 0) {
-				actions.push(
-					{ id: "move-personnel", label: "Move", icon: ArrowRightIcon },
-					{ id: "disband-personnel", label: "Disband", icon: XMarkIcon },
-				);
-			}
-		}
-
-		// Troops-specific actions
-		if (itemsByType.troops) {
-			const troopsItems = itemsByType.troops;
-			const activeTroops = troopsItems.filter(
-				(item) => item.status === "active",
-			);
-
-			if (activeTroops.length > 0) {
-				actions.push(
-					{ id: "move-troops", label: "Move", icon: ArrowRightIcon },
-					{ id: "disband-troops", label: "Disband", icon: XMarkIcon },
-				);
-			}
-		}
-
-		// Squadrons-specific actions
-		if (itemsByType.squadrons) {
-			const squadronItems = itemsByType.squadrons;
-			const activeSquadrons = squadronItems.filter(
-				(item) => item.status === "active",
-			);
-
-			if (activeSquadrons.length > 0) {
-				actions.push(
-					{ id: "deploy-squadrons", label: "Deploy", icon: ArrowRightIcon },
-					{ id: "disband-squadrons", label: "Disband", icon: XMarkIcon },
-				);
-			}
-		}
-
-		// Shields-specific actions
-		if (itemsByType.shields) {
-			actions.push({
-				id: "configure-shields",
-				label: "Configure",
-				icon: ArrowRightIcon,
-			});
-		}
-
-		// Batteries-specific actions
-		if (itemsByType.batteries) {
-			actions.push({
-				id: "configure-batteries",
-				label: "Configure",
-				icon: ArrowRightIcon,
-			});
-		}
-
-		return actions;
-	};
-
-	const handleAction = (actionId: string) => {
-		if (doesActionRequireTarget(actionId)) {
+	const handleAction = (action: ActionDefinition) => {
+		if (action.requiresTarget) {
 			// Start target selection mode
-			startTargetSelection(actionId);
+			startTargetSelection(action.id);
 		} else {
 			// Execute action immediately (no target required)
-			console.log(`Executing action: ${actionId} on items:`, selectedItems);
+			console.log(`Executing action: ${action.id} on items:`, selectedItems);
 			clearSelection();
 		}
 	};
 
-	const contextualActions = getContextualActions();
+	const contextualActions = React.useMemo<ActionDefinition[]>(
+		() => getAvailableActions(selectedItems),
+		[selectedItems],
+	);
 
 	return (
 		<div className={`flex items-center gap-2 ${className}`}>
@@ -211,33 +122,29 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 
 			{/* Contextual actions menu - only show during idle state */}
 			{selectionState === "idle" && contextualActions.length > 0 && (
-				<Popover className="relative">
-					<PopoverButton className="flex cursor-pointer items-center gap-1 rounded bg-green-600 px-2 py-1 text-sm text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-none">
+				<Menu as="div" className="relative">
+					<MenuButton className="flex cursor-pointer items-center gap-1 rounded bg-green-600 px-2 py-1 text-sm text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-none">
 						<EllipsisHorizontalIcon className="size-4" />
 						<span className="hidden sm:inline">Actions</span>
-					</PopoverButton>
+					</MenuButton>
 
-					<PopoverPanel
+					<MenuItems
 						anchor="bottom start"
-						className="z-50 mt-2 w-48 rounded-md border border-slate-600 bg-slate-800 shadow-lg ring-1 ring-black/5 focus:outline-none"
+						className="z-50 mt-1 w-48 divide-y divide-slate-700 overflow-y-auto rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
 					>
-						<div className="p-1">
-							{contextualActions.map((action) => {
-								const IconComponent = action.icon;
-								return (
-									<button
-										key={action.id}
-										className="group flex w-full cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700 hover:text-white"
-										onClick={() => handleAction(action.id)}
-									>
-										<IconComponent className="size-4 text-slate-400 transition-colors group-hover:text-white" />
-										{action.label}
-									</button>
-								);
-							})}
-						</div>
-					</PopoverPanel>
-				</Popover>
+						{contextualActions.map((action) => (
+							<MenuItem key={action.id}>
+								<button
+									className="group flex w-full cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-sm text-slate-200 hover:bg-green-700/60 hover:text-white data-[focus]:bg-green-700/60 data-[focus]:text-white"
+									onClick={() => handleAction(action)}
+								>
+									<ArrowRightIcon className="size-4 text-slate-400 group-hover:text-white group-data-[focus]:text-white" />
+									{action.label}
+								</button>
+							</MenuItem>
+						))}
+					</MenuItems>
+				</Menu>
 			)}
 		</div>
 	);

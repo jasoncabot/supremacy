@@ -1,10 +1,12 @@
 import React, { ReactNode, useState } from "react";
 import {
-    SelectableItem,
-    SelectionContext,
-    SelectionKind,
-    SelectionState,
+	SelectableItem,
+	SelectionContext,
+	SelectionKind,
+	SelectionState,
 } from "../hooks/useSelectionContext";
+import { getAvailableActions, type ActionDefinition } from "./types/actions";
+import type { DefenseResource, ManufacturingResource } from "../../worker/api";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	children,
@@ -13,7 +15,36 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const [selectionMode, setSelectionKind] = useState<SelectionKind>("none");
 	const [selectionState, setSelectionState] = useState<SelectionState>("idle");
 	const [currentAction, setCurrentAction] = useState<string | null>(null);
+	const [currentActionDef, setCurrentActionDef] =
+		useState<ActionDefinition | null>(null);
 	const [targetItem, setTargetItem] = useState<SelectableItem | null>(null);
+
+	// Helper function to create ActionTarget from selectable items
+	const createTargetFromItem = (item: SelectableItem) => {
+		// For now, map based on item types we know
+		if (
+			"subtype" in item &&
+			[
+				"shipyard",
+				"training_facility",
+				"construction_yard",
+				"refinery",
+				"mine",
+			].includes(item.type)
+		) {
+			return {
+				type: "structure" as const,
+				id: item.id,
+				data: item as ManufacturingResource,
+			};
+		}
+		// All defense resources are units
+		return {
+			type: "unit" as const,
+			id: item.id,
+			data: item as DefenseResource,
+		};
+	};
 
 	const toggleSelectionKind = (mode: SelectionKind) => {
 		if (mode === selectionMode) {
@@ -45,7 +76,13 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		} else if (selectionMode === "multiple") {
 			// Check if item is already selected
 			if (!isSelected(item.id)) {
-				setSelectedItems([...selectedItems, item]);
+				// If no items are selected yet, or if the new item has the same type as existing selections
+				if (selectedItems.length === 0 || selectedItems[0].type === item.type) {
+					setSelectedItems([...selectedItems, item]);
+				} else {
+					// Different type selected - replace the entire selection with just this item
+					setSelectedItems([item]);
+				}
 			}
 		}
 	};
@@ -58,6 +95,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		setSelectedItems([]);
 		setSelectionState("idle");
 		setCurrentAction(null);
+		setCurrentActionDef(null);
 		setTargetItem(null);
 		setSelectionKind("none");
 	};
@@ -67,7 +105,12 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	};
 
 	const startTargetSelection = (actionId: string) => {
+		// Find the action definition
+		const availableActions = getAvailableActions(selectedItems);
+		const actionDef = availableActions.find((action) => action.id === actionId);
+
 		setCurrentAction(actionId);
+		setCurrentActionDef(actionDef || null);
 		setSelectionState("awaiting-target");
 		setSelectionKind("target");
 		setTargetItem(null);
@@ -80,9 +123,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	};
 
 	const executeActionWithTarget = (target: SelectableItem) => {
-		if (currentAction && selectedItems.length > 0) {
+		if (currentAction && selectedItems.length > 0 && currentActionDef) {
 			console.log(
-				`Selected items ${selectedItems.map(item => `${item.type}:${item.id}`).join(', ')} performing action ${currentAction} on target ${target.type}:${target.id}`
+				`Selected items ${selectedItems.map((item) => `${item.type}:${item.id}`).join(", ")} performing action ${currentAction} (${currentActionDef.label}) on target ${target.type}:${target.id}`,
 			);
 		}
 		clearSelection();
@@ -91,7 +134,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const executeAction = () => {
 		if (currentAction && selectedItems.length > 0 && targetItem) {
 			console.log(
-				`Selected items ${selectedItems.map(item => `${item.type}:${item.id}`).join(', ')} performing action ${currentAction} on target ${targetItem.type}:${targetItem.id}`
+				`Selected items ${selectedItems.map((item) => `${item.type}:${item.id}`).join(", ")} performing action ${currentAction} on target ${targetItem.type}:${targetItem.id}`,
 			);
 		}
 		clearSelection();
@@ -100,6 +143,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const cancelTargetSelection = () => {
 		setSelectionState("idle");
 		setCurrentAction(null);
+		setCurrentActionDef(null);
 		setTargetItem(null);
 		setSelectionKind("multiple"); // Return to previous selection mode
 	};

@@ -19,11 +19,8 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const [windowZIndex, setWindowZIndex] = useState(100);
 	const { getNextZIndex } = useZIndex();
 
-	const {
-		handleMinimizeWindow,
-		handleCloseWindow,
-		bringToFront,
-	} = useWindowContext();
+	const { handleMinimizeWindow, handleCloseWindow, bringToFront } =
+		useWindowContext();
 
 	// Function to bring window to front - now uses the context method
 	const bringWindowToFront = () => {
@@ -263,7 +260,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`min-h-[50vh] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
+			className={`flex min-h-[50vh] max-w-full flex-col rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
 			// Bring window to front when clicking anywhere in the window
 			onClick={bringWindowToFront}
 		>
@@ -294,7 +291,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				</div>
 			</div>
 
-			<div className="max-h-[50vh] flex-1 overflow-y-auto overscroll-contain sm:max-h-[70vh]">
+			<div className="flex max-h-[50vh] flex-1 overflow-y-auto overscroll-contain sm:max-h-[70vh]">
 				{children}
 			</div>
 		</div>
