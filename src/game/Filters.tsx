@@ -1,9 +1,4 @@
-import {
-	Listbox,
-	ListboxButton,
-	ListboxOption,
-	ListboxOptions,
-} from "@headlessui/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import React, { Fragment } from "react";
 
@@ -110,53 +105,59 @@ const Filters: React.FC<FiltersProps> = ({ filter, onChange }) => {
 		? allFilterOptions.find((opt) => opt.value === filter)?.label || "None"
 		: "None";
 
+	const handleFilterSelect = (filterValue: FilterType) => {
+		onChange(filterValue);
+	};
+
 	return (
 		<div className="flex items-center gap-3">
 			<label className="hidden items-center gap-1 font-semibold text-slate-300 sm:flex">
 				<FunnelIcon className="animate-spin-slow h-5 w-5 text-purple-400" />
 			</label>
-			<Listbox value={filter} onChange={onChange}>
-				<div className="relative">
-					<ListboxButton className="ml-1 flex cursor-pointer appearance-none items-center justify-between rounded-md border border-slate-700 bg-slate-800/80 p-2 text-white shadow-md transition-colors duration-300 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
-						{selectedFilterLabel}
-						<ChevronDownIcon className="ml-1 h-5 w-5 text-purple-400" />
-					</ListboxButton>
-					<ListboxOptions
-						anchor="bottom"
-						className="absolute z-20 mt-1 max-h-32 overflow-y-hidden rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
-					>
-						{/* Display Off option */}
-						<ListboxOption
-							key="OFF"
-							value="OFF"
-							className="group flex cursor-pointer gap-2 bg-slate-900 px-4 py-2 text-slate-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+			<Menu>
+				<MenuButton className="ml-1 flex cursor-pointer appearance-none items-center justify-between rounded-md border border-slate-700 bg-slate-800/80 p-2 text-white shadow-md transition-colors duration-300 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
+					{selectedFilterLabel}
+					<ChevronDownIcon className="ml-1 h-5 w-5 text-purple-400" />
+				</MenuButton>
+				<MenuItems
+					anchor="bottom start"
+					className="z-50 mt-1 h-[50vh] max-h-32 w-64 divide-y divide-slate-700 overflow-y-auto rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
+				>
+					{/* Display Off option */}
+					<MenuItem>
+						<button
+							onClick={() => handleFilterSelect("OFF")}
+							className="group flex w-full cursor-pointer items-center rounded-md px-4 py-2 text-sm text-slate-200 hover:bg-purple-700/60 hover:text-white data-[focus]:bg-purple-700/60 data-[focus]:text-white"
 						>
 							Display Off
-						</ListboxOption>
+						</button>
+					</MenuItem>
 
-						{/* Categories and their options */}
-						{filterCategories.map((category) => (
-							<Fragment key={category.name}>
-								{/* Category header */}
-								<div className="bg-slate-800 px-4 py-1 font-semibold text-purple-300">
-									{category.name}
-								</div>
+					{/* Categories and their options */}
+					{filterCategories.map((category) => (
+						<Fragment key={category.name}>
+							{/* Category header */}
+							<div className="bg-slate-800 px-4 py-1 font-semibold text-purple-300">
+								{category.name}
+							</div>
 
-								{/* Category options */}
-								{category.options.map((option) => (
-									<ListboxOption
-										key={option.value}
-										value={option.value}
-										className="group flex cursor-pointer gap-2 bg-slate-900 px-6 py-2 text-slate-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+							{/* Category options */}
+							{category.options.map((option) => (
+								<MenuItem key={option.value}>
+									<button
+										onClick={() =>
+											handleFilterSelect(option.value as FilterType)
+										}
+										className="group flex w-full cursor-pointer items-center rounded-md px-6 py-2 text-sm text-slate-200 hover:bg-purple-700/60 hover:text-white data-[focus]:bg-purple-700/60 data-[focus]:text-white"
 									>
 										{option.label}
-									</ListboxOption>
-								))}
-							</Fragment>
-						))}
-					</ListboxOptions>
-				</div>
-			</Listbox>
+									</button>
+								</MenuItem>
+							))}
+						</Fragment>
+					))}
+				</MenuItems>
+			</Menu>
 		</div>
 	);
 };

@@ -9,6 +9,7 @@ export interface DraggableWindowProps {
 	children: ReactNode;
 	initialPosition?: { x: number; y: number };
 	zIndex?: number;
+	className?: string;
 }
 
 const DraggableWindow: React.FC<DraggableWindowProps> = ({
@@ -16,6 +17,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	children,
 	initialPosition = { x: 100, y: 100 },
 	zIndex = 50,
+	className = "",
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
 	const [windowZIndex, setWindowZIndex] = useState(zIndex);
@@ -271,7 +273,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className="min-h-[50vh] w-[280px] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl"
+			className={`min-h-[50vh] w-[280px] max-w-full rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
 			// Bring window to front when clicking anywhere in the window
 			onClick={bringToFront}
 		>
