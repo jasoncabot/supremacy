@@ -3,6 +3,7 @@ import { PlanetView, SectorMetadata } from "../../worker/api";
 import { FilterType } from "./Filters";
 import { useWindowContext } from "../hooks/useWindowContext";
 import SectorComponent from "./SectorComponent";
+import { useSoundManager } from "../hooks/useSoundManager";
 
 interface SectorOverviewProps {
 	sectors: SectorMetadata[];
@@ -16,11 +17,13 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 	filter,
 }) => {
 	const { handleOpenWindow } = useWindowContext();
+	const { playSound } = useSoundManager();
 
 	const handleSectorClick = (
 		sector: SectorMetadata,
 		event: React.MouseEvent,
 	) => {
+		playSound("sectorOpen");
 		// Calculate position relative to viewport
 		const isMobile = window.innerWidth < 768;
 		handleOpenWindow({

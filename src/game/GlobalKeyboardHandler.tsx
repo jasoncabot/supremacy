@@ -10,9 +10,18 @@ export const GlobalKeyboardHandler: React.FC<GlobalKeyboardHandlerProps> = ({
 	onGlobalSearch,
 	onNavigateToFinder,
 }) => {
+	// Enhanced handlers that include sound effects
+	const handleGlobalSearch = () => {
+		onGlobalSearch?.();
+	};
+
+	const handleNavigateToFinder = () => {
+		onNavigateToFinder?.();
+	};
+
 	useGlobalKeyboardHandler({
-		onGlobalSearch,
-		onNavigateToFinder,
+		onGlobalSearch: handleGlobalSearch,
+		onNavigateToFinder: handleNavigateToFinder,
 	});
 
 	// This component doesn't render anything, it just handles keyboard events

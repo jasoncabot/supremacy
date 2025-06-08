@@ -50,6 +50,15 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 						</p>
 					</div>
 				)}
+
+				{activeView === "settings" && (
+					<div className="mx-auto w-full max-w-2xl p-4">
+						<h1 className="text-2xl font-bold text-white">Settings</h1>
+						<p className="text-gray-400">
+							Please use the Settings button to access game settings.
+						</p>
+					</div>
+				)}
 			</div>
 		</div>
 	);

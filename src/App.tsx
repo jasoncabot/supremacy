@@ -5,7 +5,7 @@ import {
 	ProtectedRoute,
 	RegisterPage,
 } from "./auth";
-import { GameScreen } from "./game";
+import GameRoutes from "./game/GameRoutes";
 import { NotFound } from "./NotFound";
 import { EntryPoint, Matchmaking, NewGameConfig, RestoreGame } from "./setup";
 import { WebLayout } from "./WebLayout";
@@ -76,11 +76,10 @@ const App = () => {
 				}
 			/>
 			<Route
-				path="/game/:gameId"
+				path="/game/:gameId/*"
 				element={
-					// Game has it's own layout
 					<ProtectedRoute>
-						<GameScreen />
+						<GameRoutes />
 					</ProtectedRoute>
 				}
 			/>

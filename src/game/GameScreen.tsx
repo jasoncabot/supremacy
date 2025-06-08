@@ -1,20 +1,21 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useGame } from "../hooks/useGame";
 import { Loading } from "../Loading";
+import { BackgroundMusicProvider } from "./BackgroundMusicProvider";
 import Filters, { FilterType } from "./Filters";
 import FloatingWindows from "./FloatingWindows";
 import GameActions from "./GameActions";
 import GameContent from "./GameContent";
 import { GameProvider } from "./GameContext";
+import { GlobalKeyboardHandler } from "./GlobalKeyboardHandler";
 import MobileMenu from "./MobileMenu";
-import SelectionOptions from "./SelectionOptions";
 import { SelectionProvider } from "./SelectionContext";
+import SelectionOptions from "./SelectionOptions";
 import SideMenu, { MenuView } from "./SideMenu";
 import StatusBar from "./StatusBar";
 import TouchBlockingOverlay from "./TouchBlockingOverlay";
 import { WindowProvider } from "./WindowProvider";
-import { GlobalKeyboardHandler } from "./GlobalKeyboardHandler";
 
 // Inner component that uses the game and window contexts
 const GameScreenContent: React.FC = () => {
@@ -22,6 +23,7 @@ const GameScreenContent: React.FC = () => {
 	const [menuExpanded, setMenuExpanded] = useState(false);
 	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
 	const { game, loading, submitActions } = useGame();
+	const { gameId } = useParams<{ gameId: string }>();
 	const navigate = useNavigate();
 
 	const handleToggleMenu = () => {
@@ -34,6 +36,10 @@ const GameScreenContent: React.FC = () => {
 
 	const handleExitGame = () => {
 		navigate("/");
+	};
+
+	const handleOpenSettings = () => {
+		navigate(`/game/${gameId}/settings`);
 	};
 
 	const handleEndTurn = () => {
@@ -61,6 +67,7 @@ const GameScreenContent: React.FC = () => {
 					activeView={activeView}
 					onChangeView={handleChangeView}
 					onExitGame={handleExitGame}
+					onOpenSettings={handleOpenSettings}
 				/>
 			</div>
 
@@ -79,6 +86,7 @@ const GameScreenContent: React.FC = () => {
 								activeView={activeView}
 								onChangeView={handleChangeView}
 								onExitGame={handleExitGame}
+								onOpenSettings={handleOpenSettings}
 							/>
 						</div>
 
@@ -119,23 +127,25 @@ const GameScreenContent: React.FC = () => {
 // Wrapper component that provides the GameContext and WindowContext
 const GameScreen: React.FC = () => {
 	return (
-		<GameProvider>
-			<WindowProvider>
-				<GlobalKeyboardHandler
-					onGlobalSearch={() => {
-						// TODO: Implement global search functionality
-						console.log("Global search triggered");
-					}}
-					onNavigateToFinder={() => {
-						// TODO: Implement navigation to finder route
-						console.log("Navigate to finder triggered");
-					}}
-				/>
-				<SelectionProvider>
-					<GameScreenContent />
-				</SelectionProvider>
-			</WindowProvider>
-		</GameProvider>
+		<BackgroundMusicProvider>
+			<GameProvider>
+				<WindowProvider>
+					<GlobalKeyboardHandler
+						onGlobalSearch={() => {
+							// TODO: Implement global search functionality
+							console.log("Global search triggered");
+						}}
+						onNavigateToFinder={() => {
+							// TODO: Implement navigation to finder route
+							console.log("Navigate to finder triggered");
+						}}
+					/>
+					<SelectionProvider>
+						<GameScreenContent />
+					</SelectionProvider>
+				</WindowProvider>
+			</GameProvider>
+		</BackgroundMusicProvider>
 	);
 };
 

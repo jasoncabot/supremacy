@@ -3,6 +3,7 @@ import {
 	Bars3Icon,
 	BellAlertIcon,
 	BookOpenIcon,
+	Cog6ToothIcon,
 	GlobeAltIcon,
 	MagnifyingGlassIcon,
 	SparklesIcon,
@@ -17,7 +18,8 @@ export type MenuView =
 	| "sectorOverview"
 	| "notifications"
 	| "encyclopaedia"
-	| "finder";
+	| "finder"
+	| "settings";
 
 interface SideMenuProps {
 	isExpanded: boolean;
@@ -25,6 +27,7 @@ interface SideMenuProps {
 	activeView: MenuView;
 	onChangeView: (view: MenuView) => void;
 	onExitGame: () => void;
+	onOpenSettings: () => void;
 }
 
 const SideMenu: React.FC<SideMenuProps> = ({
@@ -33,6 +36,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 	activeView,
 	onChangeView,
 	onExitGame,
+	onOpenSettings,
 }) => {
 	const { minimizedWindows, handleMaximizeWindow } = useWindowContext();
 
@@ -260,6 +264,14 @@ const SideMenu: React.FC<SideMenuProps> = ({
 
 					{/* Separator */}
 					<div className={`${isExpanded ? "h-px bg-purple-700/30" : "h-2"}`} />
+
+					{/* Settings */}
+					{renderMenuButton(
+						Cog6ToothIcon,
+						"Settings",
+						null,
+						onOpenSettings,
+					)}
 
 					{/* Exit Game */}
 					{renderMenuButton(

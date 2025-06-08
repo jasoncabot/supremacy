@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { MinimizedWindowInfo, WindowContext } from "../hooks/useWindowContext";
 import { WindowInfo } from "./WindowInfo";
+import { useSoundManager } from "../hooks/useSoundManager";
 
 export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
@@ -75,39 +76,53 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 		});
 	}, []);
 
+	const { playSound } = useSoundManager();
 	// Close a window - remove from both open and minimized windows
-	const handleCloseWindow = useCallback((info: WindowInfo) => {
-		// Remove from open windows
-		setOpenWindows((current) =>
-			current.filter((window) => window.id !== info.id),
-		);
+	const handleCloseWindow = useCallback(
+		(info: WindowInfo) => {
+			if (info.type == "sector") {
+				playSound("sectorClose");
+			} else {
+				playSound("itemClose");
+			}
 
-		// Remove from minimized windows
-		setMinimizedWindows((current) =>
-			current.filter((window) => window.id !== info.id),
-		);
-	}, []);
+			// Remove from open windows
+			setOpenWindows((current) =>
+				current.filter((window) => window.id !== info.id),
+			);
+
+			// Remove from minimized windows
+			setMinimizedWindows((current) =>
+				current.filter((window) => window.id !== info.id),
+			);
+		},
+		[playSound],
+	);
 
 	// Close all windows - remove from both open and minimized windows
 	const handleCloseAllWindows = useCallback(() => {
+		playSound("sectorClose");
 		setOpenWindows([]);
 		setMinimizedWindows([]);
-	}, []);
+	}, [playSound]);
 
 	// Simple z-index management - last window in array is topmost
-	const isTopmost = useCallback((windowId: string) => {
-		if (openWindows.length === 0) return false;
-		return openWindows[openWindows.length - 1].id === windowId;
-	}, [openWindows]);
+	const isTopmost = useCallback(
+		(windowId: string) => {
+			if (openWindows.length === 0) return false;
+			return openWindows[openWindows.length - 1].id === windowId;
+		},
+		[openWindows],
+	);
 
 	// Move window to front by moving it to end of array
 	const bringToFront = useCallback((windowId: string) => {
 		setOpenWindows((current) => {
-			const windowIndex = current.findIndex(w => w.id === windowId);
+			const windowIndex = current.findIndex((w) => w.id === windowId);
 			if (windowIndex === -1) return current; // Window not found
-			
+
 			const window = current[windowIndex];
-			const filtered = current.filter(w => w.id !== windowId);
+			const filtered = current.filter((w) => w.id !== windowId);
 			return [...filtered, window];
 		});
 	}, []);
@@ -121,7 +136,7 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 		handleMaximizeWindow,
 		handleCloseWindow,
 		handleCloseAllWindows,
-		
+
 		isTopmost,
 		bringToFront,
 	};

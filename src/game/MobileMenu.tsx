@@ -3,6 +3,7 @@ import {
 	ArrowLeftEndOnRectangleIcon,
 	BellAlertIcon,
 	BookOpenIcon,
+	Cog6ToothIcon,
 	EllipsisHorizontalIcon,
 	GlobeAltIcon,
 	MagnifyingGlassIcon,
@@ -16,12 +17,14 @@ interface MobileMenuProps {
 	activeView: MenuView;
 	onChangeView: (view: MenuView) => void;
 	onExitGame: () => void;
+	onOpenSettings: () => void;
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({
 	activeView,
 	onChangeView,
 	onExitGame,
+	onOpenSettings,
 }) => {
 	const { minimizedWindows, handleMaximizeWindow } = useWindowContext();
 
@@ -139,6 +142,17 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
 					{/* Separator */}
 					<div className="my-1 h-px bg-purple-700/30"></div>
+
+					{/* Settings */}
+					<MenuItem>
+						<button
+							className="flex w-full items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white"
+							onClick={onOpenSettings}
+						>
+							<Cog6ToothIcon className="mr-2 h-5 w-5" />
+							<span>Settings</span>
+						</button>
+					</MenuItem>
 
 					{/* Exit game */}
 					<MenuItem>
