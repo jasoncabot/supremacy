@@ -37,6 +37,12 @@ import {
 	refineryNames,
 	mineNames,
 } from "../names";
+import {
+	smallSectors,
+	mediumSectors,
+	largeSectors,
+	allPlanets,
+} from "../metadata/sectors";
 
 // Helper function to generate random defense resources for a planet
 function generateDefenses(
@@ -380,17 +386,17 @@ export class GamesDurableObject extends DurableObject<Env> {
 		gameId: string,
 		request: CreateGameRequest & { creatorId: string },
 	): Promise<CreateGameResponse> {
-		// Create initial model and views
-		let sectorCount: number;
+		// Select the appropriate sector metadata based on galaxy size
+		let sectorMetadata: SectorMetadata[];
 		switch (request.galaxySize) {
 			case "Small":
-				sectorCount = 10;
+				sectorMetadata = smallSectors;
 				break;
 			case "Medium":
-				sectorCount = 15;
+				sectorMetadata = mediumSectors;
 				break;
 			default:
-				sectorCount = 20;
+				sectorMetadata = largeSectors;
 				break;
 		}
 
@@ -398,41 +404,32 @@ export class GamesDurableObject extends DurableObject<Env> {
 		const sectors: Record<string, SectorMetadata> = {};
 		const planets: Record<string, PlanetState> = {};
 
-		// Generate sectors and planets
+		// Generate sectors and planets using metadata
 		const usedCharacters = new Set<CharacterIdentifiers>();
 
-		for (let i = 0; i < sectorCount; i++) {
-			const sectorId = `sector-${i + 1}`;
-			const isInnerRim = i < sectorCount / 3; // First third are inner rim
+		// Create a lookup map for planet metadata
+		const planetMetadataMap = new Map(allPlanets.map(p => [p.id, p]));
 
-			// Create sector metadata
-			const sectorMetadata: SectorMetadata = {
-				id: sectorId,
-				name: `Sector ${i + 1}`,
-				location: {
-					x: Math.random(),
-					y: Math.random(),
-				},
-				isInnerRim,
-				planetIds: [],
-			};
+		for (const sector of sectorMetadata) {
+			// Add sector to sectors record
+			sectors[sector.id] = sector;
 
-			// Create 10 planets per sector
-			for (let j = 0; j < 10; j++) {
-				const planetId = `planet-${i + 1}-${j + 1}`;
-				sectorMetadata.planetIds.push(planetId);
+			// Create planets for this sector
+			for (const planetId of sector.planetIds) {
+				const planetMeta = planetMetadataMap.get(planetId);
+				if (!planetMeta) {
+					console.warn(`Planet metadata not found for ${planetId}`);
+					continue;
+				}
 
 				// Create planet metadata
 				const planetMetadata: PlanetMetadata = {
 					id: planetId,
-					name: `Planet ${i + 1}-${j + 1}`,
-					sectorId,
-					picture: `planet-${((i * 10 + j) % 20) + 1}.png`, // Cycle through 20 planet images
+					name: planetMeta.name,
+					sectorId: sector.id,
+					picture: `planet-${planetMeta.picture}.png`,
 					size: Math.random() * 0.5 + 0.5, // Size between 0.5 and 1.0
-					position: {
-						x: Math.random(),
-						y: Math.random(),
-					},
+					position: planetMeta.location,
 				};
 
 				// Create planet state
@@ -453,15 +450,13 @@ export class GamesDurableObject extends DurableObject<Env> {
 					inUprising: Math.random() < 0.1, // 10% chance of uprising
 					general: null,
 					commander: null,
-					isDiscovered: isInnerRim, // Inner rim planets start discovered
+					isDiscovered: sector.isInnerRim, // Inner rim planets start discovered
 					defenses: generateDefenses(owner, usedCharacters),
 					manufacturing: generateManufacturing(owner),
 				};
 
 				planets[planetId] = planetState;
 			}
-
-			sectors[sectorId] = sectorMetadata;
 		}
 
 		// Create faction states

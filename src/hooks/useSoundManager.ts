@@ -15,9 +15,20 @@ export const useSoundManager = (): SoundManager => {
 	const { settings } = useSettings();
 	const audioCache = useRef<Map<SoundType, HTMLAudioElement>>(new Map());
 	const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
+	const audioContextRef = useRef<AudioContext | null>(null);
 
 	// Initialize audio elements
 	useEffect(() => {
+		if (!audioContextRef.current) {
+			try {
+				audioContextRef.current = new (window.AudioContext ||
+					(window as unknown as { webkitAudioContext: typeof AudioContext })
+						.webkitAudioContext)();
+			} catch (error) {
+				console.warn("Could not create AudioContext:", error);
+			}
+		}
+
 		// Capture current ref values at the start of the effect
 		const currentAudioCache = audioCache.current;
 		const currentBackgroundMusic = backgroundMusicRef.current;
@@ -76,20 +87,46 @@ export const useSoundManager = (): SoundManager => {
 		}
 	}, [settings.soundVolume, settings.musicVolume]);
 
+	// Stop background music immediately when music is disabled
+	useEffect(() => {
+		if (!settings.musicEnabled && backgroundMusicRef.current) {
+			backgroundMusicRef.current.pause();
+		}
+	}, [settings.musicEnabled]);
+
 	const playSound = useCallback(
 		(type: SoundType) => {
 			if (!settings.soundEnabled) return;
 
 			const audio = audioCache.current.get(type);
-			if (audio) {
-				// Reset to start and play
-				audio.currentTime = 0;
-				audio.play().catch((error) => {
-					// Ignore autoplay policy errors
-					if (error.name !== "NotAllowedError") {
-						console.warn(`Failed to play sound ${type}:`, error);
-					}
-				});
+			if (audio && audioContextRef.current) {
+				try {
+					// Use Web Audio API universally for better silent mode support
+					const source =
+						audioContextRef.current.createMediaElementSource(audio);
+					source.connect(audioContextRef.current.destination);
+
+					// Reset to start and play
+					audio.currentTime = 0;
+					audio.play().catch((error) => {
+						// Ignore autoplay policy errors and silent mode
+						if (error.name !== "NotAllowedError") {
+							console.warn(`Failed to play sound ${type}:`, error);
+						}
+					});
+				} catch (error) {
+					// Fallback to regular audio if Web Audio API fails
+					console.warn(
+						`Web Audio API failed for ${type}, falling back to regular audio:`,
+						error,
+					);
+					audio.currentTime = 0;
+					audio.play().catch((playError) => {
+						if (playError.name !== "NotAllowedError") {
+							console.warn(`Failed to play sound ${type}:`, playError);
+						}
+					});
+				}
 			}
 		},
 		[settings.soundEnabled],
@@ -98,12 +135,33 @@ export const useSoundManager = (): SoundManager => {
 	const playBackgroundMusic = useCallback(() => {
 		if (!settings.musicEnabled || !backgroundMusicRef.current) return;
 
-		backgroundMusicRef.current.play().catch((error) => {
-			// Ignore autoplay policy errors
-			if (error.name !== "NotAllowedError") {
-				console.warn("Failed to play background music:", error);
+		if (audioContextRef.current) {
+			try {
+				// Use Web Audio API for background music as well
+				const source = audioContextRef.current.createMediaElementSource(
+					backgroundMusicRef.current,
+				);
+				source.connect(audioContextRef.current.destination);
+
+				backgroundMusicRef.current.play().catch((error) => {
+					// Ignore autoplay policy errors and silent mode
+					if (error.name !== "NotAllowedError") {
+						console.warn("Failed to play background music:", error);
+					}
+				});
+			} catch (error) {
+				// Fallback to regular audio if Web Audio API fails
+				console.warn(
+					"Web Audio API failed for background music, falling back to regular audio:",
+					error,
+				);
+				backgroundMusicRef.current.play().catch((playError) => {
+					if (playError.name !== "NotAllowedError") {
+						console.warn("Failed to play background music:", playError);
+					}
+				});
 			}
-		});
+		}
 	}, [settings.musicEnabled]);
 
 	const stopBackgroundMusic = useCallback(() => {

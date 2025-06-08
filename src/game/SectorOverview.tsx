@@ -1,9 +1,9 @@
 import React from "react";
 import { PlanetView, SectorMetadata } from "../../worker/api";
-import { FilterType } from "./Filters";
-import { useWindowContext } from "../hooks/useWindowContext";
-import SectorComponent from "./SectorComponent";
 import { useSoundManager } from "../hooks/useSoundManager";
+import { useWindowContext } from "../hooks/useWindowContext";
+import { FilterType } from "./Filters";
+import SectorComponent from "./SectorComponent";
 
 interface SectorOverviewProps {
 	sectors: SectorMetadata[];
@@ -39,7 +39,7 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 	};
 
 	return (
-		<div className="relative h-full min-h-screen w-full overflow-auto p-4 pb-16">
+		<div className="relative m-[20px] flex flex-1">
 			{sectors.map((sector) => {
 				const planets = planetsBySector[sector.id] || ([] as PlanetView[]);
 

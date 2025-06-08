@@ -43,7 +43,7 @@ const GameSettings: React.FC = () => {
 					<div className="flex items-center px-4 py-3">
 						<button
 							onClick={handleBack}
-							className="mr-4 flex items-center justify-center rounded-lg p-2 text-purple-300 transition-colors hover:bg-purple-900/40 hover:text-purple-100"
+							className="mr-4 flex cursor-pointer items-center justify-center rounded-lg p-2 text-purple-300 transition-colors hover:bg-purple-900/40 hover:text-purple-100"
 						>
 							<ArrowLeftIcon className="h-5 w-5" />
 						</button>
@@ -73,7 +73,7 @@ const GameSettings: React.FC = () => {
 									</div>
 									<button
 										onClick={handleToggleSound}
-										className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none ${
+										className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none ${
 											settings.soundEnabled ? "bg-purple-600" : "bg-gray-600"
 										}`}
 									>
@@ -125,7 +125,7 @@ const GameSettings: React.FC = () => {
 									</div>
 									<button
 										onClick={handleToggleMusic}
-										className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none ${
+										className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none ${
 											settings.musicEnabled ? "bg-purple-600" : "bg-gray-600"
 										}`}
 									>
@@ -177,7 +177,7 @@ const GameSettings: React.FC = () => {
 							</p>
 							<button
 								onClick={handleReset}
-								className="rounded-lg border border-red-600/50 bg-red-900/20 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-900/40 hover:text-red-200"
+								className="cursor-pointer rounded-lg border border-red-600/50 bg-red-900/20 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-900/40 hover:text-red-200"
 							>
 								Reset to Defaults
 							</button>

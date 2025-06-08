@@ -96,29 +96,27 @@ const NewGameConfig: React.FC = () => {
 				<div className="flex flex-1 flex-col space-y-4 overflow-scroll">
 					{/* Faction */}
 					<div className="space-y-2">
-						<label
-							htmlFor="faction-select"
-							className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200"
-						>
+						<label className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200">
 							Faction
 						</label>
 						<Listbox value={faction} onChange={setFaction}>
 							<div className="relative">
-								<ListboxButton className="flex min-h-[56px] w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/70 px-5 py-4 text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
-									{faction}
-									<ChevronDownIcon className="ml-2 h-6 w-6 text-slate-400 transition-transform duration-200 group-data-[open]:rotate-180" />
+								<ListboxButton className="relative w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-800/70 py-4 pr-12 pl-5 text-left text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+									<span className="block truncate">{faction}</span>
+									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+										<ChevronDownIcon className="ui-open:rotate-180 h-6 w-6 text-slate-400 transition-transform duration-200" />
+									</span>
 								</ListboxButton>
-								<ListboxOptions
-									anchor="bottom"
-									className="animate-fade-in absolute left-0 z-20 mt-2 w-72 rounded-xl bg-slate-900/80 shadow-2xl ring-1 ring-black/10 backdrop-blur-lg focus:outline-none"
-								>
+								<ListboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-700 bg-slate-900/95 py-1 text-xl shadow-2xl backdrop-blur-lg focus:outline-none">
 									{factions.map((f) => (
 										<ListboxOption
 											key={f}
 											value={f}
-											className="group flex cursor-pointer gap-2 px-5 py-4 text-xl text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+											className="relative cursor-pointer px-5 py-3 text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[focus]:text-white data-[selected]:bg-purple-600/40 data-[selected]:text-white"
 										>
-											{f}
+											<span className="block truncate data-[selected]:font-medium">
+												{f}
+											</span>
 										</ListboxOption>
 									))}
 								</ListboxOptions>
@@ -128,29 +126,27 @@ const NewGameConfig: React.FC = () => {
 
 					{/* Difficulty */}
 					<div className="space-y-2">
-						<label
-							htmlFor="difficulty-select"
-							className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200"
-						>
+						<label className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200">
 							Difficulty
 						</label>
 						<Listbox value={difficulty} onChange={setDifficulty}>
 							<div className="relative">
-								<ListboxButton className="flex min-h-[56px] w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/70 px-5 py-4 text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
-									{difficulty}
-									<ChevronDownIcon className="ml-2 h-6 w-6 text-slate-400 transition-transform duration-200 group-data-[open]:rotate-180" />
+								<ListboxButton className="relative w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-800/70 py-4 pr-12 pl-5 text-left text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+									<span className="block truncate">{difficulty}</span>
+									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+										<ChevronDownIcon className="ui-open:rotate-180 h-6 w-6 text-slate-400 transition-transform duration-200" />
+									</span>
 								</ListboxButton>
-								<ListboxOptions
-									anchor="bottom"
-									className="animate-fade-in absolute left-0 z-20 mt-2 w-72 rounded-xl bg-slate-900/80 shadow-2xl ring-1 ring-black/10 backdrop-blur-lg focus:outline-none"
-								>
+								<ListboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-700 bg-slate-900/95 py-1 text-xl shadow-2xl backdrop-blur-lg focus:outline-none">
 									{difficulties.map((d) => (
 										<ListboxOption
 											key={d}
 											value={d}
-											className="group flex cursor-pointer gap-2 px-5 py-4 text-xl text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+											className="relative cursor-pointer px-5 py-3 text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[focus]:text-white data-[selected]:bg-purple-600/40 data-[selected]:text-white"
 										>
-											{d}
+											<span className="block truncate data-[selected]:font-medium">
+												{d}
+											</span>
 										</ListboxOption>
 									))}
 								</ListboxOptions>
@@ -160,29 +156,27 @@ const NewGameConfig: React.FC = () => {
 
 					{/* Galaxy Size */}
 					<div className="space-y-2">
-						<label
-							htmlFor="galaxy-size-select"
-							className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200"
-						>
+						<label className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200">
 							Galaxy Size
 						</label>
 						<Listbox value={galaxySize} onChange={setGalaxySize}>
 							<div className="relative">
-								<ListboxButton className="flex min-h-[56px] w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/70 px-5 py-4 text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
-									{galaxySize}
-									<ChevronDownIcon className="ml-2 h-6 w-6 text-slate-400 transition-transform duration-200 group-data-[open]:rotate-180" />
+								<ListboxButton className="relative w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-800/70 py-4 pr-12 pl-5 text-left text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+									<span className="block truncate">{galaxySize}</span>
+									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+										<ChevronDownIcon className="ui-open:rotate-180 h-6 w-6 text-slate-400 transition-transform duration-200" />
+									</span>
 								</ListboxButton>
-								<ListboxOptions
-									anchor="bottom"
-									className="animate-fade-in absolute left-0 z-20 mt-2 w-72 rounded-xl bg-slate-900/80 shadow-2xl ring-1 ring-black/10 backdrop-blur-lg focus:outline-none"
-								>
+								<ListboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-700 bg-slate-900/95 py-1 text-xl shadow-2xl backdrop-blur-lg focus:outline-none">
 									{galaxySizes.map((g) => (
 										<ListboxOption
 											key={g}
 											value={g}
-											className="group flex cursor-pointer gap-2 px-5 py-4 text-xl text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+											className="relative cursor-pointer px-5 py-3 text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[focus]:text-white data-[selected]:bg-purple-600/40 data-[selected]:text-white"
 										>
-											{g}
+											<span className="block truncate data-[selected]:font-medium">
+												{g}
+											</span>
 										</ListboxOption>
 									))}
 								</ListboxOptions>
@@ -192,29 +186,27 @@ const NewGameConfig: React.FC = () => {
 
 					{/* Win Condition */}
 					<div className="space-y-2">
-						<label
-							htmlFor="win-condition-select"
-							className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200"
-						>
+						<label className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200">
 							Winning Condition
 						</label>
 						<Listbox value={winCondition} onChange={setWinCondition}>
 							<div className="relative">
-								<ListboxButton className="flex min-h-[56px] w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/70 px-5 py-4 text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
-									{winCondition}
-									<ChevronDownIcon className="ml-2 h-6 w-6 text-slate-400 transition-transform duration-200 group-data-[open]:rotate-180" />
+								<ListboxButton className="relative w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-800/70 py-4 pr-12 pl-5 text-left text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+									<span className="block truncate">{winCondition}</span>
+									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+										<ChevronDownIcon className="ui-open:rotate-180 h-6 w-6 text-slate-400 transition-transform duration-200" />
+									</span>
 								</ListboxButton>
-								<ListboxOptions
-									anchor="bottom"
-									className="animate-fade-in absolute left-0 z-20 mt-2 w-72 rounded-xl bg-slate-900/80 shadow-2xl ring-1 ring-black/10 backdrop-blur-lg focus:outline-none"
-								>
+								<ListboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-700 bg-slate-900/95 py-1 text-xl shadow-2xl backdrop-blur-lg focus:outline-none">
 									{winConditions.map((w) => (
 										<ListboxOption
 											key={w}
 											value={w}
-											className="group flex cursor-pointer gap-2 px-5 py-4 text-xl text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+											className="relative cursor-pointer px-5 py-3 text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[focus]:text-white data-[selected]:bg-purple-600/40 data-[selected]:text-white"
 										>
-											{w}
+											<span className="block truncate data-[selected]:font-medium">
+												{w}
+											</span>
 										</ListboxOption>
 									))}
 								</ListboxOptions>
@@ -224,29 +216,27 @@ const NewGameConfig: React.FC = () => {
 
 					{/* Mode */}
 					<div className="space-y-2">
-						<label
-							htmlFor="mode-select"
-							className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200"
-						>
+						<label className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200">
 							Mode
 						</label>
 						<Listbox value={mode} onChange={setMode}>
 							<div className="relative">
-								<ListboxButton className="flex min-h-[56px] w-full items-center justify-between rounded-xl border border-slate-700 bg-slate-800/70 px-5 py-4 text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500">
-									{mode}
-									<ChevronDownIcon className="ml-2 h-6 w-6 text-slate-400 transition-transform duration-200 group-data-[open]:rotate-180" />
+								<ListboxButton className="relative w-full cursor-pointer rounded-xl border border-slate-700 bg-slate-800/70 py-4 pr-12 pl-5 text-left text-xl text-white shadow-md backdrop-blur-md transition-all duration-300 hover:shadow-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+									<span className="block truncate">{mode}</span>
+									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+										<ChevronDownIcon className="ui-open:rotate-180 h-6 w-6 text-slate-400 transition-transform duration-200" />
+									</span>
 								</ListboxButton>
-								<ListboxOptions
-									anchor="bottom"
-									className="animate-fade-in absolute left-0 z-20 mt-2 w-72 rounded-xl bg-slate-900/80 shadow-2xl ring-1 ring-black/10 backdrop-blur-lg focus:outline-none"
-								>
+								<ListboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-700 bg-slate-900/95 py-1 text-xl shadow-2xl backdrop-blur-lg focus:outline-none">
 									{modes.map((m) => (
 										<ListboxOption
 											key={m}
 											value={m}
-											className="group flex cursor-pointer gap-2 px-5 py-4 text-xl text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[selected]:text-white"
+											className="relative cursor-pointer px-5 py-3 text-slate-200 transition-colors duration-200 select-none data-[focus]:bg-purple-700/60 data-[focus]:text-white data-[selected]:bg-purple-600/40 data-[selected]:text-white"
 										>
-											{m}
+											<span className="block truncate data-[selected]:font-medium">
+												{m}
+											</span>
 										</ListboxOption>
 									))}
 								</ListboxOptions>
