@@ -359,8 +359,7 @@ export interface PlanetMetadata {
 	id: string;
 	name: string;
 	sectorId: string;
-	picture: string;
-	size: number;
+	picture: number; // ID of the picture asset
 	position: { x: number; y: number };
 }
 
@@ -373,6 +372,7 @@ export interface PlanetState {
 	naturalResources: number;
 	garrisonRequirement: number;
 	inUprising: boolean;
+	isDestroyed: boolean;
 	general: string | null;
 	commander: string | null;
 	isDiscovered: boolean;
@@ -390,6 +390,7 @@ export interface PlanetView {
 		naturalResources?: number;
 		garrisonRequirement?: number;
 		inUprising?: boolean;
+		isDestroyed: boolean;
 		general?: string | null;
 		commander?: string | null;
 		defenses?: PlanetDefenses;

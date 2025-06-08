@@ -37,7 +37,7 @@ const SectorComponent: React.FC<SectorComponentProps> = ({
 			{/* Planets container */}
 			<div className="relative h-full w-full p-1">
 				{planets.map((planet, index) => {
-					const planetSize = getPlanetSize(planet.metadata.size);
+					const planetSize = getPlanetSize(1);
 					const pixelSize = getPlanetPixelSize(planetSize);
 
 					// Responsive usable area calculation (sector size - 2px padding)

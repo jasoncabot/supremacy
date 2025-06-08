@@ -8,12 +8,36 @@ interface SectorDetailWindowProps {
 	filter: FilterType;
 }
 
-const SectorDetailWindow: React.FC<SectorDetailWindowProps> = ({ planets }) => {
+const SectorDetailWindow: React.FC<SectorDetailWindowProps> = ({
+	planets,
+	filter,
+}) => {
 	return (
-		<div className="p-4">
-			{planets.map((planet) => (
-				<PlanetOverview key={planet.metadata.id} planet={planet} />
-			))}
+		<div className="relative m-[40px] flex flex-1">
+			{planets.map((planet) => {
+				// Convert percentage coordinates to CSS positioning
+				// Coordinates are percentages, so multiply by 100 for CSS percentage values
+				const leftPercent = planet.metadata.position.x * 100;
+				const topPercent = planet.metadata.position.y * 100;
+
+				return (
+					<div
+						key={planet.metadata.id}
+						className="absolute"
+						style={{
+							left: `${leftPercent}%`,
+							top: `${topPercent}%`,
+							transform: "translate(-50%, -50%)", // Center the sector on its coordinates
+						}}
+					>
+						<PlanetOverview
+							key={planet.metadata.id}
+							planet={planet}
+							filter={filter}
+						/>
+					</div>
+				);
+			})}
 		</div>
 	);
 };

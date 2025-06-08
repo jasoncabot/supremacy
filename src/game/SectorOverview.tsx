@@ -39,7 +39,7 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 	};
 
 	return (
-		<div className="relative m-[20px] flex flex-1">
+		<div className="relative m-[40px] flex flex-1 md:m-[80px]">
 			{sectors.map((sector) => {
 				const planets = planetsBySector[sector.id] || ([] as PlanetView[]);
 

@@ -16,6 +16,12 @@ export const useSoundManager = (): SoundManager => {
 	const audioCache = useRef<Map<SoundType, HTMLAudioElement>>(new Map());
 	const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
 	const audioContextRef = useRef<AudioContext | null>(null);
+	const audioSourcesRef = useRef<Map<SoundType, MediaElementAudioSourceNode>>(
+		new Map(),
+	);
+	const backgroundMusicSourceRef = useRef<MediaElementAudioSourceNode | null>(
+		null,
+	);
 
 	// Initialize audio elements
 	useEffect(() => {
@@ -32,6 +38,7 @@ export const useSoundManager = (): SoundManager => {
 		// Capture current ref values at the start of the effect
 		const currentAudioCache = audioCache.current;
 		const currentBackgroundMusic = backgroundMusicRef.current;
+		const currentAudioSources = audioSourcesRef.current;
 
 		// Preload sound effects
 		Object.entries(sounds).forEach(([type, src]) => {
@@ -47,6 +54,18 @@ export const useSoundManager = (): SoundManager => {
 				});
 
 				currentAudioCache.set(type as SoundType, audio);
+
+				// Create MediaElementSource for Web Audio API if context is available
+				if (audioContextRef.current) {
+					try {
+						const source =
+							audioContextRef.current.createMediaElementSource(audio);
+						source.connect(audioContextRef.current.destination);
+						currentAudioSources.set(type as SoundType, source);
+					} catch (error) {
+						console.warn(`Failed to create audio source for ${type}:`, error);
+					}
+				}
 			}
 		});
 
@@ -63,6 +82,23 @@ export const useSoundManager = (): SoundManager => {
 			});
 
 			backgroundMusicRef.current = newBackgroundMusic;
+
+			// Create MediaElementSource for background music if context is available
+			if (audioContextRef.current) {
+				try {
+					const source =
+						audioContextRef.current.createMediaElementSource(
+							newBackgroundMusic,
+						);
+					source.connect(audioContextRef.current.destination);
+					backgroundMusicSourceRef.current = source;
+				} catch (error) {
+					console.warn(
+						"Failed to create audio source for background music:",
+						error,
+					);
+				}
+			}
 		}
 
 		return () => {
@@ -99,13 +135,8 @@ export const useSoundManager = (): SoundManager => {
 			if (!settings.soundEnabled) return;
 
 			const audio = audioCache.current.get(type);
-			if (audio && audioContextRef.current) {
+			if (audio) {
 				try {
-					// Use Web Audio API universally for better silent mode support
-					const source =
-						audioContextRef.current.createMediaElementSource(audio);
-					source.connect(audioContextRef.current.destination);
-
 					// Reset to start and play
 					audio.currentTime = 0;
 					audio.play().catch((error) => {
@@ -115,17 +146,7 @@ export const useSoundManager = (): SoundManager => {
 						}
 					});
 				} catch (error) {
-					// Fallback to regular audio if Web Audio API fails
-					console.warn(
-						`Web Audio API failed for ${type}, falling back to regular audio:`,
-						error,
-					);
-					audio.currentTime = 0;
-					audio.play().catch((playError) => {
-						if (playError.name !== "NotAllowedError") {
-							console.warn(`Failed to play sound ${type}:`, playError);
-						}
-					});
+					console.warn(`Failed to play sound ${type}:`, error);
 				}
 			}
 		},
@@ -135,33 +156,12 @@ export const useSoundManager = (): SoundManager => {
 	const playBackgroundMusic = useCallback(() => {
 		if (!settings.musicEnabled || !backgroundMusicRef.current) return;
 
-		if (audioContextRef.current) {
-			try {
-				// Use Web Audio API for background music as well
-				const source = audioContextRef.current.createMediaElementSource(
-					backgroundMusicRef.current,
-				);
-				source.connect(audioContextRef.current.destination);
-
-				backgroundMusicRef.current.play().catch((error) => {
-					// Ignore autoplay policy errors and silent mode
-					if (error.name !== "NotAllowedError") {
-						console.warn("Failed to play background music:", error);
-					}
-				});
-			} catch (error) {
-				// Fallback to regular audio if Web Audio API fails
-				console.warn(
-					"Web Audio API failed for background music, falling back to regular audio:",
-					error,
-				);
-				backgroundMusicRef.current.play().catch((playError) => {
-					if (playError.name !== "NotAllowedError") {
-						console.warn("Failed to play background music:", playError);
-					}
-				});
+		backgroundMusicRef.current.play().catch((error) => {
+			// Ignore autoplay policy errors and silent mode
+			if (error.name !== "NotAllowedError") {
+				console.warn("Failed to play background music:", error);
 			}
-		}
+		});
 	}, [settings.musicEnabled]);
 
 	const stopBackgroundMusic = useCallback(() => {

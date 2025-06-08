@@ -1,9 +1,13 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
 import { useWindowContext } from "../hooks/useWindowContext";
+import { FilterType } from "./Filters";
+import { getPlanetById } from "../planets";
+import { getAdornmentByTypeAndFaction, type Faction } from "../adornments";
 
 interface PlanetOverviewProps {
 	planet: PlanetView;
+	filter: FilterType;
 }
 
 const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
@@ -78,93 +82,129 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 		});
 	};
 
-	return (
-		<div className="mb-6 border-b border-purple-700/30 pb-4 last:border-b-0">
-			<h3 className="mb-2 text-xl font-semibold text-white">
-				{planet.metadata.name}
-			</h3>
-			<ul className="space-y-2 text-sm text-gray-300">
-				<li>
-					<span className="font-medium text-gray-200">Popular Support:</span>{" "}
-					{planet.state?.loyalty !== undefined
-						? `${planet.state.loyalty}%`
-						: "Unknown"}
-				</li>
-				<li>
-					<span className="font-medium text-gray-200">Status:</span>{" "}
-					{planet.discovered ? "Discovered" : "Undiscovered"}
-				</li>
-				<li>
-					<span className="font-medium text-gray-200">Uprising:</span>{" "}
-					{planet.state?.inUprising ? (
-						<span className="text-red-500">In Rebellion</span>
-					) : (
-						<span className="text-green-500">Stable</span>
-					)}
-				</li>
-				<li>
-					<span className="font-medium text-gray-200">Natural Resources:</span>{" "}
-					{planet.state?.naturalResources !== undefined ? (
-						<>
-							{/* TODO: Get used resources data from API */}
-							<span className="text-yellow-400">? used</span> out of{" "}
-							<span className="text-yellow-400">
-								{planet.state.naturalResources}
-							</span>{" "}
-							available
-						</>
-					) : (
-						"Unknown"
-					)}
-				</li>
-				<li>
-					<span className="font-medium text-gray-200">Energy Consumption:</span>{" "}
-					{planet.state?.energySpots !== undefined ? (
-						<>
-							{/* TODO: Get used energy data from API */}
-							<span className="text-blue-400">? used</span> out of{" "}
-							<span className="text-blue-400">{planet.state.energySpots}</span>{" "}
-							available
-						</>
-					) : (
-						"Unknown"
-					)}
-				</li>
-				<li>
-					<span className="font-medium text-gray-200">Active Missions:</span>{" "}
-					{/* TODO: Implement missions data when available in API */}
-					<span className="text-gray-400 italic">
-						No mission data available
-					</span>
-				</li>
-			</ul>
+	const usedEnergy = 1; // TODO: count the manufacturing units that take energy
+	const totalEnergy = planet.state?.energySpots || 0;
+	const unusedEnergy = totalEnergy - usedEnergy;
 
-			<div className="mt-4 flex flex-wrap gap-2">
-				<button
-					onClick={handleViewFleets}
-					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
-				>
-					View Fleets
-				</button>
-				<button
-					onClick={handleViewDefence}
-					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
-				>
-					View Defence
-				</button>
-				<button
-					onClick={handleViewManufacturing}
-					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
-				>
-					View Manufacturing
-				</button>
-				<button
-					onClick={handleViewMissions}
-					className="cursor-pointer rounded bg-purple-700/30 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700/50"
-				>
-					View Missions
-				</button>
+	const usedResources = planet.state?.manufacturing?.mines.length || 0;
+	const totalResources = planet.state?.naturalResources || 0;
+	const unusedResources = totalResources - usedResources;
+
+	const loyalty = planet.state?.loyalty || 0;
+
+	const planetImageUrl = getPlanetById(
+		planet.metadata.picture,
+		planet.state?.isDestroyed,
+	);
+
+	// Determine faction for adornment icons
+	const faction: Faction =
+		planet.state?.owner === "Neutral"
+			? "neutral"
+			: planet.state?.owner || "neutral";
+
+	return (
+		<div className="items-left flex h-[80px] w-[60px] flex-col justify-center rounded-lg p-2 text-white">
+			{/* planet image */}
+			<div className="mb-1 flex items-center justify-between">
+				<img
+					src={planetImageUrl}
+					alt={planet.metadata.name}
+					title={planet.metadata.name}
+					className="h-[30px] w-[30px] rounded-full"
+				/>
 			</div>
+
+			{/* Adornments only visible on md+ devices */}
+			<div className="mb-1 hidden md:block">
+				<div className="flex flex-row gap-1">
+					<button
+						onClick={handleViewFleets}
+						className="hover:opacity-80"
+						title="Fleets"
+					>
+						<img
+							src={getAdornmentByTypeAndFaction("fleet", faction)}
+							alt="Fleets"
+						/>
+					</button>
+					<button
+						onClick={handleViewDefence}
+						className="hover:opacity-80"
+						title="Defence"
+					>
+						<img
+							src={getAdornmentByTypeAndFaction("defence", faction)}
+							alt="Defence"
+						/>
+					</button>
+					<button
+						onClick={handleViewManufacturing}
+						className="hover:opacity-80"
+						title="Manufacturing"
+					>
+						<img
+							src={getAdornmentByTypeAndFaction("manufacturing", faction)}
+							alt="Manufacturing"
+						/>
+					</button>
+					<button
+						onClick={handleViewMissions}
+						className="hover:opacity-80"
+						title="Missions"
+					>
+						<img
+							src={getAdornmentByTypeAndFaction("mission", faction)}
+							alt="Missions"
+						/>
+					</button>
+				</div>
+			</div>
+
+			{/* energy spots */}
+			<div
+				className="mb-1 flex"
+				title={`${usedEnergy} / ${totalEnergy} Energy`}
+			>
+				{Array.from({ length: usedEnergy }).map((_, index) => (
+					<div
+						key={index}
+						className="h-[6px] w-[4px] border-l border-gray-400 bg-white"
+					/>
+				))}
+				{Array.from({ length: unusedEnergy }).map((_, index) => (
+					<div
+						key={index}
+						className="h-[6px] w-[4px] border-l border-gray-400 bg-blue-500"
+					/>
+				))}
+			</div>
+
+			{/* natural resources */}
+			<div
+				className="mb-1 flex"
+				title={`${usedResources} / ${totalResources} Resources`}
+			>
+				{Array.from({ length: usedResources }).map((_, index) => (
+					<div
+						key={index}
+						className="h-[6px] w-[4px] border-l border-gray-400 bg-yellow-500"
+					/>
+				))}
+				{Array.from({ length: unusedResources }).map((_, index) => (
+					<div
+						key={index}
+						className="h-[6px] w-[4px] border-l border-gray-400 bg-red-500"
+					/>
+				))}
+			</div>
+
+			{/* popular support */}
+			<div className="mb-1 flex text-xs" title={`Popular support ${loyalty}%`}>
+				{loyalty}%
+			</div>
+
+			<div className="text-xs">{planet.metadata.name}</div>
 		</div>
 	);
 };

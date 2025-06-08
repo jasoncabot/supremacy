@@ -408,7 +408,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 		const usedCharacters = new Set<CharacterIdentifiers>();
 
 		// Create a lookup map for planet metadata
-		const planetMetadataMap = new Map(allPlanets.map(p => [p.id, p]));
+		const planetMetadataMap = new Map(allPlanets.map((p) => [p.id, p]));
 
 		for (const sector of sectorMetadata) {
 			// Add sector to sectors record
@@ -427,8 +427,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 					id: planetId,
 					name: planetMeta.name,
 					sectorId: sector.id,
-					picture: `planet-${planetMeta.picture}.png`,
-					size: Math.random() * 0.5 + 0.5, // Size between 0.5 and 1.0
+					picture: planetMeta.picture,
 					position: planetMeta.location,
 				};
 
@@ -448,6 +447,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 					naturalResources: Math.floor(Math.random() * 10),
 					garrisonRequirement: Math.floor(Math.random() * 5) + 1,
 					inUprising: Math.random() < 0.1, // 10% chance of uprising
+					isDestroyed: false,
 					general: null,
 					commander: null,
 					isDiscovered: sector.isInnerRim, // Inner rim planets start discovered
@@ -520,6 +520,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 								? planetState.garrisonRequirement
 								: undefined,
 							inUprising: isOwner ? planetState.inUprising : undefined,
+							isDestroyed: planetState.isDestroyed,
 							general: isOwner ? planetState.general : undefined,
 							commander: isOwner ? planetState.commander : undefined,
 							defenses: isOwner ? planetState.defenses : undefined,
@@ -568,6 +569,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 								? planetState.garrisonRequirement
 								: undefined,
 							inUprising: isOwner ? planetState.inUprising : undefined,
+							isDestroyed: planetState.isDestroyed,
 							general: isOwner ? planetState.general : undefined,
 							commander: isOwner ? planetState.commander : undefined,
 							defenses: isOwner ? planetState.defenses : undefined,

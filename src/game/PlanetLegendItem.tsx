@@ -67,7 +67,7 @@ const getFilterRelevanceSize = (
 
 		case "OFF":
 		default:
-			return getPlanetSize(planet.metadata.size);
+			return getPlanetSize(1);
 	}
 };
 
@@ -84,7 +84,7 @@ const PlanetLegendItem: React.FC<PlanetLegendItemProps> = ({
 	const filterSize =
 		filter !== "OFF"
 			? getFilterRelevanceSize(planet, filter)
-			: getPlanetSize(planet.metadata.size);
+			: getPlanetSize(1);
 
 	// Use the filter-based size for the image, but keep original pixelSize for positioning
 	const planetImage = getPlanetImage(
