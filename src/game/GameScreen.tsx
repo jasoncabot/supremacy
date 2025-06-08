@@ -18,7 +18,7 @@ import { GlobalKeyboardHandler } from "./GlobalKeyboardHandler";
 
 // Inner component that uses the game and window contexts
 const GameScreenContent: React.FC = () => {
-	const [filter, setFilter] = useState<FilterType>("OFF");
+	const [filter, setFilter] = useState<FilterType>("LOYALTY_SUPPORT");
 	const [menuExpanded, setMenuExpanded] = useState(false);
 	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
 	const { game, loading, submitActions } = useGame();
@@ -121,7 +121,7 @@ const GameScreen: React.FC = () => {
 	return (
 		<GameProvider>
 			<WindowProvider>
-				<GlobalKeyboardHandler 
+				<GlobalKeyboardHandler
 					onGlobalSearch={() => {
 						// TODO: Implement global search functionality
 						console.log("Global search triggered");
