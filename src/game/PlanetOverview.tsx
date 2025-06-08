@@ -1,9 +1,11 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
-import { useWindowContext } from "../hooks/useWindowContext";
-import { FilterType } from "./Filters";
-import { getPlanetById } from "../planets";
 import { getAdornmentByTypeAndFaction, type Faction } from "../adornments";
+import { useSelectionContext } from "../hooks/useSelectionContext";
+import { useWindowContext } from "../hooks/useWindowContext";
+import { getPlanetById } from "../planets";
+import { FilterType } from "./Filters";
+import PlanetMobileMenu from "./PlanetMobileMenu";
 
 interface PlanetOverviewProps {
 	planet: PlanetView;
@@ -12,6 +14,7 @@ interface PlanetOverviewProps {
 
 const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	const { handleOpenWindow } = useWindowContext();
+	const { selectionState, selectItem } = useSelectionContext();
 
 	const handleViewFleets = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent event from bubbling to parent window
@@ -82,6 +85,20 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 		});
 	};
 
+	const handlePlanetSelected = () => {
+		// If we're in target selection mode, select this planet as the target
+		if (selectionState === "awaiting-target") {
+			const planetAsSelectableItem = {
+				...planet,
+				type: "planet" as const,
+				id: planet.metadata.id,
+			};
+			selectItem(planetAsSelectableItem);
+		}
+		// If no selection is in progress, the mobile menu will handle the interaction
+		// (for desktop, the adornment buttons are always visible)
+	};
+
 	const usedEnergy = 1; // TODO: count the manufacturing units that take energy
 	const totalEnergy = planet.state?.energySpots || 0;
 	const unusedEnergy = totalEnergy - usedEnergy;
@@ -105,59 +122,113 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 	return (
 		<div className="items-left flex h-[80px] w-[60px] flex-col justify-center rounded-lg p-2 text-white">
-			{/* planet image */}
-			<div className="mb-1 flex items-center justify-between">
-				<img
-					src={planetImageUrl}
-					alt={planet.metadata.name}
-					title={planet.metadata.name}
-					className="h-[30px] w-[30px] rounded-full"
-				/>
+			{/* Mobile: Show menu on tap, Desktop: Always show adornments */}
+			<div className="md:hidden">
+				{/* Mobile - Show menu only if not in target selection mode */}
+				{selectionState !== "awaiting-target" ? (
+					<PlanetMobileMenu
+						planet={planet}
+						onFleets={handleViewFleets}
+						onDefence={handleViewDefence}
+						onManufacturing={handleViewManufacturing}
+						onMissions={handleViewMissions}
+					>
+						<div>
+							{/* planet image */}
+							<div className="mb-1 flex items-center justify-between">
+								<img
+									src={planetImageUrl}
+									alt={planet.metadata.name}
+									title={planet.metadata.name}
+									className="h-[30px] w-[30px] rounded-full"
+								/>
+							</div>
+						</div>
+					</PlanetMobileMenu>
+				) : (
+					/* Target selection mode - just show clickable planet */
+					<div onClick={handlePlanetSelected} className="cursor-pointer">
+						<div className="mb-1 flex items-center justify-between">
+							<img
+								src={planetImageUrl}
+								alt={planet.metadata.name}
+								title={planet.metadata.name}
+								className="h-[30px] w-[30px] rounded-full"
+							/>
+						</div>
+					</div>
+				)}
 			</div>
 
-			{/* Adornments only visible on md+ devices */}
-			<div className="mb-1 hidden md:block">
-				<div className="flex flex-row gap-1">
-					<button
-						onClick={handleViewFleets}
-						className="hover:opacity-80"
-						title="Fleets"
-					>
-						<img
-							src={getAdornmentByTypeAndFaction("fleet", faction)}
-							alt="Fleets"
-						/>
-					</button>
-					<button
-						onClick={handleViewDefence}
-						className="hover:opacity-80"
-						title="Defence"
-					>
-						<img
-							src={getAdornmentByTypeAndFaction("defence", faction)}
-							alt="Defence"
-						/>
-					</button>
-					<button
-						onClick={handleViewManufacturing}
-						className="hover:opacity-80"
-						title="Manufacturing"
-					>
-						<img
-							src={getAdornmentByTypeAndFaction("manufacturing", faction)}
-							alt="Manufacturing"
-						/>
-					</button>
-					<button
-						onClick={handleViewMissions}
-						className="hover:opacity-80"
-						title="Missions"
-					>
-						<img
-							src={getAdornmentByTypeAndFaction("mission", faction)}
-							alt="Missions"
-						/>
-					</button>
+			{/* Desktop - Always show planet image and adornments */}
+			<div className="hidden md:block">
+				{/* planet image */}
+				<div className="mb-1 flex items-center justify-between">
+					<img
+						src={planetImageUrl}
+						alt={planet.metadata.name}
+						title={planet.metadata.name}
+						className="h-[30px] w-[30px] rounded-full"
+						onClick={
+							selectionState === "awaiting-target"
+								? handlePlanetSelected
+								: undefined
+						}
+						style={{
+							cursor:
+								selectionState === "awaiting-target" ? "pointer" : "default",
+						}}
+					/>
+				</div>
+
+				{/* Adornments only visible on md+ devices */}
+				<div className="mb-1">
+					<div className="flex flex-row gap-1">
+						{faction !== "neutral" && (
+							<button
+								onClick={handleViewFleets}
+								className="hover:opacity-80"
+								title="Fleets"
+							>
+								<img
+									src={getAdornmentByTypeAndFaction("fleet", faction)}
+									alt="Fleets"
+								/>
+							</button>
+						)}
+						<button
+							onClick={handleViewDefence}
+							className="hover:opacity-80"
+							title="Defence"
+						>
+							<img
+								src={getAdornmentByTypeAndFaction("defence", faction)}
+								alt="Defence"
+							/>
+						</button>
+						<button
+							onClick={handleViewManufacturing}
+							className="hover:opacity-80"
+							title="Manufacturing"
+						>
+							<img
+								src={getAdornmentByTypeAndFaction("manufacturing", faction)}
+								alt="Manufacturing"
+							/>
+						</button>
+						{faction !== "neutral" && (
+							<button
+								onClick={handleViewMissions}
+								className="hover:opacity-80"
+								title="Missions"
+							>
+								<img
+									src={getAdornmentByTypeAndFaction("mission", faction)}
+									alt="Missions"
+								/>
+							</button>
+						)}
+					</div>
 				</div>
 			</div>
 

@@ -2,6 +2,7 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
 	BeakerIcon,
 	BuildingLibraryIcon,
+	CogIcon,
 	CubeIcon,
 	UserGroupIcon,
 	WrenchScrewdriverIcon,
@@ -12,9 +13,9 @@ import {
 	ManufacturingResource,
 	PlanetView,
 } from "../../worker/api";
-import MiniCardView from "./MiniCardView";
-import { SelectableItem } from "../hooks/useSelectionContext";
 import { getManufacturingCardImage } from "../cards";
+import { SelectableItem } from "../hooks/useSelectionContext";
+import MiniCardView from "./MiniCardView";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: ManufacturingResource): string => {
@@ -33,8 +34,9 @@ const getBackgroundImage = (resource: ManufacturingResource): string => {
 export const ManufacturingOverview: React.FC<{
 	planet: PlanetView;
 }> = ({ planet }) => {
-	const [selectedCategory, setSelectedCategory] =
-		useState<ManufacturingCategory>("shipyard");
+	const [selectedCategory, setSelectedCategory] = useState<
+		ManufacturingCategory | "build"
+	>("build");
 
 	// Get manufacturing from planet data, or use empty arrays if no manufacturing
 	const planetManufacturing = planet.state?.manufacturing || {
@@ -54,10 +56,11 @@ export const ManufacturingOverview: React.FC<{
 	};
 
 	const categories: {
-		id: ManufacturingCategory;
+		id: ManufacturingCategory | "build";
 		name: string;
 		icon: React.ElementType;
 	}[] = [
+		{ id: "build", name: "Build", icon: CogIcon },
 		{ id: "shipyard", name: "Shipyards", icon: BuildingLibraryIcon },
 		{
 			id: "training_facility",
@@ -87,7 +90,10 @@ export const ManufacturingOverview: React.FC<{
 			<TabList className="flex space-x-1 rounded-md bg-slate-800 p-1">
 				{categories.map((category) => {
 					const CategoryIcon = category.icon;
-					const hasResources = resources[category.id].length > 0;
+					const hasResources =
+						category.id === "build"
+							? true
+							: resources[category.id as ManufacturingCategory]?.length > 0;
 					const owner = planet.state?.owner || "Neutral";
 
 					return (
@@ -113,57 +119,152 @@ export const ManufacturingOverview: React.FC<{
 			</TabList>
 
 			<TabPanels className="mt-2 flex-1 flex-grow">
-				{categories.map((category) => (
-					<TabPanel key={category.id} className="rounded-md p-1">
-						<div className="flex flex-col">
-							<div className="flex-grow overflow-auto">
-								{resources[category.id].length > 0 ? (
-									<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-										{resources[category.id].map(
-											(resource: ManufacturingResource) => {
-												const imagePairs = [
-													{
-														overlay: getOverlayImage(),
-														foreground: getManufacturingCardImage(resource),
-														background: getBackgroundImage(resource),
-													},
-												];
-
-												// Create selectable item data
-												const selectableItem = {
-													id: resource.id,
-													type: category.id, // manufacturing category
-													subtype: resource.subtype,
-													name: resource.name,
-													status: resource.status,
-												} as SelectableItem;
-
-												return (
-													<MiniCardView
-														key={resource.id}
-														imagePairs={imagePairs}
-														displayText={resource.name}
-														selectableItem={selectableItem}
-													/>
-												);
-											},
-										)}
+				{categories.map((category) => {
+					if (category.id === "build") {
+						return (
+							<TabPanel key={category.id} className="rounded-md p-1">
+								<div className="flex flex-col space-y-4">
+									{/* Shipyard Construction */}
+									<div className="rounded-lg bg-slate-800 p-4">
+										<h3 className="mb-3 flex items-center text-lg font-semibold text-white">
+											<BuildingLibraryIcon className="mr-2 h-5 w-5" />
+											Shipyard Construction
+										</h3>
+										<div className="space-y-2">
+											{/* Example construction item */}
+											<div className="rounded bg-slate-700 p-3">
+												<div className="mb-2 flex items-center justify-between">
+													<span className="text-sm text-white">
+														Alliance Dreadnaught
+													</span>
+													<span className="text-xs text-slate-300">65%</span>
+												</div>
+												<div className="h-2 overflow-hidden rounded-full bg-slate-600">
+													<div className="h-full w-[65%] bg-blue-500 transition-all duration-300"></div>
+												</div>
+											</div>
+											{/* No construction message */}
+											<div className="text-center text-slate-400">
+												<p className="text-sm">
+													No ships currently under construction
+												</p>
+											</div>
+										</div>
 									</div>
-								) : (
-									<div className="flex flex-1 items-center justify-center">
-										<p className="text-center text-slate-400">
-											{planet.state?.owner === "Neutral"
-												? `This neutral planet has no ${category.name.toLowerCase()}.`
-												: planet.state?.owner
-													? `No ${category.name.toLowerCase()} deployed on this planet.`
-													: `Planet details not available. You may need to control this planet to see its manufacturing facilities.`}
-										</p>
+
+									{/* Troop Training */}
+									<div className="rounded-lg bg-slate-800 p-4">
+										<h3 className="mb-3 flex items-center text-lg font-semibold text-white">
+											<UserGroupIcon className="mr-2 h-5 w-5" />
+											Troop Training
+										</h3>
+										<div className="space-y-2">
+											{/* Example training item */}
+											<div className="rounded bg-slate-700 p-3">
+												<div className="mb-2 flex items-center justify-between">
+													<span className="text-sm text-white">
+														Alliance Army
+													</span>
+													<span className="text-xs text-slate-300">25%</span>
+												</div>
+												<div className="h-2 overflow-hidden rounded-full bg-slate-600">
+													<div className="h-full w-[25%] bg-green-500 transition-all duration-300"></div>
+												</div>
+											</div>
+											{/* No training message */}
+											<div className="text-center text-slate-400">
+												<p className="text-sm">
+													No troops currently in training
+												</p>
+											</div>
+										</div>
 									</div>
-								)}
+
+									{/* Facility Construction */}
+									<div className="rounded-lg bg-slate-800 p-4">
+										<h3 className="mb-3 flex items-center text-lg font-semibold text-white">
+											<WrenchScrewdriverIcon className="mr-2 h-5 w-5" />
+											Facility Construction
+										</h3>
+										<div className="space-y-2">
+											{/* Example facility construction */}
+											<div className="rounded bg-slate-700 p-3">
+												<div className="mb-2 flex items-center justify-between">
+													<span className="text-sm text-white">
+														Advanced Shipyard
+													</span>
+													<span className="text-xs text-slate-300">80%</span>
+												</div>
+												<div className="h-2 overflow-hidden rounded-full bg-slate-600">
+													<div className="h-full w-[80%] bg-orange-500 transition-all duration-300"></div>
+												</div>
+											</div>
+											{/* No construction message */}
+											<div className="text-center text-slate-400">
+												<p className="text-sm">
+													No facilities currently under construction
+												</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</TabPanel>
+						);
+					}
+
+					return (
+						<TabPanel key={category.id} className="rounded-md p-1">
+							<div className="flex flex-col">
+								<div className="flex-grow overflow-auto">
+									{resources[category.id as ManufacturingCategory]?.length >
+									0 ? (
+										<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+											{resources[category.id as ManufacturingCategory].map(
+												(resource: ManufacturingResource) => {
+													const imagePairs = [
+														{
+															overlay: getOverlayImage(),
+															foreground: getManufacturingCardImage(resource),
+															background: getBackgroundImage(resource),
+														},
+													];
+
+													// Create selectable item data
+													const selectableItem = {
+														id: resource.id,
+														type: category.id, // manufacturing category
+														subtype: resource.subtype,
+														name: resource.name,
+														status: resource.status,
+													} as SelectableItem;
+
+													return (
+														<MiniCardView
+															key={resource.id}
+															imagePairs={imagePairs}
+															displayText={resource.name}
+															selectableItem={selectableItem}
+														/>
+													);
+												},
+											)}
+										</div>
+									) : (
+										<div className="flex flex-1 items-center justify-center">
+											<p className="text-center text-slate-400">
+												{planet.state?.owner === "Neutral"
+													? `This neutral planet has no ${category.name.toLowerCase()}.`
+													: planet.state?.owner
+														? `No ${category.name.toLowerCase()} deployed on this planet.`
+														: `Planet details not available. You may need to control this planet to see its manufacturing facilities.`}
+											</p>
+										</div>
+									)}
+								</div>
 							</div>
-						</div>
-					</TabPanel>
-				))}
+						</TabPanel>
+					);
+				})}
 			</TabPanels>
 		</TabGroup>
 	);

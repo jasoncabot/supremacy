@@ -304,6 +304,8 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 			requiresTarget: false,
 		},
 	],
+	// Planet actions - planets can be targeted but don't have actions themselves
+	planet: [],
 };
 
 // Helper function to get available actions for selected items

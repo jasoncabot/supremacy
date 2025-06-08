@@ -3,6 +3,7 @@ import {
 	DefenseResource,
 	FleetResource,
 	ManufacturingResource,
+	PlanetView,
 	ShipResource,
 } from "../../worker/api";
 
@@ -10,7 +11,8 @@ export type SelectableItem =
 	| DefenseResource
 	| ManufacturingResource
 	| ShipResource
-	| FleetResource;
+	| FleetResource
+	| (PlanetView & { type: "planet"; id: string });
 
 export type SelectionKind = "none" | "single" | "multiple" | "target";
 

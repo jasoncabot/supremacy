@@ -304,7 +304,8 @@ export type ActionableResource =
 	| "training_facility"
 	| "construction_yard"
 	| "refinery"
-	| "mine";
+	| "mine"
+	| "planet";
 
 export type DefenseResource =
 	| (ResourceBase & {
