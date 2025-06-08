@@ -2,10 +2,16 @@ import {
 	BatterySubtype,
 	CharacterIdentifiers,
 	DefenseResource,
+	ManufacturingResource,
 	PersonnelSubtype,
 	ShieldSubtype,
 	SquadronSubtype,
 	TroopSubtype,
+	ShipyardSubtype,
+	TrainingFacilitySubtype,
+	ConstructionYardSubtype,
+	RefinerySubtype,
+	MineSubtype,
 } from "../../worker/api";
 // NOTE: Display names for resources are now in ../../worker/names.ts
 
@@ -112,6 +118,16 @@ import gencore2 from "./gencore2.png";
 import kdy150 from "./kdy150.png";
 import lnr1 from "./lnr1.png";
 import lnr2 from "./lnr2.png";
+
+// Manufacturing images
+import shipyard from "./shipyard.png";
+import advanced_shipyard from "./advanced_shipyard.png";
+import training from "./training.png";
+import advanced_training from "./advanced_training.png";
+import construction from "./construction.png";
+import advanced_construction from "./advanced_construction.png";
+import refinery from "./refinery.png";
+import mine from "./mine.png";
 
 // Character mapping
 const characterImages: Record<CharacterIdentifiers, string> = {
@@ -230,6 +246,30 @@ const batteryImages: Record<BatterySubtype, string> = {
 	lnr_series_ii: lnr2,
 };
 
+// Manufacturing mappings
+const shipyardImages: Record<ShipyardSubtype, string> = {
+	orbital_shipyard: shipyard,
+	advanced_shipyard: advanced_shipyard,
+};
+
+const trainingFacilityImages: Record<TrainingFacilitySubtype, string> = {
+	training_facility: training,
+	advanced_training_facility: advanced_training,
+};
+
+const constructionYardImages: Record<ConstructionYardSubtype, string> = {
+	construction_yard: construction,
+	advanced_construction_yard: advanced_construction,
+};
+
+const refineryImages: Record<RefinerySubtype, string> = {
+	refinery: refinery,
+};
+
+const mineImages: Record<MineSubtype, string> = {
+	mine: mine,
+};
+
 /**
  * Get the appropriate card image for a defense resource
  * @param resource - The defense resource to get the image for
@@ -264,6 +304,40 @@ export function getCardImage(resource: DefenseResource): string {
 
 		case "battery":
 			return batteryImages[resource.subtype] || batteryImages["kdy_150"]; // fallback
+	}
+}
+
+/**
+ * Get the appropriate card image for a manufacturing resource
+ * @param resource - The manufacturing resource to get the image for
+ * @returns The image URL string
+ */
+export function getManufacturingCardImage(
+	resource: ManufacturingResource,
+): string {
+	switch (resource.type) {
+		case "shipyard":
+			return (
+				shipyardImages[resource.subtype] || shipyardImages["orbital_shipyard"]
+			); // fallback
+
+		case "training_facility":
+			return (
+				trainingFacilityImages[resource.subtype] ||
+				trainingFacilityImages["training_facility"]
+			); // fallback
+
+		case "construction_yard":
+			return (
+				constructionYardImages[resource.subtype] ||
+				constructionYardImages["construction_yard"]
+			); // fallback
+
+		case "refinery":
+			return refineryImages[resource.subtype] || refineryImages["refinery"]; // fallback
+
+		case "mine":
+			return mineImages[resource.subtype] || mineImages["mine"]; // fallback
 	}
 }
 

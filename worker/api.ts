@@ -291,7 +291,20 @@ export type MissionResource = ResourceBase & {
 	subtype: MissionType;
 };
 
-export type ActionableResource = "mission" | "personnel" | "troop" | "squadron" | "shield" | "battery" | "capital_ship" | "fleet" | "shipyard" | "training_facility" | "construction_yard" | "refinery" | "mine";
+export type ActionableResource =
+	| "mission"
+	| "personnel"
+	| "troop"
+	| "squadron"
+	| "shield"
+	| "battery"
+	| "capital_ship"
+	| "fleet"
+	| "shipyard"
+	| "training_facility"
+	| "construction_yard"
+	| "refinery"
+	| "mine";
 
 export type DefenseResource =
 	| (ResourceBase & {
@@ -325,6 +338,22 @@ export interface PlanetDefenses {
 	batteries: DefenseResource[];
 }
 
+export interface PlanetManufacturing {
+	shipyards: ManufacturingResource[];
+	training_facilities: ManufacturingResource[];
+	construction_yards: ManufacturingResource[];
+	refineries: ManufacturingResource[];
+	mines: ManufacturingResource[];
+}
+
+export interface PlanetManufacturing {
+	shipyards: ManufacturingResource[];
+	training_facilities: ManufacturingResource[];
+	construction_yards: ManufacturingResource[];
+	refineries: ManufacturingResource[];
+	mines: ManufacturingResource[];
+}
+
 // Metadata: Static data that never changes and is known to all players
 export interface PlanetMetadata {
 	id: string;
@@ -348,6 +377,7 @@ export interface PlanetState {
 	commander: string | null;
 	isDiscovered: boolean;
 	defenses: PlanetDefenses;
+	manufacturing: PlanetManufacturing;
 }
 
 // View: What a specific faction knows or believes
@@ -363,6 +393,7 @@ export interface PlanetView {
 		general?: string | null;
 		commander?: string | null;
 		defenses?: PlanetDefenses;
+		manufacturing?: PlanetManufacturing;
 	};
 	discovered: boolean;
 }

@@ -6,7 +6,6 @@ import {
 	SelectionState,
 } from "../hooks/useSelectionContext";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
-import type { DefenseResource, ManufacturingResource } from "../../worker/api";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	children,
@@ -18,33 +17,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const [currentActionDef, setCurrentActionDef] =
 		useState<ActionDefinition | null>(null);
 	const [targetItem, setTargetItem] = useState<SelectableItem | null>(null);
-
-	// Helper function to create ActionTarget from selectable items
-	const createTargetFromItem = (item: SelectableItem) => {
-		// For now, map based on item types we know
-		if (
-			"subtype" in item &&
-			[
-				"shipyard",
-				"training_facility",
-				"construction_yard",
-				"refinery",
-				"mine",
-			].includes(item.type)
-		) {
-			return {
-				type: "structure" as const,
-				id: item.id,
-				data: item as ManufacturingResource,
-			};
-		}
-		// All defense resources are units
-		return {
-			type: "unit" as const,
-			id: item.id,
-			data: item as DefenseResource,
-		};
-	};
 
 	const toggleSelectionKind = (mode: SelectionKind) => {
 		if (mode === selectionMode) {

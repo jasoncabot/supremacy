@@ -85,14 +85,15 @@ const NewGameConfig: React.FC = () => {
 					Create a new game
 				</div>
 			</h2>
-			<div className="flex-1 overflow-scroll">
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						handleStart();
-					}}
-					className="space-y-8"
-				>
+
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					handleStart();
+				}}
+				className="flex flex-col space-y-4 overflow-hidden"
+			>
+				<div className="flex flex-1 flex-col space-y-4 overflow-scroll">
 					{/* Faction */}
 					<div className="space-y-2">
 						<label
@@ -252,38 +253,38 @@ const NewGameConfig: React.FC = () => {
 							</div>
 						</Listbox>
 					</div>
-				</form>
-			</div>
+				</div>
 
-			<div className="space-y-4 pt-8">
-				{error && (
-					<div className="mb-4 rounded-lg bg-red-500/20 p-3 text-red-200">
-						Error: {error.message}
-					</div>
-				)}
-				<button
-					type="submit"
-					disabled={loading}
-					className={`h-14 w-full rounded-xl ${
-						loading
-							? "cursor-not-allowed bg-gray-600"
-							: "cursor-pointer bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:brightness-110"
-					} text-xl font-bold shadow-lg backdrop-blur-md transition-all duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none`}
-				>
-					{loading
-						? "Processing..."
-						: mode === "Multiplayer"
-							? "Find Match"
-							: "Start Game"}
-				</button>
-				<button
-					type="button"
-					onClick={() => navigate("/")}
-					className="h-14 w-full cursor-pointer rounded-xl bg-slate-700/80 text-xl font-bold shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-slate-600/80 focus:ring-2 focus:ring-slate-400 focus:outline-none"
-				>
-					Back to Main Menu
-				</button>
-			</div>
+				<div className="flex flex-col space-y-4">
+					{error && (
+						<div className="mb-4 rounded-lg bg-red-500/20 p-3 text-red-200">
+							Error: {error.message}
+						</div>
+					)}
+					<button
+						type="submit"
+						disabled={loading}
+						className={`h-14 w-full rounded-xl ${
+							loading
+								? "cursor-not-allowed bg-gray-600"
+								: "cursor-pointer bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:brightness-110"
+						} text-xl font-bold shadow-lg backdrop-blur-md transition-all duration-300 focus:ring-2 focus:ring-purple-400 focus:outline-none`}
+					>
+						{loading
+							? "Processing..."
+							: mode === "Multiplayer"
+								? "Find Match"
+								: "Start Game"}
+					</button>
+					<button
+						type="button"
+						onClick={() => navigate("/")}
+						className="h-14 w-full cursor-pointer rounded-xl bg-slate-700/80 text-xl font-bold shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-slate-600/80 focus:ring-2 focus:ring-slate-400 focus:outline-none"
+					>
+						Back to Main Menu
+					</button>
+				</div>
+			</form>
 		</div>
 	);
 };

@@ -1,7 +1,8 @@
 // Card images exports
-export { 
-  getCardImage, 
-  getCharacterImages, 
-  getCharacterImage, 
-  hasCharacterImage 
-} from './cards';
+export {
+	getCardImage,
+	getManufacturingCardImage,
+	getCharacterImages,
+	getCharacterImage,
+	hasCharacterImage,
+} from "./cards";

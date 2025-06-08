@@ -2,223 +2,169 @@ import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
 	BeakerIcon,
 	BuildingLibraryIcon,
-	CogIcon,
 	CubeIcon,
 	UserGroupIcon,
 	WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { PlanetView } from "../../worker/api";
+import React, { useState } from "react";
+import {
+	ManufacturingCategory,
+	ManufacturingResource,
+	PlanetView,
+} from "../../worker/api";
+import MiniCardView from "./MiniCardView";
+import { SelectableItem } from "../hooks/useSelectionContext";
+import { getManufacturingCardImage } from "../cards";
 
-// Define the manufacturing categories
-type ManufacturingCategory =
-	| "manufacturing"
-	| "shipyards"
-	| "training"
-	| "construction"
-	| "refineries"
-	| "mines";
-
-// Define resources for each category (placeholder data)
-interface CategoryResources {
-	available: number;
-	total: number;
-	details: {
-		name: string;
-		level: number;
-		status: "active" | "idle" | "under-construction";
-	}[];
-}
+// Helper function to get background image based on resource state
+const getBackgroundImage = (resource: ManufacturingResource): string => {
+	switch (resource.status) {
+		case "active":
+			return "/path/to/active_bg.png";
+		case "en-route":
+			return "/path/to/en_route_bg.png";
+		case "under-construction":
+			return "/path/to/under_construction_bg.png";
+		default:
+			return "/path/to/default_bg.png";
+	}
+};
 
 export const ManufacturingOverview: React.FC<{
 	planet: PlanetView;
 }> = ({ planet }) => {
-	// We're tracking the selected category for future use but not currently using the variable directly
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [_, setSelectedCategory] =
-		useState<ManufacturingCategory>("manufacturing");
+	const [selectedCategory, setSelectedCategory] =
+		useState<ManufacturingCategory>("shipyard");
 
-	// This would normally come from the planet data
-	// For now we'll create placeholder data
-	const resources: Record<ManufacturingCategory, CategoryResources> = {
-		manufacturing: {
-			available: 3,
-			total: 5,
-			details: [
-				{ name: "Production Center", level: 2, status: "active" },
-				{ name: "Assembly Line", level: 1, status: "active" },
-				{ name: "Factory Complex", level: 3, status: "idle" },
-			],
-		},
-		shipyards: {
-			available: 2,
-			total: 3,
-			details: [
-				{ name: "Capital Shipyard", level: 3, status: "active" },
-				{ name: "Fighter Facility", level: 2, status: "idle" },
-			],
-		},
-		training: {
-			available: 1,
-			total: 2,
-			details: [{ name: "Officer Academy", level: 2, status: "active" }],
-		},
-		construction: {
-			available: 2,
-			total: 2,
-			details: [
-				{ name: "Construction Yard Alpha", level: 1, status: "idle" },
-				{ name: "Engineering Bay", level: 2, status: "active" },
-			],
-		},
-		refineries: {
-			available: 3,
-			total: 4,
-			details: [
-				{ name: "Primary Refinery", level: 3, status: "active" },
-				{ name: "Secondary Refinery", level: 2, status: "active" },
-				{ name: "Tertiary Refinery", level: 1, status: "active" },
-			],
-		},
-		mines: {
-			available: 4,
-			total: 5,
-			details: [
-				{ name: "Mineral Mine Alpha", level: 2, status: "active" },
-				{ name: "Mineral Mine Beta", level: 2, status: "active" },
-				{ name: "Gas Extractor", level: 3, status: "active" },
-				{ name: "Rare Elements Mine", level: 1, status: "idle" },
-			],
-		},
+	// Get manufacturing from planet data, or use empty arrays if no manufacturing
+	const planetManufacturing = planet.state?.manufacturing || {
+		shipyards: [],
+		training_facilities: [],
+		construction_yards: [],
+		refineries: [],
+		mines: [],
 	};
 
-	// Set up category data
+	const resources: Record<ManufacturingCategory, ManufacturingResource[]> = {
+		shipyard: planetManufacturing.shipyards,
+		training_facility: planetManufacturing.training_facilities,
+		construction_yard: planetManufacturing.construction_yards,
+		refinery: planetManufacturing.refineries,
+		mine: planetManufacturing.mines,
+	};
+
 	const categories: {
 		id: ManufacturingCategory;
 		name: string;
 		icon: React.ElementType;
 	}[] = [
-		{ id: "manufacturing", name: "Manufacturing", icon: CogIcon },
-		{ id: "shipyards", name: "Shipyards", icon: BuildingLibraryIcon },
-		{ id: "training", name: "Training Facilities", icon: UserGroupIcon },
+		{ id: "shipyard", name: "Shipyards", icon: BuildingLibraryIcon },
 		{
-			id: "construction",
+			id: "training_facility",
+			name: "Training Facilities",
+			icon: UserGroupIcon,
+		},
+		{
+			id: "construction_yard",
 			name: "Construction Yards",
 			icon: WrenchScrewdriverIcon,
 		},
-		{ id: "refineries", name: "Refineries", icon: BeakerIcon },
-		{ id: "mines", name: "Mines", icon: CubeIcon },
+		{ id: "refinery", name: "Refineries", icon: BeakerIcon },
+		{ id: "mine", name: "Mines", icon: CubeIcon },
 	];
 
+	function getOverlayImage(): string {
+		// No overlays for manufacturing resources currently
+		return "";
+	}
+
 	return (
-		<div className="flex h-full flex-col rounded-lg bg-slate-900 p-4 text-slate-200">
-			<TabGroup onChange={(index) => setSelectedCategory(categories[index].id)}>
-				<TabList className="flex space-x-1 rounded-xl bg-slate-800 p-1">
-					{categories.map((category) => {
-						const CategoryIcon = category.icon;
-						const hasResources = resources[category.id].available > 0;
-						const owner = planet.state?.owner || "Neutral";
+		<TabGroup
+			className="flex w-full flex-col"
+			selectedIndex={categories.findIndex((cat) => cat.id === selectedCategory)}
+			onChange={(index) => setSelectedCategory(categories[index].id)}
+		>
+			<TabList className="flex space-x-1 rounded-md bg-slate-800 p-1">
+				{categories.map((category) => {
+					const CategoryIcon = category.icon;
+					const hasResources = resources[category.id].length > 0;
+					const owner = planet.state?.owner || "Neutral";
 
-						return (
-							<Tab
-								key={category.id}
-								className={({ selected }) =>
-									`flex w-full items-center justify-center rounded-lg py-2.5 text-sm leading-5 font-medium ${
-										selected
-											? "bg-slate-700 text-white shadow"
-											: "text-slate-400 hover:bg-slate-800 hover:text-white"
-									} ${!hasResources && !selected ? "opacity-50" : ""} ${owner === "Empire" && hasResources ? "text-blue-300" : ""} ${owner === "Rebellion" && hasResources ? "text-red-300" : ""} transition-all duration-100 ease-in-out`
-								}
-							>
-								<CategoryIcon className="mr-2 h-5 w-5" />
-								<span>{category.name}</span>
-								{hasResources && (
-									<span className="ml-2 rounded-full bg-slate-600 px-2 py-0.5 text-xs">
-										{resources[category.id].available}/
-										{resources[category.id].total}
-									</span>
-								)}
-							</Tab>
-						);
-					})}
-				</TabList>
-
-				<TabPanels className="mt-4 flex-grow">
-					{categories.map((category) => (
-						<TabPanel
+					return (
+						<Tab
 							key={category.id}
-							className="h-full rounded-xl bg-slate-800 p-4"
+							title={category.name}
+							className={({ selected }) =>
+								`flex w-full items-center justify-center rounded-lg py-2 text-sm ${
+									selected
+										? "bg-slate-700 text-white shadow"
+										: "cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white"
+								} ${!hasResources && !selected ? "opacity-50" : ""} ${
+									owner === "Empire" && hasResources ? "text-blue-300" : ""
+								} ${
+									owner === "Rebellion" && hasResources ? "text-red-300" : ""
+								} transition-all duration-100 ease-in-out`
+							}
 						>
-							<div className="flex h-full flex-col">
-								<h2 className="mb-4 border-b border-slate-700 pb-2 text-xl font-bold text-slate-200">
-									{category.name} on {planet.metadata.name}
-								</h2>
+							<CategoryIcon className="h-10 w-10" />
+						</Tab>
+					);
+				})}
+			</TabList>
 
-								<div className="flex-grow overflow-auto">
-									{resources[category.id].details.length > 0 ? (
-										<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-											{resources[category.id].details.map((resource, idx) => (
-												<div
-													key={idx}
-													className={`rounded-lg border p-4 ${
-														resource.status === "active"
-															? "border-green-700 bg-slate-800"
-															: resource.status === "idle"
-																? "border-yellow-700 bg-slate-800"
-																: "border-blue-700 bg-slate-800"
-													}`}
-												>
-													<div className="flex items-center justify-between">
-														<h3 className="text-lg font-medium">
-															{resource.name}
-														</h3>
-														<span className="rounded-full bg-slate-700 px-2 py-1 text-sm">
-															Level {resource.level}
-														</span>
-													</div>
-													<div className="mt-2 flex items-center justify-between">
-														<span
-															className={`text-sm ${
-																resource.status === "active"
-																	? "text-green-400"
-																	: resource.status === "idle"
-																		? "text-yellow-400"
-																		: "text-blue-400"
-															}`}
-														>
-															Status:{" "}
-															{resource.status.charAt(0).toUpperCase() +
-																resource.status.slice(1)}
-														</span>
-														<button className="rounded-md bg-slate-700 px-3 py-1 text-sm hover:bg-slate-600">
-															Manage
-														</button>
-													</div>
-												</div>
-											))}
-										</div>
-									) : (
-										<div className="flex h-full items-center justify-center">
-											<p className="text-slate-400">
-												No {category.name.toLowerCase()} available on this
-												planet.
-											</p>
-										</div>
-									)}
-								</div>
+			<TabPanels className="mt-2 flex-1 flex-grow">
+				{categories.map((category) => (
+					<TabPanel key={category.id} className="rounded-md p-1">
+						<div className="flex flex-col">
+							<div className="flex-grow overflow-auto">
+								{resources[category.id].length > 0 ? (
+									<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+										{resources[category.id].map(
+											(resource: ManufacturingResource) => {
+												const imagePairs = [
+													{
+														overlay: getOverlayImage(),
+														foreground: getManufacturingCardImage(resource),
+														background: getBackgroundImage(resource),
+													},
+												];
 
-								<div className="mt-4 flex justify-end">
-									<button className="rounded-md bg-slate-700 px-4 py-2 hover:bg-slate-600">
-										Build New{" "}
-										{category.id.charAt(0).toUpperCase() +
-											category.id.slice(1, -1)}
-									</button>
-								</div>
+												// Create selectable item data
+												const selectableItem = {
+													id: resource.id,
+													type: category.id, // manufacturing category
+													subtype: resource.subtype,
+													name: resource.name,
+													status: resource.status,
+												} as SelectableItem;
+
+												return (
+													<MiniCardView
+														key={resource.id}
+														imagePairs={imagePairs}
+														displayText={resource.name}
+														selectableItem={selectableItem}
+													/>
+												);
+											},
+										)}
+									</div>
+								) : (
+									<div className="flex flex-1 items-center justify-center">
+										<p className="text-center text-slate-400">
+											{planet.state?.owner === "Neutral"
+												? `This neutral planet has no ${category.name.toLowerCase()}.`
+												: planet.state?.owner
+													? `No ${category.name.toLowerCase()} deployed on this planet.`
+													: `Planet details not available. You may need to control this planet to see its manufacturing facilities.`}
+										</p>
+									</div>
+								)}
 							</div>
-						</TabPanel>
-					))}
-				</TabPanels>
-			</TabGroup>
-		</div>
+						</div>
+					</TabPanel>
+				))}
+			</TabPanels>
+		</TabGroup>
 	);
 };

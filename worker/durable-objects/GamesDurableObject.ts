@@ -9,6 +9,7 @@ import {
 	GameState,
 	GameView,
 	PlanetDefenses,
+	PlanetManufacturing,
 	PlanetMetadata,
 	PlanetState,
 	PlanetView,
@@ -19,6 +20,9 @@ import {
 	SquadronSubtype,
 	ShieldSubtype,
 	BatterySubtype,
+	ShipyardSubtype,
+	TrainingFacilitySubtype,
+	ConstructionYardSubtype,
 } from "../api";
 import {
 	characterNames,
@@ -27,8 +31,12 @@ import {
 	squadronNames,
 	shieldNames,
 	batteryNames,
+	shipyardNames,
+	trainingFacilityNames,
+	constructionYardNames,
+	refineryNames,
+	mineNames,
 } from "../names";
-import { randomUUID } from "crypto";
 
 // Helper function to generate random defense resources for a planet
 function generateDefenses(
@@ -117,7 +125,7 @@ function generateDefenses(
 			];
 
 		defenses.personnel.push({
-			id: `personnel:${personnelType}:${randomUUID()}`,
+			id: `personnel:${personnelType}:${crypto.randomUUID()}`,
 			name: personnelNames[personnelType],
 			type: "personnel",
 			subtype: personnelType,
@@ -153,7 +161,7 @@ function generateDefenses(
 	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
 		const troopType = troopTypes[Math.floor(Math.random() * troopTypes.length)];
 		defenses.troops.push({
-			id: `troop:${troopType}:${randomUUID()}`,
+			id: `troop:${troopType}:${crypto.randomUUID()}`,
 			name: troopNames[troopType],
 			type: "troop",
 			subtype: troopType,
@@ -176,7 +184,7 @@ function generateDefenses(
 		const squadronType =
 			squadronTypes[Math.floor(Math.random() * squadronTypes.length)];
 		defenses.squadrons.push({
-			id: `squadron:${squadronType}:${randomUUID()}`,
+			id: `squadron:${squadronType}:${crypto.randomUUID()}`,
 			name: squadronNames[squadronType],
 			type: "squadron",
 			subtype: squadronType,
@@ -200,7 +208,7 @@ function generateDefenses(
 		const shieldType =
 			shieldTypes[Math.floor(Math.random() * shieldTypes.length)];
 		defenses.shields.push({
-			id: `shield:${shieldType}:${randomUUID()}`,
+			id: `shield:${shieldType}:${crypto.randomUUID()}`,
 			name: shieldNames[shieldType],
 			type: "shield",
 			subtype: shieldType,
@@ -224,7 +232,7 @@ function generateDefenses(
 		const batteryType =
 			batteryTypes[Math.floor(Math.random() * batteryTypes.length)];
 		defenses.batteries.push({
-			id: `battery:${batteryType}:${randomUUID()}`,
+			id: `battery:${batteryType}:${crypto.randomUUID()}`,
 			name: batteryNames[batteryType],
 			type: "battery",
 			subtype: batteryType,
@@ -238,6 +246,124 @@ function generateDefenses(
 	}
 
 	return defenses;
+}
+
+// Helper function to generate random manufacturing resources for a planet
+function generateManufacturing(
+	planetOwner: FactionMetadata | "Neutral",
+): PlanetManufacturing {
+	const manufacturing: PlanetManufacturing = {
+		shipyards: [],
+		training_facilities: [],
+		construction_yards: [],
+		refineries: [],
+		mines: [],
+	};
+
+	// Only generate manufacturing for owned planets
+	if (planetOwner === "Neutral") {
+		return manufacturing;
+	}
+
+	// Generate shipyards
+	const shipyardTypes: ShipyardSubtype[] = [
+		"orbital_shipyard",
+		"advanced_shipyard",
+	];
+	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		const shipyardType =
+			shipyardTypes[Math.floor(Math.random() * shipyardTypes.length)];
+		manufacturing.shipyards.push({
+			id: `shipyard:${shipyardType}:${crypto.randomUUID()}`,
+			name: shipyardNames[shipyardType],
+			type: "shipyard",
+			subtype: shipyardType,
+			status:
+				Math.random() < 0.7
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
+		});
+	}
+
+	// Generate training facilities
+	const trainingTypes: TrainingFacilitySubtype[] = [
+		"training_facility",
+		"advanced_training_facility",
+	];
+	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		const trainingType =
+			trainingTypes[Math.floor(Math.random() * trainingTypes.length)];
+		manufacturing.training_facilities.push({
+			id: `training:${trainingType}:${crypto.randomUUID()}`,
+			name: trainingFacilityNames[trainingType],
+			type: "training_facility",
+			subtype: trainingType,
+			status:
+				Math.random() < 0.7
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
+		});
+	}
+
+	// Generate construction yards
+	const constructionTypes: ConstructionYardSubtype[] = [
+		"construction_yard",
+		"advanced_construction_yard",
+	];
+	for (let i = 0; i < Math.floor(Math.random() * 2) + 1; i++) {
+		const constructionType =
+			constructionTypes[Math.floor(Math.random() * constructionTypes.length)];
+		manufacturing.construction_yards.push({
+			id: `construction:${constructionType}:${crypto.randomUUID()}`,
+			name: constructionYardNames[constructionType],
+			type: "construction_yard",
+			subtype: constructionType,
+			status:
+				Math.random() < 0.7
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
+		});
+	}
+
+	// Generate refineries
+	for (let i = 0; i < Math.floor(Math.random() * 3) + 1; i++) {
+		manufacturing.refineries.push({
+			id: `refinery:refinery:${crypto.randomUUID()}`,
+			name: refineryNames["refinery"],
+			type: "refinery",
+			subtype: "refinery",
+			status:
+				Math.random() < 0.8
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
+		});
+	}
+
+	// Generate mines
+	for (let i = 0; i < Math.floor(Math.random() * 4) + 1; i++) {
+		manufacturing.mines.push({
+			id: `mine:mine:${crypto.randomUUID()}`,
+			name: mineNames["mine"],
+			type: "mine",
+			subtype: "mine",
+			status:
+				Math.random() < 0.8
+					? "active"
+					: Math.random() < 0.5
+						? "en-route"
+						: "under-construction",
+		});
+	}
+
+	return manufacturing;
 }
 
 export class GamesDurableObject extends DurableObject<Env> {
@@ -329,6 +455,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 					commander: null,
 					isDiscovered: isInnerRim, // Inner rim planets start discovered
 					defenses: generateDefenses(owner, usedCharacters),
+					manufacturing: generateManufacturing(owner),
 				};
 
 				planets[planetId] = planetState;
@@ -401,6 +528,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 							general: isOwner ? planetState.general : undefined,
 							commander: isOwner ? planetState.commander : undefined,
 							defenses: isOwner ? planetState.defenses : undefined,
+							manufacturing: isOwner ? planetState.manufacturing : undefined,
 						};
 					}
 
@@ -448,6 +576,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 							general: isOwner ? planetState.general : undefined,
 							commander: isOwner ? planetState.commander : undefined,
 							defenses: isOwner ? planetState.defenses : undefined,
+							manufacturing: isOwner ? planetState.manufacturing : undefined,
 						};
 					}
 
