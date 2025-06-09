@@ -1,6 +1,7 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
 import { getAdornmentByTypeAndFaction, type Faction } from "../adornments";
+import { useGame } from "../hooks/useGame";
 import { useSelectionContext } from "../hooks/useSelectionContext";
 import { useWindowContext } from "../hooks/useWindowContext";
 import { getPlanetById } from "../planets";
@@ -15,9 +16,10 @@ interface PlanetOverviewProps {
 const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	const { handleOpenWindow } = useWindowContext();
 	const { selectionState, selectItem } = useSelectionContext();
+	const { game } = useGame();
 
 	const handleViewFleets = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent event from bubbling to parent window
+		e.stopPropagation(); // Prevent event from bubbling to parent container
 		// Get the click position
 		const position = {
 			x: e.clientX - 150, // Center window horizontally near click
@@ -35,7 +37,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	};
 
 	const handleViewDefence = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent event from bubbling to parent window
+		e.stopPropagation(); // Prevent event from bubbling to parent container
 		const position = {
 			x: e.clientX - 150,
 			y: e.clientY - 50,
@@ -52,7 +54,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	};
 
 	const handleViewManufacturing = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent event from bubbling to parent window
+		e.stopPropagation(); // Prevent event from bubbling to parent container
 		const position = {
 			x: e.clientX - 150,
 			y: e.clientY - 50,
@@ -69,7 +71,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 	};
 
 	const handleViewMissions = (e: React.MouseEvent) => {
-		e.stopPropagation(); // Prevent event from bubbling to parent window
+		e.stopPropagation(); // Prevent event from bubbling to parent container
 		const position = {
 			x: e.clientX - 150,
 			y: e.clientY - 50,
@@ -99,7 +101,28 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 		// (for desktop, the adornment buttons are always visible)
 	};
 
-	const usedEnergy = 1; // TODO: count the manufacturing units that take energy
+	// Handle container click for mobile - allows tapping anywhere on the planet overview
+	const handleContainerClick = () => {
+		// Only handle container clicks on mobile (when adornments are hidden)
+		// On desktop, individual buttons handle their own clicks
+		const isMobile = window.innerWidth < 768; // md breakpoint
+		if (isMobile) {
+			if (selectionState === "awaiting-target") {
+				handlePlanetSelected();
+			}
+			// For non-target selection, the PlanetMobileMenu will handle the interaction
+		}
+	};
+
+	// used energy is the number of refineries + shipyards + construction facilities + troop factories + shields + batteries
+	const usedEnergy = planet.state?.manufacturing
+		? planet.state.manufacturing.refineries.length +
+			planet.state.manufacturing.shipyards.length +
+			planet.state.manufacturing.construction_yards.length +
+			planet.state.manufacturing.training_facilities.length +
+			(planet.state.defenses?.shields.length || 0) +
+			(planet.state.defenses?.batteries.length || 0)
+		: 0;
 	const totalEnergy = planet.state?.energySpots || 0;
 	const unusedEnergy = totalEnergy - usedEnergy;
 
@@ -120,8 +143,44 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 			? "neutral"
 			: planet.state?.owner || "neutral";
 
+	// Calculate loyalty bar colors based on player's faction
+	const playerFaction = game?.side || "Empire";
+	const isPlayerEmpire = playerFaction === "Empire";
+
+	// If player is Empire: green for empire loyalty, red for rebellion loyalty
+	// If player is Rebellion: green for rebellion loyalty, red for empire loyalty
+	const loyaltyToPlayer = loyalty;
+	const loyaltyToOpponent = 100 - loyalty;
+
+	const playerColor = isPlayerEmpire ? "bg-green-500" : "bg-green-500";
+	const opponentColor = isPlayerEmpire ? "bg-red-500" : "bg-red-500";
+
+	// Calculate planet name color based on faction and discovery status
+	const getPlanetNameColor = () => {
+		if (!planet.discovered) {
+			return "text-gray-400"; // Light grey for undiscovered planets
+		}
+
+		if (planet.state?.owner === "Neutral") {
+			return "text-cyan-400"; // Turquoise for neutral planets
+		}
+
+		if (planet.state?.owner === "Empire") {
+			return "text-red-500"; // Red for Empire (matching loyalty bar)
+		}
+
+		if (planet.state?.owner === "Rebellion") {
+			return "text-green-500"; // Green for Rebellion (matching loyalty bar)
+		}
+
+		return "text-gray-400"; // Default fallback
+	};
+
 	return (
-		<div className="items-left flex h-[80px] w-[60px] flex-col justify-center rounded-lg p-2 text-white">
+		<div
+			className="items-left flex h-[120px] w-[80px] cursor-pointer flex-col justify-center rounded-lg p-2 text-white md:cursor-default"
+			onClick={handleContainerClick}
+		>
 			{/* Mobile: Show menu on tap, Desktop: Always show adornments */}
 			<div className="md:hidden">
 				{/* Mobile - Show menu only if not in target selection mode */}
@@ -135,7 +194,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 					>
 						<div>
 							{/* planet image */}
-							<div className="mb-1 flex items-center justify-between">
+							<div className="mb-1 flex items-center justify-center">
 								<img
 									src={planetImageUrl}
 									alt={planet.metadata.name}
@@ -146,9 +205,9 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 						</div>
 					</PlanetMobileMenu>
 				) : (
-					/* Target selection mode - just show clickable planet */
-					<div onClick={handlePlanetSelected} className="cursor-pointer">
-						<div className="mb-1 flex items-center justify-between">
+					/* Target selection mode - show planet image, container handles click */
+					<div>
+						<div className="mb-1 flex items-center justify-center">
 							<img
 								src={planetImageUrl}
 								alt={planet.metadata.name}
@@ -163,7 +222,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 			{/* Desktop - Always show planet image and adornments */}
 			<div className="hidden md:block">
 				{/* planet image */}
-				<div className="mb-1 flex items-center justify-between">
+				<div className="mb-1 flex items-center justify-center">
 					<img
 						src={planetImageUrl}
 						alt={planet.metadata.name}
@@ -171,7 +230,10 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 						className="h-[30px] w-[30px] rounded-full"
 						onClick={
 							selectionState === "awaiting-target"
-								? handlePlanetSelected
+								? (e) => {
+										e.stopPropagation();
+										handlePlanetSelected();
+									}
 								: undefined
 						}
 						style={{
@@ -181,101 +243,126 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 					/>
 				</div>
 
-				{/* Adornments only visible on md+ devices */}
-				<div className="mb-1">
-					<div className="flex flex-row gap-1">
-						{faction !== "neutral" && (
+				{/* Adornments only visible on md+ devices and if planet is discovered */}
+				{planet.discovered && (
+					<div className="mb-1">
+						<div className="flex flex-row gap-1">
+							{faction !== "neutral" && (
+								<button
+									onClick={handleViewFleets}
+									className="flex-shrink-0 cursor-pointer hover:opacity-80"
+									title="Fleets"
+								>
+									<img
+										src={getAdornmentByTypeAndFaction("fleet", faction)}
+										alt="Fleets"
+										className="flex-shrink-0"
+									/>
+								</button>
+							)}
 							<button
-								onClick={handleViewFleets}
-								className="hover:opacity-80"
-								title="Fleets"
+								onClick={handleViewDefence}
+								className="flex-shrink-0 cursor-pointer hover:opacity-80"
+								title="Defence"
 							>
 								<img
-									src={getAdornmentByTypeAndFaction("fleet", faction)}
-									alt="Fleets"
+									src={getAdornmentByTypeAndFaction("defence", faction)}
+									alt="Defence"
+									className="flex-shrink-0"
 								/>
 							</button>
-						)}
-						<button
-							onClick={handleViewDefence}
-							className="hover:opacity-80"
-							title="Defence"
-						>
-							<img
-								src={getAdornmentByTypeAndFaction("defence", faction)}
-								alt="Defence"
-							/>
-						</button>
-						<button
-							onClick={handleViewManufacturing}
-							className="hover:opacity-80"
-							title="Manufacturing"
-						>
-							<img
-								src={getAdornmentByTypeAndFaction("manufacturing", faction)}
-								alt="Manufacturing"
-							/>
-						</button>
-						{faction !== "neutral" && (
 							<button
-								onClick={handleViewMissions}
-								className="hover:opacity-80"
-								title="Missions"
+								onClick={handleViewManufacturing}
+								className="flex-shrink-0 cursor-pointer hover:opacity-80"
+								title="Manufacturing"
 							>
 								<img
-									src={getAdornmentByTypeAndFaction("mission", faction)}
-									alt="Missions"
+									src={getAdornmentByTypeAndFaction("manufacturing", faction)}
+									alt="Manufacturing"
+									className="flex-shrink-0"
 								/>
 							</button>
-						)}
+							{faction !== "neutral" && (
+								<button
+									onClick={handleViewMissions}
+									className="flex-shrink-0 cursor-pointer hover:opacity-80"
+									title="Missions"
+								>
+									<img
+										src={getAdornmentByTypeAndFaction("mission", faction)}
+										alt="Missions"
+										className="flex-shrink-0"
+									/>
+								</button>
+							)}
+						</div>
+					</div>
+				)}
+			</div>
+
+			{/* energy spots - only show if planet is discovered */}
+			{planet.discovered && (
+				<div
+					className="mb-[2px] flex h-[6px] space-x-[2px] overflow-hidden"
+					title={`${usedEnergy} / ${totalEnergy} Energy`}
+				>
+					{Array.from({ length: usedEnergy }).map((_, index) => (
+						<div
+							key={index}
+							className="h-[6px] w-[4px] flex-shrink-0 bg-white"
+						/>
+					))}
+					{Array.from({ length: unusedEnergy }).map((_, index) => (
+						<div
+							key={index}
+							className="h-[6px] w-[4px] flex-shrink-0 bg-blue-500"
+						/>
+					))}
+				</div>
+			)}
+
+			{/* natural resources - only show if planet is discovered */}
+			{planet.discovered && (
+				<div
+					className="mb-[2px] flex h-[6px] space-x-[2px] overflow-hidden"
+					title={`${usedResources} / ${totalResources} Resources`}
+				>
+					{Array.from({ length: usedResources }).map((_, index) => (
+						<div
+							key={index}
+							className="h-[6px] w-[4px] flex-shrink-0 bg-yellow-500"
+						/>
+					))}
+					{Array.from({ length: unusedResources }).map((_, index) => (
+						<div
+							key={index}
+							className="h-[6px] w-[4px] flex-shrink-0 bg-red-500"
+						/>
+					))}
+				</div>
+			)}
+
+			{/* popular support - only show if planet is discovered */}
+			{planet.discovered && (
+				<div title={`Popular support ${loyalty}%`}>
+					<div className="flex h-[6px] w-full overflow-hidden">
+						{/* Player faction loyalty (green) */}
+						<div
+							className={playerColor}
+							style={{ width: `${loyaltyToPlayer}%` }}
+						/>
+						{/* Opponent faction loyalty (red) */}
+						<div
+							className={opponentColor}
+							style={{ width: `${loyaltyToOpponent}%` }}
+						/>
 					</div>
 				</div>
-			</div>
+			)}
 
-			{/* energy spots */}
-			<div
-				className="mb-1 flex"
-				title={`${usedEnergy} / ${totalEnergy} Energy`}
-			>
-				{Array.from({ length: usedEnergy }).map((_, index) => (
-					<div
-						key={index}
-						className="h-[6px] w-[4px] border-l border-gray-400 bg-white"
-					/>
-				))}
-				{Array.from({ length: unusedEnergy }).map((_, index) => (
-					<div
-						key={index}
-						className="h-[6px] w-[4px] border-l border-gray-400 bg-blue-500"
-					/>
-				))}
+			<div className={`text-center text-xs ${getPlanetNameColor()}`}>
+				{planet.metadata.name}
 			</div>
-
-			{/* natural resources */}
-			<div
-				className="mb-1 flex"
-				title={`${usedResources} / ${totalResources} Resources`}
-			>
-				{Array.from({ length: usedResources }).map((_, index) => (
-					<div
-						key={index}
-						className="h-[6px] w-[4px] border-l border-gray-400 bg-yellow-500"
-					/>
-				))}
-				{Array.from({ length: unusedResources }).map((_, index) => (
-					<div
-						key={index}
-						className="h-[6px] w-[4px] border-l border-gray-400 bg-red-500"
-					/>
-				))}
-			</div>
-
-			{/* popular support */}
-			<div className="mb-1 flex text-xs" title={`Popular support ${loyalty}%`}>
-				{loyalty}%
-			</div>
-
-			<div className="text-xs">{planet.metadata.name}</div>
 		</div>
 	);
 };

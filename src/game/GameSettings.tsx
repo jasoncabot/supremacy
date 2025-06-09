@@ -52,7 +52,7 @@ const GameSettings: React.FC = () => {
 				</div>
 
 				{/* Content */}
-				<div className="flex-1 overflow-auto p-4">
+				<div className="flex-1 overflow-auto scrollbar-none p-4">
 					<div className="mx-auto max-w-2xl space-y-6">
 						{/* Audio Settings */}
 						<div className="rounded-lg border border-purple-700/30 bg-gray-900/40 p-6 backdrop-blur-sm">

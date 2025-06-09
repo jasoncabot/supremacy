@@ -16,6 +16,7 @@ import {
 import { getManufacturingCardImage } from "../cards";
 import { SelectableItem } from "../hooks/useSelectionContext";
 import MiniCardView from "./MiniCardView";
+import { rawMaterialImage } from "../cards/cards";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: ManufacturingResource): string => {
@@ -93,7 +94,10 @@ export const ManufacturingOverview: React.FC<{
 					const hasResources =
 						category.id === "build"
 							? true
-							: resources[category.id as ManufacturingCategory]?.length > 0;
+							: category.id === "mine"
+								? (resources.mine?.length || 0) > 0 ||
+									(planet.state?.naturalResources ?? 0) > 0
+								: resources[category.id as ManufacturingCategory]?.length > 0;
 					const owner = planet.state?.owner || "Neutral";
 
 					return (
@@ -212,10 +216,123 @@ export const ManufacturingOverview: React.FC<{
 						);
 					}
 
+					if (category.id == "mine") {
+						return (
+							<TabPanel key={category.id} className="rounded-md p-1">
+								<div className="flex flex-col">
+									<div className="flex-grow overflow-auto scrollbar-none">
+										{(() => {
+											const totalNaturalResources =
+												planet.state?.naturalResources ?? 0;
+											const numberOfMines = resources.mine?.length || 0;
+											const availableRawMaterials = Math.max(
+												0,
+												totalNaturalResources - numberOfMines,
+											);
+
+											// Create array of all items to display (mines + available raw materials)
+											const allItems = [
+												// Existing mines
+												...(resources.mine || []).map(
+													(resource: ManufacturingResource) => ({
+														type: "mine" as const,
+														resource,
+													}),
+												),
+												// Available raw material slots
+												...Array.from(
+													{ length: availableRawMaterials },
+													(_, index) => ({
+														type: "raw_material" as const,
+														index,
+													}),
+												),
+											];
+
+											if (allItems.length > 0) {
+												return (
+													<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+														{allItems.map((item) => {
+															if (item.type === "mine") {
+																const imagePairs = [
+																	{
+																		overlay: getOverlayImage(),
+																		foreground: getManufacturingCardImage(
+																			item.resource,
+																		),
+																		background: getBackgroundImage(
+																			item.resource,
+																		),
+																	},
+																];
+
+																const selectableItem = {
+																	id: item.resource.id,
+																	type: category.id,
+																	subtype: item.resource.subtype,
+																	name: item.resource.name,
+																	status: item.resource.status,
+																} as SelectableItem;
+
+																return (
+																	<MiniCardView
+																		key={item.resource.id}
+																		imagePairs={imagePairs}
+																		displayText={item.resource.name}
+																		selectableItem={selectableItem}
+																	/>
+																);
+															} else {
+																// Raw material slot
+																const imagePairs = [
+																	{
+																		overlay: getOverlayImage(),
+																		foreground: rawMaterialImage,
+																		background: getBackgroundImage({
+																			id: `raw_material_${item.index}`,
+																			name: "Raw Material",
+																			status: "active",
+																			type: "mine",
+																			subtype: "mine",
+																		} as ManufacturingResource),
+																	},
+																];
+
+																return (
+																	<MiniCardView
+																		key={`raw_material_${item.index}`}
+																		imagePairs={imagePairs}
+																		displayText="Raw Material"
+																	/>
+																);
+															}
+														})}
+													</div>
+												);
+											} else {
+												return (
+													<div className="flex flex-1 items-center justify-center">
+														<p className="text-center text-slate-400">
+															{planet.state?.owner === "Neutral"
+																? "This neutral planet has no natural resources."
+																: planet.state?.owner
+																	? "No natural resources available on this planet."
+																	: "Planet details not available. You may need to control this planet to see its natural resources."}
+														</p>
+													</div>
+												);
+											}
+										})()}
+									</div>
+								</div>
+							</TabPanel>
+						);
+					}
+
 					return (
 						<TabPanel key={category.id} className="rounded-md p-1">
 							<div className="flex flex-col">
-								<div className="flex-grow overflow-auto">
+								<div className="flex-grow overflow-auto scrollbar-none">
 									{resources[category.id as ManufacturingCategory]?.length >
 									0 ? (
 										<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

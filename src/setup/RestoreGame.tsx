@@ -69,7 +69,7 @@ const RestoreGame: React.FC = () => {
 					Continue your galactic campaign from a previous save.
 				</div>
 			</h2>
-			<div className="flex-1 overflow-scroll">
+			<div className="flex-1 overflow-scroll scrollbar-none">
 				{loading ? (
 					<Loading text="Loading saved games..." />
 				) : error ? (

@@ -1,23 +1,25 @@
 import {
 	BatterySubtype,
 	CharacterIdentifiers,
+	ConstructionYardSubtype,
 	DefenseResource,
 	ManufacturingResource,
-	PersonnelSubtype,
-	ShieldSubtype,
-	SquadronSubtype,
-	TroopSubtype,
-	ShipyardSubtype,
-	TrainingFacilitySubtype,
-	ConstructionYardSubtype,
-	RefinerySubtype,
 	MineSubtype,
+	PersonnelSubtype,
+	RefinerySubtype,
+	ShieldSubtype,
+	ShipyardSubtype,
+	SquadronSubtype,
+	TrainingFacilitySubtype,
+	TroopSubtype,
 } from "../../worker/api";
 // NOTE: Display names for resources are now in ../../worker/names.ts
 
 // Character images
 import adar_tallon from "./adar_tallon.png";
 import afyon from "./afyon.png";
+import amise_griff from "./amise_griff.png";
+import arhul_narra from "./arhul_narra.png";
 import bane_nothos from "./bane_nothos.png";
 import bevel_lemelisk from "./bevel_lemelisk.png";
 import bin_essada from "./bin_essada.png";
@@ -26,88 +28,86 @@ import brandei from "./brandei.png";
 import bren_derlin from "./bren_derlin.png";
 import carlist_rieekan from "./carlist_rieekan.png";
 import chewbacca from "./chewbacca.png";
-import freja_covell from "./freja_covell.png";
 import crix_madine from "./crix_madine.png";
-import natasi_daala from "./natasi_daala.png";
 import darth_vader from "./darth_vader.png";
 import dorja from "./dorja.png";
-import hiram_drayson from "./hiram_drayson.png";
-import palpatine from "./palpatine.png";
+import firmus_piett from "./firmus_piett.png";
+import freja_covell from "./freja_covell.png";
 import garindan from "./garindan.png";
 import garm_bel_iblis from "./garm_bel_iblis.png";
+import gial_ackbar from "./gial_ackbar.png";
+import gilad_pellaeon from "./gilad_pellaeon.png";
 import grammel from "./grammel.png";
-import amise_griff from "./amise_griff.png";
 import han_solo from "./han_solo.png";
+import hiram_drayson from "./hiram_drayson.png";
 import huoba_neva from "./huoba_neva.png";
 import jan_dodonna from "./jan_dodonna.png";
-import tiaan_jerjerrod from "./tiaan_jerjerrod.png";
+import judder_page from "./judder_page.png";
 import kaiya_adrimetrum from "./kaiya_adrimetrum.png";
-import titus_klev from "./titus_klev.png";
+import kendal_ozzel from "./kendal_ozzel.png";
 import labansat from "./labansat.png";
 import lando_calrissian from "./lando_calrissian.png";
 import leia_organa from "./leia_organa.png";
+import lorth_needa from "./lorth_needa.png";
 import luke_skywalker from "./luke_skywalker.png";
 import ma_w_shiye from "./ma_w_shiye.png";
+import maximilian_veers from "./maximilian_veers.png";
 import mazer_rackus from "./mazer_rackus.png";
 import menndo from "./menndo.png";
 import mon_mothma from "./mon_mothma.png";
-import arhul_narra from "./arhul_narra.png";
-import lorth_needa from "./lorth_needa.png";
+import natasi_daala from "./natasi_daala.png";
 import niles_ferrier from "./niles_ferrier.png";
 import noval_garaint from "./noval_garaint.png";
 import orlok from "./orlok.png";
 import orrimaarko from "./orrimaarko.png";
-import kendal_ozzel from "./kendal_ozzel.png";
-import judder_page from "./judder_page.png";
-import gilad_pellaeon from "./gilad_pellaeon.png";
-import firmus_piett from "./firmus_piett.png";
+import palpatine from "./palpatine.png";
 import pter_thanas from "./pter_thanas.png";
 import roget_jiriss from "./roget_jiriss.png";
 import sarin_virgilio from "./sarin_virgilio.png";
-import terrinald_screed from "./terrinald_screed.png";
 import shenir_rix from "./shenir_rix.png";
 import syub_snunb from "./syub_snunb.png";
 import talon_karrde from "./talon_karrde.png";
+import terrinald_screed from "./terrinald_screed.png";
 import thrawn from "./thrawn.png";
+import tiaan_jerjerrod from "./tiaan_jerjerrod.png";
+import titus_klev from "./titus_klev.png";
 import tura_raftican from "./tura_raftican.png";
 import vanden_willard from "./vanden_willard.png";
-import maximilian_veers from "./maximilian_veers.png";
 import villar from "./villar.png";
 import wedge_antilles from "./wedge_antilles.png";
 import zuggs from "./zuggs.png";
-import gial_ackbar from "./gial_ackbar.png";
 
 // Personnel non-character images
 import bothan_spy from "./bothan_spy.png";
+import commandos from "./commandos.png";
+import espionage_droid from "./espionage_droid.png";
 import guerilla from "./guerilla.png";
 import infiltrator from "./infiltrator.png";
 import longprobe_ywing from "./longprobe_ywing.png";
-import commandos from "./commandos.png";
-import espionage_droid from "./espionage_droid.png";
-import probe_droid from "./probe_droid.png";
 import noghri_death_commando from "./noghri_death_commando.png";
+import probe_droid from "./probe_droid.png";
 
 // Troop images
 import alliance_army from "./alliance_army.png";
 import alliance_fleet from "./alliance_fleet.png";
-import mon_calamari from "./mon_calamari.png";
-import sullustan from "./sullustan.png";
-import wookiee from "./wookiee.png";
 import dark_trooper from "./dark_trooper.png";
 import imperial_army from "./imperial_army.png";
 import imperial_fleet from "./imperial_fleet.png";
+import mon_calamari from "./mon_calamari.png";
 import stormtrooper from "./stormtrooper.png";
+import sullustan from "./sullustan.png";
 import war_droid from "./war_droid.png";
+import wookiee from "./wookiee.png";
 
 // Squadron images
 import awing from "./awing.png";
 import bwing from "./bwing.png";
-import xwing from "./xwing.png";
-import ywing from "./ywing.png";
 import tie_bomber from "./tie_bomber.png";
 import tie_defender from "./tie_defender.png";
 import tie_fighter from "./tie_fighter.png";
 import tie_interceptor from "./tie_interceptor.png";
+import xwing from "./xwing.png";
+import ywing from "./ywing.png";
 
 // Shield images
 import death_star_shield from "./death_star_shield.png";
@@ -120,14 +120,15 @@ import lnr1 from "./lnr1.png";
 import lnr2 from "./lnr2.png";
 
 // Manufacturing images
-import shipyard from "./shipyard.png";
+import advanced_construction from "./advanced_construction.png";
 import advanced_shipyard from "./advanced_shipyard.png";
-import training from "./training.png";
 import advanced_training from "./advanced_training.png";
 import construction from "./construction.png";
-import advanced_construction from "./advanced_construction.png";
-import refinery from "./refinery.png";
 import mine from "./mine.png";
+import rawMaterial from "./raw_material.png";
+import refinery from "./refinery.png";
+import shipyard from "./shipyard.png";
+import training from "./training.png";
 
 // Character mapping
 const characterImages: Record<CharacterIdentifiers, string> = {
@@ -269,6 +270,8 @@ const refineryImages: Record<RefinerySubtype, string> = {
 const mineImages: Record<MineSubtype, string> = {
 	mine: mine,
 };
+
+export const rawMaterialImage = rawMaterial;
 
 /**
  * Get the appropriate card image for a defense resource

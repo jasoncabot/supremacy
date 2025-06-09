@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
+import { useSoundManager } from "../hooks/useSoundManager";
 import { MinimizedWindowInfo, WindowContext } from "../hooks/useWindowContext";
 import { WindowInfo } from "./WindowInfo";
-import { useSoundManager } from "../hooks/useSoundManager";
 
 export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
@@ -25,6 +25,12 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 				updatedWindows.splice(existingWindowIndex, 1);
 				// Add it to the end (highest z-index)
 				return [...updatedWindows, info];
+			}
+
+			if (info.type == "sector") {
+				playSound("sectorOpen");
+			} else {
+				playSound("itemOpen");
 			}
 
 			// If it doesn't exist, add it to the end

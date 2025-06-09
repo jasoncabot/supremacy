@@ -98,7 +98,7 @@ const GameScreenContent: React.FC = () => {
 
 					{/* Scrollable content area - takes remaining space */}
 					<div
-						className={`flex flex-1 touch-pan-y overflow-auto overscroll-contain ${menuExpanded ? "md:pl-52" : ""} transition-all duration-300`}
+						className={`flex flex-1 touch-pan-y overflow-auto overscroll-contain scrollbar-none ${menuExpanded ? "md:pl-52" : ""} transition-all duration-300`}
 					>
 						<GameContent activeView={activeView} filter={filter} />
 					</div>

@@ -25,7 +25,7 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 				const getWindowClassName = (type: string) => {
 					switch (type) {
 						case "sector":
-							return "w-[95vw] h-[62vh] md:w-[400px]"; // Wider for sector details
+							return "w-[95vw] md:w-[400px]"; // Wider for sector details
 						case "manufacturing":
 							return "w-[350px]"; // Medium width for manufacturing
 						case "fleets":

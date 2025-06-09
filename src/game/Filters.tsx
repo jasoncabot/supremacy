@@ -125,7 +125,7 @@ const Filters: React.FC<FiltersProps> = ({ filter, onChange }) => {
 				</MenuButton>
 				<MenuItems
 					anchor="bottom start"
-					className="z-50 mt-1 h-[50vh] max-h-32 w-64 divide-y divide-slate-700 overflow-y-auto rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
+					className="z-50 mt-1 h-[50vh] max-h-32 w-64 divide-y divide-slate-700 overflow-y-auto scrollbar-none rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
 				>
 					{/* Display Off option */}
 					<MenuItem>

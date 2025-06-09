@@ -113,7 +113,7 @@ export const DefenceOverview: React.FC<{
 				{categories.map((category) => (
 					<TabPanel key={category.id} className="rounded-md p-1">
 						<div className="flex flex-col">
-							<div className="flex-grow overflow-auto">
+							<div className="flex-grow overflow-auto scrollbar-none">
 								{resources[category.id].length > 0 ? (
 									<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
 										{resources[category.id].map((resource: DefenseResource) => {

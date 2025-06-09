@@ -130,7 +130,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 
 					<MenuItems
 						anchor="bottom start"
-						className="z-50 mt-1 w-48 divide-y divide-slate-700 overflow-y-auto rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
+						className="z-50 mt-1 w-48 divide-y divide-slate-700 overflow-y-auto scrollbar-none rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
 					>
 						{contextualActions.map((action) => (
 							<MenuItem key={action.id}>

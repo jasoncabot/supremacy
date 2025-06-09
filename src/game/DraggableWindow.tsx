@@ -1,5 +1,6 @@
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { GlobeAltIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
+import { useGame } from "../hooks/useGame";
 import { useWindowContext } from "../hooks/useWindowContext";
 import { useZIndex } from "../hooks/useZIndexContext";
 import { WindowInfo } from "./WindowInfo";
@@ -18,9 +19,14 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const nodeRef = useRef<HTMLDivElement>(null);
 	const [windowZIndex, setWindowZIndex] = useState(100);
 	const { getNextZIndex } = useZIndex();
+	const { sectors } = useGame();
 
-	const { handleMinimizeWindow, handleCloseWindow, bringToFront } =
-		useWindowContext();
+	const {
+		handleMinimizeWindow,
+		handleCloseWindow,
+		handleOpenWindow,
+		bringToFront,
+	} = useWindowContext();
 
 	// Function to bring window to front - now uses the context method
 	const bringWindowToFront = () => {
@@ -260,20 +266,52 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`flex min-h-[50vh] max-w-full flex-col rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
+			className={`flex min-h-[540px] max-w-full flex-col rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
 			// Bring window to front when clicking anywhere in the window
 			onClick={bringWindowToFront}
 		>
 			<div className="flex border-b border-purple-700/30">
+				{/* Sector overview button - only show for non-sector windows that have a sectorId */}
+				{windowInfo.type !== "sector" && windowInfo.sectorId && (
+					<button
+						onClick={(e) => {
+							// Prevent event from bubbling up to the window's onClick handler
+							e.stopPropagation();
+							
+							// Find the sector name
+							const sector = sectors.find((s) => s.id === windowInfo.sectorId);
+							const sectorName = sector ? sector.name : "Sector";
+
+							// Use handleOpenWindow to open sector overview
+							const isMobile = window.innerWidth < 768;
+							handleOpenWindow({
+								id: `sector-${windowInfo.sectorId}`,
+								title: sectorName,
+								type: "sector",
+								sectorId: windowInfo.sectorId,
+								position: {
+									x: isMobile ? 0 : position.x - 50,
+									y: position.y + 50,
+								},
+							});
+						}}
+						className="my-2 ml-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
+						title={`Open ${sectors.find((s) => s.id === windowInfo.sectorId)?.name}`}
+						aria-label="Open Sector Overview"
+					>
+						<GlobeAltIcon className="h-4 w-4" />
+					</button>
+				)}
+
 				<h2
-					className={`ml-2 flex-1 ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none py-2 text-xl font-semibold text-white select-none`}
+					className={`${windowInfo.type !== "sector" && windowInfo.sectorId ? "ml-2" : "ml-2"} flex-1 ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none py-2 text-xl font-semibold text-white select-none`}
 					onMouseDown={onMouseDown}
 					onTouchStart={onTouchStart}
 				>
 					{windowInfo.title}
 				</h2>
 
-				<div className="mx-2 flex items-center space-x-2">
+				<div className="mx-2 my-2 flex items-start space-x-2">
 					<button
 						onClick={() => handleMinimizeWindow({ ...windowInfo, position })}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
@@ -291,7 +329,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				</div>
 			</div>
 
-			<div className="flex max-h-[50vh] flex-1 overflow-y-auto overscroll-contain sm:max-h-[70vh]">
+			<div className="scrollbar-none flex max-h-[500px] flex-1 overflow-y-auto overscroll-contain">
 				{children}
 			</div>
 		</div>

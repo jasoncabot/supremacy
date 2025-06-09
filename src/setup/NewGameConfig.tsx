@@ -93,7 +93,7 @@ const NewGameConfig: React.FC = () => {
 				}}
 				className="flex flex-col space-y-4 overflow-hidden"
 			>
-				<div className="flex flex-1 flex-col space-y-4 overflow-scroll">
+				<div className="flex flex-1 flex-col space-y-4 overflow-scroll scrollbar-none">
 					{/* Faction */}
 					<div className="space-y-2">
 						<label className="mb-1 block text-left text-lg font-semibold tracking-wide text-slate-200">

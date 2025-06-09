@@ -99,7 +99,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 
 			{/* Menu content */}
 			<div className={`flex-1 p-1`}>
-				<div className="flex h-full flex-col space-y-1 overflow-y-auto">
+				<div className="flex h-full flex-col space-y-1 overflow-y-auto scrollbar-none">
 					{/* Main Navigation */}
 					{renderMenuButton(
 						GlobeAltIcon,
