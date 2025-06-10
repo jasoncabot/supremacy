@@ -1,7 +1,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import React from "react";
 import { PlanetView } from "../../worker/api";
-import { getAdornmentByTypeAndFaction, type Faction } from "../adornments";
+import { getMenuAdornmentByTypeAndFaction, type Faction } from "../adornments";
 
 interface PlanetMobileMenuProps {
 	planet: PlanetView;
@@ -30,25 +30,25 @@ const PlanetMobileMenu: React.FC<PlanetMobileMenuProps> = ({
 		{
 			label: "Fleets",
 			onClick: onFleets,
-			icon: getAdornmentByTypeAndFaction("fleet", faction),
+			icon: getMenuAdornmentByTypeAndFaction("fleet", faction),
 			showForNeutral: false,
 		},
 		{
 			label: "Defence",
 			onClick: onDefence,
-			icon: getAdornmentByTypeAndFaction("defence", faction),
+			icon: getMenuAdornmentByTypeAndFaction("defence", faction),
 			showForNeutral: true,
 		},
 		{
 			label: "Manufacturing",
 			onClick: onManufacturing,
-			icon: getAdornmentByTypeAndFaction("manufacturing", faction),
+			icon: getMenuAdornmentByTypeAndFaction("manufacturing", faction),
 			showForNeutral: true,
 		},
 		{
 			label: "Missions",
 			onClick: onMissions,
-			icon: getAdornmentByTypeAndFaction("mission", faction),
+			icon: getMenuAdornmentByTypeAndFaction("mission", faction),
 			showForNeutral: false,
 		},
 	];
@@ -77,7 +77,7 @@ const PlanetMobileMenu: React.FC<PlanetMobileMenuProps> = ({
 							<img
 								src={item.icon}
 								alt={item.label}
-								className="mr-3 h-5 w-5"
+								className="mr-3"
 							/>
 							{item.label}
 						</button>

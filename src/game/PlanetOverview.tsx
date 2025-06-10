@@ -1,6 +1,10 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
-import { getAdornmentByTypeAndFaction, type Faction } from "../adornments";
+import { 
+	getAdornmentByTypeAndFaction, 
+	getHoverAdornmentByTypeAndFaction,
+	type Faction 
+} from "../adornments";
 import { useGame } from "../hooks/useGame";
 import { useSelectionContext } from "../hooks/useSelectionContext";
 import { useWindowContext } from "../hooks/useWindowContext";
@@ -181,123 +185,238 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 			className="items-left flex h-[120px] w-[80px] cursor-pointer flex-col justify-center rounded-lg p-2 text-white md:cursor-default"
 			onClick={handleContainerClick}
 		>
-			{/* Mobile: Show menu on tap, Desktop: Always show adornments */}
-			<div className="md:hidden">
-				{/* Mobile - Show menu only if not in target selection mode */}
+			{/* Planet with adornments positioned around it - same layout for mobile and desktop */}
+			<div className="relative mb-2">
+				{/* Mobile: Wrap entire planet area with menu when not in target selection mode */}
 				{selectionState !== "awaiting-target" ? (
-					<PlanetMobileMenu
-						planet={planet}
-						onFleets={handleViewFleets}
-						onDefence={handleViewDefence}
-						onManufacturing={handleViewManufacturing}
-						onMissions={handleViewMissions}
-					>
-						<div>
-							{/* planet image */}
-							<div className="mb-1 flex items-center justify-center">
+					<div className="md:hidden">
+						<PlanetMobileMenu
+							planet={planet}
+							onFleets={handleViewFleets}
+							onDefence={handleViewDefence}
+							onManufacturing={handleViewManufacturing}
+							onMissions={handleViewMissions}
+						>
+							{/* Planet with positioned adornments */}
+							<div className="relative flex items-center justify-center">
+								{/* Adornments positioned around planet - only show if discovered */}
+								{planet.discovered && (
+									<>
+										{/* Top left - Manufacturing */}
+										<div className="absolute top-[-4px] left-0">
+											<img
+												src={getAdornmentByTypeAndFaction(
+													"manufacturing",
+													faction,
+												)}
+												alt="Manufacturing"
+											/>
+										</div>
+
+										{/* Top right - Fleets (only for non-neutral) */}
+										{faction !== "neutral" && (
+											<div className="absolute top-[-4px] right-0">
+												<img
+													src={getAdornmentByTypeAndFaction("fleet", faction)}
+													alt="Fleets"
+												/>
+											</div>
+										)}
+
+										{/* Bottom left - Defence */}
+										<div className="absolute bottom-0 left-0">
+											<img
+												src={getAdornmentByTypeAndFaction("defence", faction)}
+												alt="Defence"
+											/>
+										</div>
+
+										{/* Bottom right - Missions (only for non-neutral) */}
+										{faction !== "neutral" && (
+											<div className="absolute right-0 bottom-0">
+												<img
+													src={getAdornmentByTypeAndFaction("mission", faction)}
+													alt="Missions"
+												/>
+											</div>
+										)}
+									</>
+								)}
+
+								{/* Planet image */}
 								<img
 									src={planetImageUrl}
 									alt={planet.metadata.name}
 									title={planet.metadata.name}
-									className="h-[30px] w-[30px] rounded-full"
+									className="h-[37px] w-[37px]"
 								/>
 							</div>
-						</div>
-					</PlanetMobileMenu>
+						</PlanetMobileMenu>
+					</div>
 				) : (
-					/* Target selection mode - show planet image, container handles click */
-					<div>
-						<div className="mb-1 flex items-center justify-center">
+					/* Target selection mode - show planet with adornments, container handles click */
+					<div className="md:hidden">
+						<div className="relative flex items-center justify-center">
+							{/* Adornments positioned around planet - only show if discovered */}
+							{planet.discovered && (
+								<>
+									{/* Top left - Manufacturing */}
+									<div className="absolute top-[-4px] left-0">
+										<img
+											src={getAdornmentByTypeAndFaction(
+												"manufacturing",
+												faction,
+											)}
+											alt="Manufacturing"
+										/>
+									</div>
+
+									{/* Top right - Fleets (only for non-neutral) */}
+									{faction !== "neutral" && (
+										<div className="absolute top-[-4px] right-0">
+											<img
+												src={getAdornmentByTypeAndFaction("fleet", faction)}
+												alt="Fleets"
+											/>
+										</div>
+									)}
+
+									{/* Bottom left - Defence */}
+									<div className="absolute bottom-0 left-0">
+										<img
+											src={getAdornmentByTypeAndFaction("defence", faction)}
+											alt="Defence"
+										/>
+									</div>
+
+									{/* Bottom right - Missions (only for non-neutral) */}
+									{faction !== "neutral" && (
+										<div className="absolute right-0 bottom-0">
+											<img
+												src={getAdornmentByTypeAndFaction("mission", faction)}
+												alt="Missions"
+											/>
+										</div>
+									)}
+								</>
+							)}
+
+							{/* Planet image */}
 							<img
 								src={planetImageUrl}
 								alt={planet.metadata.name}
 								title={planet.metadata.name}
-								className="h-[30px] w-[30px] rounded-full"
+								className="h-[37px] w-[37px]"
 							/>
 						</div>
 					</div>
 				)}
-			</div>
 
-			{/* Desktop - Always show planet image and adornments */}
-			<div className="hidden md:block">
-				{/* planet image */}
-				<div className="mb-1 flex items-center justify-center">
-					<img
-						src={planetImageUrl}
-						alt={planet.metadata.name}
-						title={planet.metadata.name}
-						className="h-[30px] w-[30px] rounded-full"
-						onClick={
-							selectionState === "awaiting-target"
-								? (e) => {
-										e.stopPropagation();
-										handlePlanetSelected();
-									}
-								: undefined
-						}
-						style={{
-							cursor:
-								selectionState === "awaiting-target" ? "pointer" : "default",
-						}}
-					/>
-				</div>
-
-				{/* Adornments only visible on md+ devices and if planet is discovered */}
-				{planet.discovered && (
-					<div className="mb-1">
-						<div className="flex flex-row gap-1">
-							{faction !== "neutral" && (
+				{/* Desktop - Planet with clickable adornments */}
+				<div className="hidden md:block">
+					<div className="relative flex items-center justify-center">
+						{/* Adornments positioned around planet - only show if discovered */}
+						{planet.discovered && (
+							<>
+								{/* Top left - Manufacturing */}
 								<button
-									onClick={handleViewFleets}
-									className="flex-shrink-0 cursor-pointer hover:opacity-80"
-									title="Fleets"
+									onClick={handleViewManufacturing}
+									className="absolute top-[-4px] left-0 cursor-pointer group"
+									title="Manufacturing"
 								>
 									<img
-										src={getAdornmentByTypeAndFaction("fleet", faction)}
-										alt="Fleets"
-										className="flex-shrink-0"
+										src={getAdornmentByTypeAndFaction("manufacturing", faction)}
+										alt="Manufacturing"
+										className="group-hover:hidden"
+									/>
+									<img
+										src={getHoverAdornmentByTypeAndFaction("manufacturing", faction)}
+										alt="Manufacturing"
+										className="hidden group-hover:block"
 									/>
 								</button>
-							)}
-							<button
-								onClick={handleViewDefence}
-								className="flex-shrink-0 cursor-pointer hover:opacity-80"
-								title="Defence"
-							>
-								<img
-									src={getAdornmentByTypeAndFaction("defence", faction)}
-									alt="Defence"
-									className="flex-shrink-0"
-								/>
-							</button>
-							<button
-								onClick={handleViewManufacturing}
-								className="flex-shrink-0 cursor-pointer hover:opacity-80"
-								title="Manufacturing"
-							>
-								<img
-									src={getAdornmentByTypeAndFaction("manufacturing", faction)}
-									alt="Manufacturing"
-									className="flex-shrink-0"
-								/>
-							</button>
-							{faction !== "neutral" && (
+
+								{/* Top right - Fleets (only for non-neutral) */}
+								{faction !== "neutral" && (
+									<button
+										onClick={handleViewFleets}
+										className="absolute top-[-4px] right-0 cursor-pointer group"
+										title="Fleets"
+									>
+										<img
+											src={getAdornmentByTypeAndFaction("fleet", faction)}
+											alt="Fleets"
+											className="group-hover:hidden"
+										/>
+										<img
+											src={getHoverAdornmentByTypeAndFaction("fleet", faction)}
+											alt="Fleets"
+											className="hidden group-hover:block"
+										/>
+									</button>
+								)}
+
+								{/* Bottom left - Defence */}
 								<button
-									onClick={handleViewMissions}
-									className="flex-shrink-0 cursor-pointer hover:opacity-80"
-									title="Missions"
+									onClick={handleViewDefence}
+									className="absolute bottom-0 left-0 cursor-pointer group"
+									title="Defence"
 								>
 									<img
-										src={getAdornmentByTypeAndFaction("mission", faction)}
-										alt="Missions"
-										className="flex-shrink-0"
+										src={getAdornmentByTypeAndFaction("defence", faction)}
+										alt="Defence"
+										className="group-hover:hidden"
+									/>
+									<img
+										src={getHoverAdornmentByTypeAndFaction("defence", faction)}
+										alt="Defence"
+										className="hidden group-hover:block"
 									/>
 								</button>
-							)}
-						</div>
+
+								{/* Bottom right - Missions (only for non-neutral) */}
+								{faction !== "neutral" && (
+									<button
+										onClick={handleViewMissions}
+										className="absolute right-0 bottom-0 cursor-pointer group"
+										title="Missions"
+									>
+										<img
+											src={getAdornmentByTypeAndFaction("mission", faction)}
+											alt="Missions"
+											className="group-hover:hidden"
+										/>
+										<img
+											src={getHoverAdornmentByTypeAndFaction("mission", faction)}
+											alt="Missions"
+											className="hidden group-hover:block"
+										/>
+									</button>
+								)}
+							</>
+						)}
+
+						{/* Planet image */}
+						<img
+							src={planetImageUrl}
+							alt={planet.metadata.name}
+							title={planet.metadata.name}
+							className="h-[37px] w-[37px]"
+							onClick={
+								selectionState === "awaiting-target"
+									? (e) => {
+											e.stopPropagation();
+											handlePlanetSelected();
+										}
+									: undefined
+							}
+							style={{
+								cursor:
+									selectionState === "awaiting-target" ? "pointer" : "default",
+							}}
+						/>
 					</div>
-				)}
+				</div>
 			</div>
 
 			{/* energy spots - only show if planet is discovered */}
