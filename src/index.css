@@ -30,3 +30,7 @@ body.window-dragging {
 	-webkit-overflow-scrolling: none;
 	overscroll-behavior: none;
 }
+
+.scrollbar-none {
+	scrollbar-width: none;
+}
