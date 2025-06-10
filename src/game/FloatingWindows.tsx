@@ -25,17 +25,17 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 				const getWindowClassName = (type: string) => {
 					switch (type) {
 						case "sector":
-							return "w-[95vw] md:w-[400px]"; // Wider for sector details
+							return "w-[95vw] md:w-[400px] min-h-[400px] md:min-h-[500px]"; // Wider for sector details
 						case "manufacturing":
-							return "w-[350px]"; // Medium width for manufacturing
+							return "w-[350px] min-h-[400px] md:min-h-[500px]"; // Medium width for manufacturing
 						case "fleets":
-							return "w-[300px]"; // Standard width for fleets
+							return "w-[300px] min-h-[400px] md:min-h-[500px]]"; // Standard width for fleets
 						case "defence":
-							return "w-[300px]"; // Standard width for defence
+							return "w-[300px] min-h-[400px] md:min-h-[500px]"; // Standard width for defence
 						case "missions":
-							return "w-[320px]"; // Slightly wider for missions
+							return "w-[320px] min-h-[400px] md:min-h-[500px]"; // Slightly wider for missions
 						default:
-							return "w-[280px]"; // Default width (maintains current behavior)
+							return "w-[280px] min-h-[400px] md:min-h-[500px]"; // Default width (maintains current behavior)
 					}
 				};
 

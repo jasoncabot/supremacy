@@ -40,6 +40,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	// Function to ensure the window opens within the viewport
 	const ensureWithinViewport = (pos: { x: number; y: number }) => {
 		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
 		const windowWidth = 280; // Minimum width from CSS
 
 		// Ensure window is not positioned outside the right edge
@@ -47,7 +48,11 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 
 		// Ensure window is not positioned outside the left edge
 		const finalX = Math.max(x, 0);
-		return { x: finalX, y: pos.y };
+
+		const maxY = Math.max(0, viewportHeight * 0.25 - 48);
+		const finalY = Math.min(Math.max(pos.y, 0), maxY);
+
+		return { x: finalX, y: finalY };
 	};
 
 	// Use the position from windowInfo if available, otherwise use initialPosition
@@ -266,7 +271,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				top: 0,
 				touchAction: dragging ? "none" : "auto", // Explicitly disable touch actions when dragging
 			}}
-			className={`flex min-h-[540px] max-w-full flex-col rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
+			className={`flex max-w-full flex-col rounded-xl border border-purple-700/40 bg-gradient-to-br from-slate-900 to-gray-900 shadow-2xl ${className}`}
 			// Bring window to front when clicking anywhere in the window
 			onClick={bringWindowToFront}
 		>
@@ -277,13 +282,16 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 						onClick={(e) => {
 							// Prevent event from bubbling up to the window's onClick handler
 							e.stopPropagation();
-							
+
 							// Find the sector name
 							const sector = sectors.find((s) => s.id === windowInfo.sectorId);
 							const sectorName = sector ? sector.name : "Sector";
 
-							// Use handleOpenWindow to open sector overview
+							// Calculate position with 25% viewport constraint
 							const isMobile = window.innerWidth < 768;
+							const maxY = Math.max(0, window.innerHeight * 0.25 - 48);
+
+							// Use handleOpenWindow to open sector overview
 							handleOpenWindow({
 								id: `sector-${windowInfo.sectorId}`,
 								title: sectorName,
@@ -291,7 +299,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 								sectorId: windowInfo.sectorId,
 								position: {
 									x: isMobile ? 0 : position.x - 50,
-									y: position.y + 50,
+									y: Math.min(position.y + 50, maxY),
 								},
 							});
 						}}
@@ -304,7 +312,10 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				)}
 
 				<h2
-					className={`${windowInfo.type !== "sector" && windowInfo.sectorId ? "ml-2" : "ml-2"} flex-1 ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none py-2 text-xl font-semibold text-white select-none`}
+					className={
+						`flex-1 ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none py-2 text-center font-semibold text-white select-none` +
+						(windowInfo.type === "sector" ? " text-xl" : " text-xs")
+					}
 					onMouseDown={onMouseDown}
 					onTouchStart={onTouchStart}
 				>

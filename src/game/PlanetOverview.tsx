@@ -1,9 +1,9 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
-import { 
-	getAdornmentByTypeAndFaction, 
+import {
+	getAdornmentByTypeAndFaction,
 	getHoverAdornmentByTypeAndFaction,
-	type Faction 
+	type Faction,
 } from "../adornments";
 import { useGame } from "../hooks/useGame";
 import { useSelectionContext } from "../hooks/useSelectionContext";
@@ -24,10 +24,11 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 	const handleViewFleets = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent event from bubbling to parent container
-		// Get the click position
+		// Get the click position, constrained to keep within top 25% of viewport
+		const maxY = Math.max(0, window.innerHeight * 0.25 - 48);
 		const position = {
 			x: e.clientX - 150, // Center window horizontally near click
-			y: e.clientY - 50, // Position window vertically near click with offset for header
+			y: Math.min(e.clientY - 50, maxY), // Position within top 25% of viewport
 		};
 
 		handleOpenWindow({
@@ -36,15 +37,16 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 			type: "fleets",
 			planetId: planet.metadata.id,
 			sectorId: planet.metadata.sectorId,
-			position: position, // Pass the click position
+			position: position,
 		});
 	};
 
 	const handleViewDefence = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent event from bubbling to parent container
+		const maxY = Math.max(0, window.innerHeight * 0.25 - 48);
 		const position = {
 			x: e.clientX - 150,
-			y: e.clientY - 50,
+			y: Math.min(e.clientY - 50, maxY),
 		};
 
 		handleOpenWindow({
@@ -59,9 +61,10 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 	const handleViewManufacturing = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent event from bubbling to parent container
+		const maxY = Math.max(0, window.innerHeight * 0.25 - 48);
 		const position = {
 			x: e.clientX - 150,
-			y: e.clientY - 50,
+			y: Math.min(e.clientY - 50, maxY),
 		};
 
 		handleOpenWindow({
@@ -76,9 +79,10 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 	const handleViewMissions = (e: React.MouseEvent) => {
 		e.stopPropagation(); // Prevent event from bubbling to parent container
+		const maxY = Math.max(0, window.innerHeight * 0.25 - 48);
 		const position = {
 			x: e.clientX - 150,
-			y: e.clientY - 50,
+			y: Math.min(e.clientY - 50, maxY),
 		};
 
 		handleOpenWindow({
@@ -203,7 +207,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 								{planet.discovered && (
 									<>
 										{/* Top left - Manufacturing */}
-										<div className="absolute top-[-4px] left-0">
+										<div className="absolute top-[-4px] left-[4px]">
 											<img
 												src={getAdornmentByTypeAndFaction(
 													"manufacturing",
@@ -215,7 +219,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 										{/* Top right - Fleets (only for non-neutral) */}
 										{faction !== "neutral" && (
-											<div className="absolute top-[-4px] right-0">
+											<div className="absolute top-[-4px] right-[2px]">
 												<img
 													src={getAdornmentByTypeAndFaction("fleet", faction)}
 													alt="Fleets"
@@ -224,7 +228,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 										)}
 
 										{/* Bottom left - Defence */}
-										<div className="absolute bottom-0 left-0">
+										<div className="absolute bottom-0 left-[4px]">
 											<img
 												src={getAdornmentByTypeAndFaction("defence", faction)}
 												alt="Defence"
@@ -233,7 +237,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 										{/* Bottom right - Missions (only for non-neutral) */}
 										{faction !== "neutral" && (
-											<div className="absolute right-0 bottom-0">
+											<div className="absolute right-[2px] bottom-0">
 												<img
 													src={getAdornmentByTypeAndFaction("mission", faction)}
 													alt="Missions"
@@ -261,7 +265,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 							{planet.discovered && (
 								<>
 									{/* Top left - Manufacturing */}
-									<div className="absolute top-[-4px] left-0">
+									<div className="absolute top-[-4px] left-[4px]">
 										<img
 											src={getAdornmentByTypeAndFaction(
 												"manufacturing",
@@ -273,7 +277,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 									{/* Top right - Fleets (only for non-neutral) */}
 									{faction !== "neutral" && (
-										<div className="absolute top-[-4px] right-0">
+										<div className="absolute top-[-4px] right-[2px]">
 											<img
 												src={getAdornmentByTypeAndFaction("fleet", faction)}
 												alt="Fleets"
@@ -282,7 +286,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 									)}
 
 									{/* Bottom left - Defence */}
-									<div className="absolute bottom-0 left-0">
+									<div className="absolute bottom-0 left-[4px]">
 										<img
 											src={getAdornmentByTypeAndFaction("defence", faction)}
 											alt="Defence"
@@ -291,7 +295,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 
 									{/* Bottom right - Missions (only for non-neutral) */}
 									{faction !== "neutral" && (
-										<div className="absolute right-0 bottom-0">
+										<div className="absolute right-[2px] bottom-0">
 											<img
 												src={getAdornmentByTypeAndFaction("mission", faction)}
 												alt="Missions"
@@ -321,7 +325,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 								{/* Top left - Manufacturing */}
 								<button
 									onClick={handleViewManufacturing}
-									className="absolute top-[-4px] left-0 cursor-pointer group"
+									className="group absolute top-[-4px] left-[4px] cursor-pointer"
 									title="Manufacturing"
 								>
 									<img
@@ -330,7 +334,10 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 										className="group-hover:hidden"
 									/>
 									<img
-										src={getHoverAdornmentByTypeAndFaction("manufacturing", faction)}
+										src={getHoverAdornmentByTypeAndFaction(
+											"manufacturing",
+											faction,
+										)}
 										alt="Manufacturing"
 										className="hidden group-hover:block"
 									/>
@@ -340,7 +347,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 								{faction !== "neutral" && (
 									<button
 										onClick={handleViewFleets}
-										className="absolute top-[-4px] right-0 cursor-pointer group"
+										className="group absolute top-[-4px] right-[2px] cursor-pointer"
 										title="Fleets"
 									>
 										<img
@@ -359,7 +366,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 								{/* Bottom left - Defence */}
 								<button
 									onClick={handleViewDefence}
-									className="absolute bottom-0 left-0 cursor-pointer group"
+									className="group absolute bottom-0 left-[4px] cursor-pointer"
 									title="Defence"
 								>
 									<img
@@ -378,7 +385,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 								{faction !== "neutral" && (
 									<button
 										onClick={handleViewMissions}
-										className="absolute right-0 bottom-0 cursor-pointer group"
+										className="group absolute right-[2px] bottom-0 cursor-pointer"
 										title="Missions"
 									>
 										<img
@@ -387,7 +394,10 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 											className="group-hover:hidden"
 										/>
 										<img
-											src={getHoverAdornmentByTypeAndFaction("mission", faction)}
+											src={getHoverAdornmentByTypeAndFaction(
+												"mission",
+												faction,
+											)}
 											alt="Missions"
 											className="hidden group-hover:block"
 										/>

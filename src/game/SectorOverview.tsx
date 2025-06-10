@@ -23,6 +23,8 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 	) => {
 		// Calculate position relative to viewport
 		const isMobile = window.innerWidth < 768;
+		const maxY = Math.max(0, (window.innerHeight * 0.25) - 48);
+		
 		handleOpenWindow({
 			id: `sector-${sector.id}`,
 			title: sector.name,
@@ -30,7 +32,7 @@ const SectorOverview: React.FC<SectorOverviewProps> = ({
 			sectorId: sector.id,
 			position: {
 				x: isMobile ? 0 : event.clientX - 150, // Fixed on mobile, centered near click otherwise
-				y: 100,
+				y: Math.min(event.clientY - 50, maxY), // Constrain to top 25% of viewport
 			},
 		});
 	};
