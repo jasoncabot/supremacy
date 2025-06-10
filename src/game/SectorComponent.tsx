@@ -1,7 +1,6 @@
 import React from "react";
 import { PlanetView, SectorMetadata } from "../../worker/api";
 import { FilterType } from "./Filters";
-import { getPlanetSize, getPlanetPixelSize } from "../legend/legend";
 import PlanetLegendItem from "./PlanetLegendItem";
 
 interface SectorComponentProps {
@@ -37,8 +36,7 @@ const SectorComponent: React.FC<SectorComponentProps> = ({
 			{/* Planets container */}
 			<div className="relative h-full w-full p-1">
 				{planets.map((planet, index) => {
-					const planetSize = getPlanetSize(1);
-					const pixelSize = getPlanetPixelSize(planetSize);
+					const pixelSize = 15; // All planet images are 15x15px
 
 					// Responsive usable area calculation (sector size - 2px padding)
 					// Mobile: 80px - 2px = 78px, SM: 96px - 2px = 94px, MD: 112px - 2px = 110px, LG+: 120px - 2px = 118px

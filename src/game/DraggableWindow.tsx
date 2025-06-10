@@ -303,7 +303,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 								},
 							});
 						}}
-						className="my-2 ml-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
+						className="m-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
 						title={`Open ${sectors.find((s) => s.id === windowInfo.sectorId)?.name}`}
 						aria-label="Open Sector Overview"
 					>

@@ -74,18 +74,3 @@ export function getPlanetImage(
 	const ownerKey = owner || "None";
 	return planetImages[size][ownerKey];
 }
-
-export function getPlanetPixelSize(size: PlanetSize): number {
-	switch (size) {
-		case "large":
-			return 12;
-		case "medium":
-			return 10;
-		case "small":
-			return 8;
-		case "tiny":
-			return 6;
-		default:
-			return 8;
-	}
-}

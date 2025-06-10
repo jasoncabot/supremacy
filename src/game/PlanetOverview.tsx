@@ -11,13 +11,14 @@ import { useWindowContext } from "../hooks/useWindowContext";
 import { getPlanetById } from "../planets";
 import { FilterType } from "./Filters";
 import PlanetMobileMenu from "./PlanetMobileMenu";
+import StarLegend from "./StarLegend";
 
 interface PlanetOverviewProps {
 	planet: PlanetView;
 	filter: FilterType;
 }
 
-const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
+const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 	const { handleOpenWindow } = useWindowContext();
 	const { selectionState, selectItem } = useSelectionContext();
 	const { game } = useGame();
@@ -247,6 +248,11 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 									</>
 								)}
 
+								{/* Star Legend - positioned to the right of defence adornment */}
+								<div className="absolute bottom-[-2px] left-[14px] z-20 h-[15px] w-[15px]">
+									<StarLegend planet={planet} filter={filter} />
+								</div>
+
 								{/* Planet image */}
 								<img
 									src={planetImageUrl}
@@ -304,6 +310,11 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 									)}
 								</>
 							)}
+
+							{/* Star Legend - positioned to the right of defence adornment */}
+							<div className="absolute bottom-[-2px] left-[14px] z-20 h-[15px] w-[15px]">
+								<StarLegend planet={planet} filter={filter} />
+							</div>
 
 							{/* Planet image */}
 							<img
@@ -405,6 +416,11 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet }) => {
 								)}
 							</>
 						)}
+
+						{/* Star Legend - positioned to the right of defence adornment */}
+						<div className="absolute bottom-[-2px] left-[14px] z-20 h-[15px] w-[15px]">
+							<StarLegend planet={planet} filter={filter} />
+						</div>
 
 						{/* Planet image */}
 						<img

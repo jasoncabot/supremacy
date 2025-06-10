@@ -1,15 +1,11 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
 import { FilterType } from "./Filters";
-import { getPlanetSize, getPlanetImage, PlanetOwner } from "../legend/legend";
-import StarLegend from "./StarLegend";
+import { getPlanetImage, PlanetOwner } from "../legend/legend";
 
-interface PlanetLegendItemProps {
+interface StarLegendProps {
 	planet: PlanetView;
 	filter: FilterType;
-	x: number;
-	y: number;
-	pixelSize: number;
 }
 
 const getFilterRelevanceSize = (
@@ -68,59 +64,49 @@ const getFilterRelevanceSize = (
 
 		case "OFF":
 		default:
-			return getPlanetSize(1);
+			return "tiny";
 	}
 };
 
-const PlanetLegendItem: React.FC<PlanetLegendItemProps> = ({
-	planet,
-	filter,
-	x,
-	y,
-	pixelSize,
-}) => {
-	const owner = planet.state?.owner as PlanetOwner | undefined;
+const getStarOwner = (planet: PlanetView, filter: FilterType): PlanetOwner => {
+	if (!planet.discovered || !planet.state) return "None";
 
-	// Get the appropriate size based on filter relevance
-	const filterSize =
-		filter !== "OFF"
-			? getFilterRelevanceSize(planet, filter)
-			: getPlanetSize(1);
+	// Special handling for loyalty filters
+	if (filter === "LOYALTY_SUPPORT") {
+		const loyalty = planet.state.loyalty || 0;
+		const isEmpireLoyalty = loyalty >= 50;
 
-	// Use the filter-based size for the image, but keep original pixelSize for positioning
-	const planetImage = getPlanetImage(
-		planet.discovered,
-		owner,
-		filterSize,
-		planet.metadata.name.toLowerCase().includes("capital") ||
-			planet.metadata.name.toLowerCase().includes("coruscant") ||
-			planet.metadata.name.toLowerCase().includes("yavin"),
-	);
+		// Show the faction that the planet supports, not who controls it
+		// This creates the visual distinction requested in the requirements
+		if (isEmpireLoyalty) {
+			return "Empire"; // Planet supports Empire (red star)
+		} else {
+			return "Rebellion"; // Planet supports Rebellion (green star)
+		}
+	}
 
-	return (
-		<div
-			className="absolute"
-			style={{
-				left: `${x}px`,
-				top: `${y}px`,
-				width: `${pixelSize}px`,
-				height: `${pixelSize}px`,
-			}}
-		>
-			<img
-				src={planetImage}
-				alt={planet.metadata.name}
-				title={planet.metadata.name}
-				className={`absolute drop-shadow-sm w-[${pixelSize}px] h-[${pixelSize}px] ${
-					planet.discovered ? "opacity-100" : "opacity-60"
-				}`}
-			/>
-			{/* Star Legend - positioned to the right of the planet */}
-			<div className="absolute top-[2px] left-[17px]">
-				<StarLegend planet={planet} filter={filter} />
-			</div>
-		</div>
-	);
+	// Standard owner-based coloring for all other filters
+	return (planet.state.owner as PlanetOwner) || "None";
 };
 
-export default PlanetLegendItem;
+const StarLegend: React.FC<StarLegendProps> = ({ planet, filter }) => {
+	// Don't show star if filter is off or planet is not discovered
+	if (filter === "OFF" || !planet.discovered) {
+		return null;
+	}
+
+	const size = getFilterRelevanceSize(planet, filter);
+	const owner = getStarOwner(planet, filter);
+
+	// Get the planet image using the same system as SectorComponent
+	const planetImage = getPlanetImage(
+		true, // Always show as discovered since we already check above
+		owner,
+		size,
+		false, // Not a capital for legend purposes
+	);
+
+	return <img src={planetImage} alt="Filter Legend" />;
+};
+
+export default StarLegend;
