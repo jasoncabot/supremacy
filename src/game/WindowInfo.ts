@@ -14,4 +14,5 @@ export type WindowInfoType =
 	| "fleets"
 	| "defence"
 	| "manufacturing"
-	| "missions";
+	| "missions"
+	| "action-detail";

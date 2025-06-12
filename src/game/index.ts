@@ -1,3 +1,4 @@
+export { default as ActionDetailWindow } from "./ActionDetailWindow";
 export { default as DraggableWindow } from "./DraggableWindow";
 export { default as GameActions } from "./GameActions";
 export { default as GameContent } from "./GameContent";

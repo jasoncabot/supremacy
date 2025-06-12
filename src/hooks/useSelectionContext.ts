@@ -6,6 +6,7 @@ import {
 	PlanetView,
 	ShipResource,
 } from "../../worker/api";
+import type { ActionDefinition } from "../game/types/actions";
 
 export type SelectableItem =
 	| DefenseResource
@@ -16,7 +17,7 @@ export type SelectableItem =
 
 export type SelectionKind = "none" | "single" | "multiple" | "target";
 
-export type SelectionState = "idle" | "awaiting-target";
+export type SelectionState = "idle" | "awaiting-target" | "action-confirmation";
 
 interface SelectionContextType {
 	selectedItems: SelectableItem[];
@@ -24,6 +25,13 @@ interface SelectionContextType {
 	selectionState: SelectionState;
 	currentAction: string | null;
 	targetItem: SelectableItem | null;
+	// Add action confirmation state
+	pendingActionDetails: {
+		actionId: string;
+		actionDef: ActionDefinition;
+		sources: SelectableItem[];
+		target?: SelectableItem;
+	} | null;
 	toggleSelectionKind: (mode: SelectionKind) => void;
 	selectItem: (item: SelectableItem) => void;
 	deselectItem: (itemId: string) => void;
@@ -33,6 +41,10 @@ interface SelectionContextType {
 	selectTarget: (target: SelectableItem) => void;
 	executeAction: () => void;
 	cancelTargetSelection: () => void;
+	// Add action confirmation methods
+	showActionConfirmation: (actionId: string, actionDef: ActionDefinition, sources: SelectableItem[], target?: SelectableItem) => void;
+	confirmAction: () => void;
+	cancelActionConfirmation: () => void;
 }
 
 // Create context with default values
@@ -42,6 +54,7 @@ export const SelectionContext = createContext<SelectionContextType>({
 	selectionState: "idle",
 	currentAction: null,
 	targetItem: null,
+	pendingActionDetails: null,
 	toggleSelectionKind: () => {},
 	selectItem: () => {},
 	deselectItem: () => {},
@@ -51,6 +64,9 @@ export const SelectionContext = createContext<SelectionContextType>({
 	selectTarget: () => {},
 	executeAction: () => {},
 	cancelTargetSelection: () => {},
+	showActionConfirmation: () => {},
+	confirmAction: () => {},
+	cancelActionConfirmation: () => {},
 });
 
 export const useSelectionContext = () => {

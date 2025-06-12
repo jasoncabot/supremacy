@@ -26,9 +26,9 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 		selectionState,
 		currentAction,
 		toggleSelectionKind,
-		clearSelection,
 		startTargetSelection,
 		cancelTargetSelection,
+		showActionConfirmation,
 	} = useSelectionContext();
 
 	const getButtonClasses = (mode: SelectionKind) => {
@@ -46,9 +46,8 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 			// Start target selection mode
 			startTargetSelection(action.id);
 		} else {
-			// Execute action immediately (no target required)
-			console.log(`Executing action: ${action.id} on items:`, selectedItems);
-			clearSelection();
+			// Show action confirmation window immediately (no target required)
+			showActionConfirmation(action.id, action, selectedItems);
 		}
 	};
 

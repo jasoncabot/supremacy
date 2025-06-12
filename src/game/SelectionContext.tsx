@@ -6,10 +6,13 @@ import {
 	SelectionState,
 } from "../hooks/useSelectionContext";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
+import { useWindowContext } from "../hooks/useWindowContext";
+import { WindowInfo } from "./WindowInfo";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
+	const { handleOpenWindow, handleCloseWindow } = useWindowContext();
 	const [selectedItems, setSelectedItems] = useState<SelectableItem[]>([]);
 	const [selectionMode, setSelectionKind] = useState<SelectionKind>("none");
 	const [selectionState, setSelectionState] = useState<SelectionState>("idle");
@@ -17,6 +20,12 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const [currentActionDef, setCurrentActionDef] =
 		useState<ActionDefinition | null>(null);
 	const [targetItem, setTargetItem] = useState<SelectableItem | null>(null);
+	const [pendingActionDetails, setPendingActionDetails] = useState<{
+		actionId: string;
+		actionDef: ActionDefinition;
+		sources: SelectableItem[];
+		target?: SelectableItem;
+	} | null>(null);
 
 	const toggleSelectionKind = (mode: SelectionKind) => {
 		if (mode === selectionMode) {
@@ -69,6 +78,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		setCurrentAction(null);
 		setCurrentActionDef(null);
 		setTargetItem(null);
+		setPendingActionDetails(null);
 		setSelectionKind("none");
 	};
 
@@ -90,17 +100,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 
 	const selectTarget = (target: SelectableItem) => {
 		setTargetItem(target);
-		// Automatically execute the action when target is selected
-		executeActionWithTarget(target);
-	};
-
-	const executeActionWithTarget = (target: SelectableItem) => {
+		// Show action confirmation window instead of automatically executing
 		if (currentAction && selectedItems.length > 0 && currentActionDef) {
-			console.log(
-				`Selected items ${selectedItems.map((item) => `${item.type}:${item.id}`).join(", ")} performing action ${currentAction} (${currentActionDef.label}) on target ${target.type}:${target.id}`,
-			);
+			showActionConfirmation(currentAction, currentActionDef, selectedItems, target);
 		}
-		clearSelection();
 	};
 
 	const executeAction = () => {
@@ -120,6 +123,69 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		setSelectionKind("multiple"); // Return to previous selection mode
 	};
 
+	const showActionConfirmation = (
+		actionId: string,
+		actionDef: ActionDefinition,
+		sources: SelectableItem[],
+		target?: SelectableItem
+	) => {
+		setPendingActionDetails({
+			actionId,
+			actionDef,
+			sources,
+			target,
+		});
+		setSelectionState("action-confirmation");
+
+		// Open action detail window
+		const actionWindow: WindowInfo = {
+			id: "action-detail",
+			title: `${actionDef.label} Confirmation`,
+			type: "action-detail",
+			position: { x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 150 }
+		};
+		handleOpenWindow(actionWindow);
+	};
+
+	const confirmAction = () => {
+		if (pendingActionDetails) {
+			console.log(
+				`Confirmed action: ${pendingActionDetails.actionId} (${pendingActionDetails.actionDef.label})`,
+				"Sources:",
+				pendingActionDetails.sources,
+				"Target:",
+				pendingActionDetails.target
+			);
+			
+			// Here you would dispatch the actual game action
+			// For now we just log and clear
+		}
+		
+		// Close the action detail window
+		handleCloseWindow({
+			id: "action-detail",
+			title: "",
+			type: "action-detail",
+			position: { x: 0, y: 0 }
+		});
+		
+		setPendingActionDetails(null);
+		clearSelection();
+	};
+
+	const cancelActionConfirmation = () => {
+		// Close the action detail window
+		handleCloseWindow({
+			id: "action-detail",
+			title: "",
+			type: "action-detail",
+			position: { x: 0, y: 0 }
+		});
+		
+		setPendingActionDetails(null);
+		setSelectionState("idle");
+	};
+
 	return (
 		<SelectionContext.Provider
 			value={{
@@ -128,6 +194,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				selectionState,
 				currentAction,
 				targetItem,
+				pendingActionDetails,
 				toggleSelectionKind,
 				selectItem,
 				deselectItem,
@@ -137,6 +204,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				selectTarget,
 				executeAction,
 				cancelTargetSelection,
+				showActionConfirmation,
+				confirmAction,
+				cancelActionConfirmation,
 			}}
 		>
 			{children}

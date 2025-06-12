@@ -34,6 +34,11 @@ const WINDOW_CONFIGS: Record<WindowInfoType, WindowConfig> = {
 		titlePrefix: "",
 		idPrefix: "sector",
 	},
+	"action-detail": {
+		type: "action-detail",
+		titlePrefix: "Action Confirmation",
+		idPrefix: "action-detail",
+	},
 };
 
 export const usePlanetWindowHandlers = (planet: PlanetView) => {
