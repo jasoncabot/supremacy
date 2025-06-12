@@ -79,7 +79,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 					<MenuButton
 						className={`flex items-center rounded px-3 py-1.5 text-sm ${
 							hasMinimizedWindows
-								? "text-purple-200 hover:bg-purple-900/40"
+								? "cursor-pointer text-purple-200 hover:bg-purple-900/40"
 								: "text-purple-400 opacity-50"
 						}`}
 						disabled={!hasMinimizedWindows}
@@ -118,7 +118,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 
 			{/* Overflow menu */}
 			<Menu as="div" className="relative">
-				<MenuButton className="flex h-8 w-8 items-center justify-center rounded text-purple-200 hover:bg-purple-900/40">
+				<MenuButton className="flex h-8 w-8 cursor-pointer items-center justify-center rounded text-purple-200 hover:bg-purple-900/40">
 					<EllipsisHorizontalIcon className="h-5 w-5" />
 				</MenuButton>
 
@@ -131,7 +131,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 					{overflowMenuItems.map((item) => (
 						<MenuItem key={item.id}>
 							<button
-								className="flex w-full items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white data-focus:bg-purple-800/60 data-focus:text-white"
+								className="flex w-full cursor-pointer items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white data-focus:bg-purple-800/60 data-focus:text-white"
 								onClick={() => onChangeView(item.id as MenuView)}
 							>
 								<span className="mr-2">{item.icon}</span>
@@ -146,7 +146,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 					{/* Settings */}
 					<MenuItem>
 						<button
-							className="flex w-full items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white"
+							className="flex w-full cursor-pointer items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white"
 							onClick={onOpenSettings}
 						>
 							<Cog6ToothIcon className="mr-2 h-5 w-5" />
@@ -157,7 +157,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 					{/* Exit game */}
 					<MenuItem>
 						<button
-							className="flex w-full items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white"
+							className="flex w-full cursor-pointer items-center rounded p-2 text-left text-purple-200 data-active:bg-purple-900/40 data-active:text-white"
 							onClick={onExitGame}
 						>
 							<ArrowLeftEndOnRectangleIcon className="mr-2 h-5 w-5" />

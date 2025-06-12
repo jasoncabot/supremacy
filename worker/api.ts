@@ -74,6 +74,7 @@ export interface GameAction {
 }
 
 export type ResourceStatus = "active" | "en-route" | "under-construction";
+
 export interface ResourceBase {
 	id: string;
 	name: string;
@@ -337,14 +338,6 @@ export interface PlanetDefenses {
 	squadrons: DefenseResource[];
 	shields: DefenseResource[];
 	batteries: DefenseResource[];
-}
-
-export interface PlanetManufacturing {
-	shipyards: ManufacturingResource[];
-	training_facilities: ManufacturingResource[];
-	construction_yards: ManufacturingResource[];
-	refineries: ManufacturingResource[];
-	mines: ManufacturingResource[];
 }
 
 export interface PlanetManufacturing {

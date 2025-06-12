@@ -72,13 +72,9 @@ const PlanetMobileMenu: React.FC<PlanetMobileMenuProps> = ({
 					<MenuItem key={item.label}>
 						<button
 							onClick={item.onClick}
-							className="flex w-full items-center rounded p-2 text-left text-white data-active:bg-gray-700 data-focus:bg-gray-700 hover:bg-gray-700"
+							className="flex w-full cursor-pointer items-center rounded p-2 text-left text-white hover:bg-gray-700 data-active:bg-gray-700 data-focus:bg-gray-700"
 						>
-							<img
-								src={item.icon}
-								alt={item.label}
-								className="mr-3"
-							/>
+							<img src={item.icon} alt={item.label} className="mr-3" />
 							{item.label}
 						</button>
 					</MenuItem>

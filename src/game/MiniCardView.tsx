@@ -1,5 +1,6 @@
 import React from 'react';
-import { useSelectionContext, SelectableItem } from '../hooks/useSelectionContext';
+import { SelectableItem, useSelectionContext } from '../hooks/useSelectionContext';
+import UnitContextMenu from './UnitContextMenu';
 
 interface ImagePair {
   foreground: string; // URL or path to foreground image
@@ -35,8 +36,11 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText, se
   const isCardSelected = selectableItem ? isSelected(selectableItem.id) : false;
   const isClickable = selectableItem && selectionMode !== 'none';
   const isTargetMode = selectionState === "awaiting-target";
+  
+  // Show context menu when not in selection or target mode
+  const showContextMenu = selectableItem && selectionMode === 'none' && selectionState === 'idle';
 
-  return (
+  const cardContent = (
     <div 
       className={`flex flex-col items-center ${isClickable ? 'cursor-pointer' : ''} ${
         isCardSelected ? 'transform scale-105' : ''
@@ -85,6 +89,14 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({ imagePairs, displayText, se
         </span>
       )}
     </div>
+  );
+
+  return showContextMenu ? (
+    <UnitContextMenu unit={selectableItem}>
+      {cardContent}
+    </UnitContextMenu>
+  ) : (
+    cardContent
   );
 };
 

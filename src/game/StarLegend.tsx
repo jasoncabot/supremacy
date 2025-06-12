@@ -1,7 +1,7 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
-import { FilterType } from "./Filters";
 import { getPlanetImage, PlanetOwner } from "../legend/legend";
+import { FilterType } from "./Filters";
 
 interface StarLegendProps {
 	planet: PlanetView;
