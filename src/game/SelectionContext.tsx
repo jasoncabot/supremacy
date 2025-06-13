@@ -244,8 +244,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			position: { x: 0, y: 0 },
 		});
 
-		setPendingActionDetails(null);
-		setSelectionState("idle");
+		// Clear all selection state including selected items, targets, and mission types
+		clearSelection();
 	};
 
 	return (

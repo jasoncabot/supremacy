@@ -1,6 +1,7 @@
 import { GlobeAltIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useGame } from "../hooks/useGame";
+import { useSelectionContext } from "../hooks/useSelectionContext";
 import { useWindowContext } from "../hooks/useWindowContext";
 import { useZIndex } from "../hooks/useZIndexContext";
 import { WindowInfo } from "./WindowInfo";
@@ -20,6 +21,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const [windowZIndex, setWindowZIndex] = useState(100);
 	const { getNextZIndex } = useZIndex();
 	const { sectors } = useGame();
+	const { cancelActionConfirmation } = useSelectionContext();
 
 	const {
 		handleMinimizeWindow,
@@ -331,7 +333,13 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 						<span className="text-sm">_</span>
 					</button>
 					<button
-						onClick={() => handleCloseWindow(windowInfo)}
+						onClick={() => {
+							// If this is an action-detail window, call cancelActionConfirmation first
+							if (windowInfo.type === "action-detail") {
+								cancelActionConfirmation();
+							}
+							handleCloseWindow(windowInfo);
+						}}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
 						aria-label="Close"
 					>
