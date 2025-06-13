@@ -58,7 +58,7 @@ const PlanetMobileMenu: React.FC<PlanetMobileMenuProps> = ({
 	);
 
 	return (
-		<Menu as="div" className="relative">
+		<Menu as="div" className="relative cursor-pointer">
 			<MenuButton as="div" className="cursor-pointer">
 				{children}
 			</MenuButton>

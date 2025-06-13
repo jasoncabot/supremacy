@@ -1,14 +1,16 @@
-import React, { useState } from "react";
 import {
-	XMarkIcon,
 	ClockIcon,
 	ExclamationTriangleIcon,
-	UserIcon,
 	EyeIcon,
+	UserIcon,
 } from "@heroicons/react/24/outline";
-import { useSelectionContext, SelectableItem } from "../hooks/useSelectionContext";
-import { ActionDefinition } from "./types/actions";
+import React, { useState } from "react";
 import { MissionType } from "../../worker/api";
+import {
+	SelectableItem,
+	useSelectionContext,
+} from "../hooks/useSelectionContext";
+import { ActionDefinition } from "./types/actions";
 
 interface ActionDetailWindowProps {
 	actionDetails: {
@@ -28,7 +30,8 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 	// Local state for action-specific options
 	const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 	const [selectedDecoys, setSelectedDecoys] = useState<string[]>([]);
-	const [selectedMissionType, setSelectedMissionType] = useState<MissionType | null>(null);
+	const [selectedMissionType, setSelectedMissionType] =
+		useState<MissionType | null>(null);
 
 	const handleConfirm = () => {
 		// You can access selectedAgents, selectedDecoys, selectedMissionType here
@@ -56,16 +59,20 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 						</div>
 						<div className="text-sm text-slate-400">
 							Moving {sources.length} unit(s) to{" "}
-							<span className="text-white">{target ? getDisplayName(target) : "selected target"}</span>
+							<span className="text-white">
+								{target ? getDisplayName(target) : "selected target"}
+							</span>
 						</div>
 					</div>
 				);
 			}
 
 			case "mission": {
-				const availableAgents = sources.filter(s => s.type === "personnel");
-				const availableDecoys = sources.filter(s => s.type === "troop" || s.type === "squadron");
-				
+				const availableAgents = sources.filter((s) => s.type === "personnel");
+				const availableDecoys = sources.filter(
+					(s) => s.type === "troop" || s.type === "squadron",
+				);
+
 				return (
 					<div className="space-y-4">
 						<div className="space-y-2">
@@ -74,7 +81,9 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 							</label>
 							<select
 								value={selectedMissionType || ""}
-								onChange={(e) => setSelectedMissionType(e.target.value as MissionType)}
+								onChange={(e) =>
+									setSelectedMissionType(e.target.value as MissionType)
+								}
 								className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 text-white focus:border-purple-500 focus:outline-none"
 							>
 								<option value="">Select mission type...</option>
@@ -102,13 +111,17 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 													if (e.target.checked) {
 														setSelectedAgents([...selectedAgents, agent.id]);
 													} else {
-														setSelectedAgents(selectedAgents.filter(id => id !== agent.id));
+														setSelectedAgents(
+															selectedAgents.filter((id) => id !== agent.id),
+														);
 													}
 												}}
 												className="rounded border-slate-600 bg-slate-800 text-purple-600 focus:ring-purple-500"
 											/>
 											<UserIcon className="size-4 text-slate-400" />
-											<span className="text-sm text-white">{getDisplayName(agent)}</span>
+											<span className="text-sm text-white">
+												{getDisplayName(agent)}
+											</span>
 										</label>
 									))}
 								</div>
@@ -130,13 +143,17 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 													if (e.target.checked) {
 														setSelectedDecoys([...selectedDecoys, decoy.id]);
 													} else {
-														setSelectedDecoys(selectedDecoys.filter(id => id !== decoy.id));
+														setSelectedDecoys(
+															selectedDecoys.filter((id) => id !== decoy.id),
+														);
 													}
 												}}
 												className="rounded border-slate-600 bg-slate-800 text-purple-600 focus:ring-purple-500"
 											/>
 											<EyeIcon className="size-4 text-slate-400" />
-											<span className="text-sm text-white">{getDisplayName(decoy)}</span>
+											<span className="text-sm text-white">
+												{getDisplayName(decoy)}
+											</span>
 										</label>
 									))}
 								</div>
@@ -144,7 +161,10 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 						)}
 
 						<div className="text-sm text-slate-400">
-							Mission target: <span className="text-white">{target ? getDisplayName(target) : "selected target"}</span>
+							Mission target:{" "}
+							<span className="text-white">
+								{target ? getDisplayName(target) : "selected target"}
+							</span>
 						</div>
 					</div>
 				);
@@ -158,7 +178,8 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 							<span>This action cannot be undone!</span>
 						</div>
 						<div className="text-sm text-slate-400">
-							You are about to scrap {sources.length} unit(s). This will permanently remove them from the game.
+							You are about to scrap {sources.length} unit(s). This will
+							permanently remove them from the game.
 						</div>
 					</div>
 				);
@@ -172,7 +193,11 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 							<span>This will damage the target planet</span>
 						</div>
 						<div className="text-sm text-slate-400">
-							Bombarding <span className="text-white">{target ? getDisplayName(target) : "selected target"}</span> with {sources.length} fleet(s).
+							Bombarding{" "}
+							<span className="text-white">
+								{target ? getDisplayName(target) : "selected target"}
+							</span>{" "}
+							with {sources.length} fleet(s).
 						</div>
 					</div>
 				);
@@ -186,8 +211,12 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 							<span>High risk combat operation</span>
 						</div>
 						<div className="text-sm text-slate-400">
-							Assaulting <span className="text-white">{target ? getDisplayName(target) : "selected target"}</span> with {sources.length} fleet(s).
-							This may result in heavy casualties.
+							Assaulting{" "}
+							<span className="text-white">
+								{target ? getDisplayName(target) : "selected target"}
+							</span>{" "}
+							with {sources.length} fleet(s). This may result in heavy
+							casualties.
 						</div>
 					</div>
 				);
@@ -196,7 +225,8 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 			default: {
 				return (
 					<div className="text-sm text-slate-400">
-						Execute action: <span className="text-white">{actionDef.label}</span>
+						Execute action:{" "}
+						<span className="text-white">{actionDef.label}</span>
 					</div>
 				);
 			}
@@ -204,20 +234,7 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 	};
 
 	return (
-		<div className="flex flex-col space-y-4">
-			{/* Header */}
-			<div className="flex items-center justify-between border-b border-slate-700 pb-2">
-				<h3 className="text-lg font-semibold text-white">
-					{actionDef.label}
-				</h3>
-				<button
-					onClick={cancelActionConfirmation}
-					className="text-slate-400 hover:text-white"
-				>
-					<XMarkIcon className="size-5" />
-				</button>
-			</div>
-
+		<div className="flex flex-1 flex-col space-y-4 p-4">
 			{/* Sources */}
 			<div className="space-y-2">
 				<h4 className="text-sm font-medium text-slate-300">
@@ -255,13 +272,13 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 			<div className="flex gap-3 pt-4">
 				<button
 					onClick={handleConfirm}
-					className="flex-1 rounded bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
+					className="flex-1 cursor-pointer rounded bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
 				>
 					Confirm {actionDef.label}
 				</button>
 				<button
 					onClick={cancelActionConfirmation}
-					className="flex-1 rounded bg-slate-600 px-4 py-2 font-medium text-white transition-colors hover:bg-slate-700"
+					className="flex-1 cursor-pointer rounded bg-slate-600 px-4 py-2 font-medium text-white transition-colors hover:bg-slate-700"
 				>
 					Cancel
 				</button>

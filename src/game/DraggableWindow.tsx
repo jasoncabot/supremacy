@@ -41,7 +41,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const ensureWithinViewport = (pos: { x: number; y: number }) => {
 		const viewportWidth = window.innerWidth;
 		const viewportHeight = window.innerHeight;
-		const windowWidth = 280; // Minimum width from CSS
+		const windowWidth = 400; // Default width of the window
 
 		// Ensure window is not positioned outside the right edge
 		const x = Math.min(pos.x, viewportWidth - windowWidth);

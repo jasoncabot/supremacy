@@ -105,7 +105,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 
 	return (
 		<div
-			className="items-left flex h-[120px] w-[80px] cursor-pointer flex-col justify-center rounded-lg p-2 text-white md:cursor-default"
+			className="items-left flex w-[80px] cursor-pointer flex-col justify-center rounded-lg px-2 text-white md:cursor-default"
 			onClick={handleContainerClick}
 		>
 			{/* Planet with adornments positioned around it - same layout for mobile and desktop */}
@@ -125,7 +125,6 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 								faction={faction}
 								planetImageUrl={planetImageUrl}
 								filter={filter}
-								selectionState={selectionState}
 								interactive={false}
 							/>
 						</PlanetMobileMenu>
@@ -138,7 +137,6 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 							faction={faction}
 							planetImageUrl={planetImageUrl}
 							filter={filter}
-							selectionState={selectionState}
 							onPlanetClick={undefined}
 							interactive={false}
 						/>
@@ -152,7 +150,6 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 						faction={faction}
 						planetImageUrl={planetImageUrl}
 						filter={filter}
-						selectionState={selectionState}
 						handlers={{
 							manufacturing: handleViewManufacturing,
 							fleet: handleViewFleets,

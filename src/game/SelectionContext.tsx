@@ -143,6 +143,36 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		clearSelection();
 	};
 
+	const getWindowTitle = (
+		actionDef: ActionDefinition,
+		sources: SelectableItem[],
+		target: SelectableItem | undefined,
+	) => {
+		if (actionDef.type === "mission") {
+			const agents = sources.filter((item) => item.type === "personnel");
+			const decoys = sources.filter(
+				(item) => item.type === "troop" || item.type === "squadron",
+			);
+			const agentNames = agents
+				.map((a) => a.name || `Agent ${a.id}`)
+				.join(", ");
+			const decoyNames = decoys
+				.map((d) => d.name || `Decoy ${d.id}`)
+				.join(", ");
+
+			return `${actionDef.label} - Agents: ${agentNames} | Decoys: ${decoyNames}${
+				target ? ` -> ${target.type}` : ""
+			}`;
+		} else if (actionDef.type === "move") {
+			const estimatedTime = sources.length * 2; // Simple calculation
+			return `${actionDef.label} - ${sources.length} unit(s) moving to ${target ? target.type : "selected target"} (Estimated time: ${estimatedTime} hours)`;
+		}
+		// Default case for other action types
+		return `${actionDef.label} - ${sources.length} unit(s) performing action${
+			target ? ` on ${target.type}` : ""
+		}`;
+	};
+
 	const cancelTargetSelection = () => {
 		setSelectionState("idle");
 		setCurrentAction(null);
@@ -169,7 +199,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		// Open action detail window
 		const actionWindow: WindowInfo = {
 			id: "action-detail",
-			title: `${actionDef.label} Confirmation`,
+			title: getWindowTitle(actionDef, sources, target),
 			type: "action-detail",
 			position: {
 				x: window.innerWidth / 2 - 200,

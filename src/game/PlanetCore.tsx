@@ -10,7 +10,6 @@ interface PlanetCoreProps {
 	faction: Faction;
 	planetImageUrl: string;
 	filter: FilterType;
-	selectionState: string;
 	handlers?: {
 		manufacturing?: (e: React.MouseEvent) => void;
 		fleet?: (e: React.MouseEvent) => void;
@@ -26,7 +25,6 @@ const PlanetCore: React.FC<PlanetCoreProps> = ({
 	faction,
 	planetImageUrl,
 	filter,
-	selectionState,
 	handlers,
 	onPlanetClick,
 	interactive = false,
@@ -52,11 +50,8 @@ const PlanetCore: React.FC<PlanetCoreProps> = ({
 				src={planetImageUrl}
 				alt={planet.metadata.name}
 				title={planet.metadata.name}
-				className="h-[37px] w-[37px] shrink-0"
+				className={`h-[37px] w-[37px] shrink-0`}
 				onClick={onPlanetClick}
-				style={{
-					cursor: selectionState === "awaiting-target" ? "pointer" : "default",
-				}}
 			/>
 		</div>
 	);
