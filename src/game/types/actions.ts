@@ -48,8 +48,8 @@ export type ActionTarget =
 	| UnitTarget;
 
 // Action types for each unit category
-export type FleetActionType = "move" | "bombard" | "assault" | "scrap";
-export type CapitalShipActionType = "move" | "create_fleet" | "scrap";
+export type FleetActionType = "move" | "rename" | "bombard" | "assault" | "scrap";
+export type CapitalShipActionType = "move" | "rename" | "create_fleet" | "scrap";
 export type PersonnelActionType = "move" | "mission" | "command" | "scrap";
 export type TroopActionType = "move" | "scrap";
 export type FighterActionType = "move" | "scrap";
@@ -137,6 +137,13 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 			validTargets: [],
 			requiresTarget: false,
 		},
+		{
+			id: "rename-capital-ship",
+			label: "Rename",
+			type: "rename",
+			validTargets: [],
+			requiresTarget: false,
+		}
 	],
 
 	// Personnel actions (maps to DefenseResource with type "personnel")
@@ -157,14 +164,14 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 		},
 		{
 			id: "command-personnel",
-			label: "Command (Promote)",
+			label: "Command",
 			type: "command",
 			validTargets: [],
 			requiresTarget: false,
 		},
 		{
 			id: "scrap-personnel",
-			label: "Scrap (Retire)",
+			label: "Retire",
 			type: "scrap",
 			validTargets: [],
 			requiresTarget: false,

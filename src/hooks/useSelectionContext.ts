@@ -37,12 +37,20 @@ interface SelectionContextType {
 	deselectItem: (itemId: string) => void;
 	clearSelection: () => void;
 	isSelected: (itemId: string) => boolean;
-	startTargetSelection: (actionId: string) => void;
+	startTargetSelection: (
+		actionId: string,
+		actionDef?: ActionDefinition,
+		sourceUnits?: SelectableItem[],
+	) => void;
 	selectTarget: (target: SelectableItem) => void;
 	executeAction: () => void;
 	cancelTargetSelection: () => void;
-	// Add action confirmation methods
-	showActionConfirmation: (actionId: string, actionDef: ActionDefinition, sources: SelectableItem[], target?: SelectableItem) => void;
+	showActionConfirmation: (
+		actionId: string,
+		actionDef: ActionDefinition,
+		sources: SelectableItem[],
+		target?: SelectableItem,
+	) => void;
 	confirmAction: () => void;
 	cancelActionConfirmation: () => void;
 }

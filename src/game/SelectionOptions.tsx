@@ -1,15 +1,15 @@
-import React from "react";
-import {
-	HandRaisedIcon,
-	StarIcon,
-	ArrowRightIcon,
-	XMarkIcon,
-	EllipsisHorizontalIcon,
-} from "@heroicons/react/24/outline";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
-	useSelectionContext,
+	ArrowRightIcon,
+	EllipsisHorizontalIcon,
+	HandRaisedIcon,
+	StarIcon,
+	XMarkIcon,
+} from "@heroicons/react/24/outline";
+import React from "react";
+import {
 	SelectionKind,
+	useSelectionContext,
 } from "../hooks/useSelectionContext";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
 
@@ -44,7 +44,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	const handleAction = (action: ActionDefinition) => {
 		if (action.requiresTarget) {
 			// Start target selection mode
-			startTargetSelection(action.id);
+			startTargetSelection(action.id, action);
 		} else {
 			// Show action confirmation window immediately (no target required)
 			showActionConfirmation(action.id, action, selectedItems);
@@ -129,7 +129,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 
 					<MenuItems
 						anchor="bottom start"
-						className="z-50 mt-1 w-48 divide-y divide-slate-700 overflow-y-auto scrollbar-none rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
+						className="scrollbar-none z-50 mt-1 w-48 divide-y divide-slate-700 overflow-y-auto rounded-md bg-slate-900/95 shadow-lg ring-1 ring-purple-700/30 focus:outline-none"
 					>
 						{contextualActions.map((action) => (
 							<MenuItem key={action.id}>

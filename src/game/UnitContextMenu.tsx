@@ -16,7 +16,8 @@ const UnitContextMenu: React.FC<UnitContextMenuProps> = ({
 	unit,
 	children,
 }) => {
-	const { startTargetSelection, clearSelection } = useSelectionContext();
+	const { startTargetSelection, showActionConfirmation } =
+		useSelectionContext();
 
 	// Get available actions for this specific unit
 	const availableActions = React.useMemo<ActionDefinition[]>(
@@ -26,14 +27,11 @@ const UnitContextMenu: React.FC<UnitContextMenuProps> = ({
 
 	const handleAction = (action: ActionDefinition) => {
 		if (action.requiresTarget) {
-			// Start target selection mode with this unit pre-selected
-			// First clear any existing selection, then start target selection
-			clearSelection();
-			startTargetSelection(action.id);
+			// Start target selection mode with the action definition and this unit as source
+			startTargetSelection(action.id, action, [unit]);
 		} else {
-			// Execute action immediately (no target required)
-			console.log(`Executing action: ${action.id} on unit:`, unit);
-			clearSelection();
+			// Show action confirmation window immediately (no target required)
+			showActionConfirmation(action.id, action, [unit]);
 		}
 	};
 

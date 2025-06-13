@@ -5,8 +5,8 @@ import {
 	SelectionKind,
 	SelectionState,
 } from "../hooks/useSelectionContext";
-import { getAvailableActions, type ActionDefinition } from "./types/actions";
 import { useWindowContext } from "../hooks/useWindowContext";
+import { getAvailableActions, type ActionDefinition } from "./types/actions";
 import { WindowInfo } from "./WindowInfo";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
@@ -19,6 +19,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const [currentAction, setCurrentAction] = useState<string | null>(null);
 	const [currentActionDef, setCurrentActionDef] =
 		useState<ActionDefinition | null>(null);
+	const [actionSourceUnits, setActionSourceUnits] = useState<SelectableItem[]>(
+		[],
+	);
 	const [targetItem, setTargetItem] = useState<SelectableItem | null>(null);
 	const [pendingActionDetails, setPendingActionDetails] = useState<{
 		actionId: string;
@@ -77,6 +80,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		setSelectionState("idle");
 		setCurrentAction(null);
 		setCurrentActionDef(null);
+		setActionSourceUnits([]);
 		setTargetItem(null);
 		setPendingActionDetails(null);
 		setSelectionKind("none");
@@ -86,13 +90,27 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		return selectedItems.some((item) => item.id === itemId);
 	};
 
-	const startTargetSelection = (actionId: string) => {
-		// Find the action definition
-		const availableActions = getAvailableActions(selectedItems);
-		const actionDef = availableActions.find((action) => action.id === actionId);
+	const startTargetSelection = (
+		actionId: string,
+		actionDef?: ActionDefinition,
+		sourceUnits?: SelectableItem[],
+	) => {
+		// Find the action definition if not provided
+		let resolvedActionDef = actionDef;
+		if (!resolvedActionDef) {
+			const availableActions = getAvailableActions(selectedItems);
+			resolvedActionDef = availableActions.find(
+				(action) => action.id === actionId,
+			);
+		}
+
+		// Use provided source units or fall back to selected items
+		const sources =
+			sourceUnits && sourceUnits.length > 0 ? sourceUnits : selectedItems;
+		setActionSourceUnits(sources);
 
 		setCurrentAction(actionId);
-		setCurrentActionDef(actionDef || null);
+		setCurrentActionDef(resolvedActionDef || null);
 		setSelectionState("awaiting-target");
 		setSelectionKind("target");
 		setTargetItem(null);
@@ -101,8 +119,18 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const selectTarget = (target: SelectableItem) => {
 		setTargetItem(target);
 		// Show action confirmation window instead of automatically executing
-		if (currentAction && selectedItems.length > 0 && currentActionDef) {
-			showActionConfirmation(currentAction, currentActionDef, selectedItems, target);
+		if (currentAction && currentActionDef) {
+			// Use action source units if available, otherwise fall back to selected items
+			const sources =
+				actionSourceUnits.length > 0 ? actionSourceUnits : selectedItems;
+			if (sources.length > 0) {
+				showActionConfirmation(
+					currentAction,
+					currentActionDef,
+					sources,
+					target,
+				);
+			}
 		}
 	};
 
@@ -119,6 +147,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		setSelectionState("idle");
 		setCurrentAction(null);
 		setCurrentActionDef(null);
+		setActionSourceUnits([]);
 		setTargetItem(null);
 		setSelectionKind("multiple"); // Return to previous selection mode
 	};
@@ -127,7 +156,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		actionId: string,
 		actionDef: ActionDefinition,
 		sources: SelectableItem[],
-		target?: SelectableItem
+		target?: SelectableItem,
 	) => {
 		setPendingActionDetails({
 			actionId,
@@ -142,7 +171,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			id: "action-detail",
 			title: `${actionDef.label} Confirmation`,
 			type: "action-detail",
-			position: { x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 150 }
+			position: {
+				x: window.innerWidth / 2 - 200,
+				y: window.innerHeight / 2 - 150,
+			},
 		};
 		handleOpenWindow(actionWindow);
 	};
@@ -154,21 +186,21 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				"Sources:",
 				pendingActionDetails.sources,
 				"Target:",
-				pendingActionDetails.target
+				pendingActionDetails.target,
 			);
-			
+
 			// Here you would dispatch the actual game action
 			// For now we just log and clear
 		}
-		
+
 		// Close the action detail window
 		handleCloseWindow({
 			id: "action-detail",
 			title: "",
 			type: "action-detail",
-			position: { x: 0, y: 0 }
+			position: { x: 0, y: 0 },
 		});
-		
+
 		setPendingActionDetails(null);
 		clearSelection();
 	};
@@ -179,9 +211,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			id: "action-detail",
 			title: "",
 			type: "action-detail",
-			position: { x: 0, y: 0 }
+			position: { x: 0, y: 0 },
 		});
-		
+
 		setPendingActionDetails(null);
 		setSelectionState("idle");
 	};

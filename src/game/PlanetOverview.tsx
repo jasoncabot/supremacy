@@ -40,12 +40,13 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 	};
 
 	// Handle container click for mobile - allows tapping anywhere on the planet overview
-	const handleContainerClick = () => {
+	const handleContainerClick = (e: React.MouseEvent) => {
 		// Only handle container clicks on mobile (when adornments are hidden)
 		// On desktop, individual buttons handle their own clicks
 		const isMobile = window.innerWidth < 768; // md breakpoint
 		if (isMobile) {
 			if (selectionState === "awaiting-target") {
+				e.stopPropagation();
 				handlePlanetSelected();
 			}
 			// For non-target selection, the PlanetMobileMenu will handle the interaction
