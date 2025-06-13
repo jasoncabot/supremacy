@@ -1,40 +1,38 @@
 import React from "react";
+import { PlanetView } from "../../worker/api";
 import {
 	getAdornmentByTypeAndFaction,
 	getHoverAdornmentByTypeAndFaction,
 	type Faction,
 } from "../adornments";
+import { getAvailablePlanetFeatures, type PlanetFeatureType } from "./planetFeatures";
 
 interface AdornmentConfig {
-	type: "manufacturing" | "fleet" | "defence" | "mission";
+	type: PlanetFeatureType;
 	position: string;
-	showForNeutral: boolean;
 }
 
 const ADORNMENT_CONFIGS: AdornmentConfig[] = [
 	{
 		type: "manufacturing",
 		position: "absolute top-[-4px] left-[4px]",
-		showForNeutral: true,
 	},
 	{
 		type: "fleet",
 		position: "absolute top-[-4px] right-[2px]",
-		showForNeutral: false,
 	},
 	{
 		type: "defence",
 		position: "absolute bottom-0 left-[4px]",
-		showForNeutral: true,
 	},
 	{
 		type: "mission",
 		position: "absolute right-[2px] bottom-0",
-		showForNeutral: false,
 	},
 ];
 
 interface PlanetAdornmentsProps {
+	planet: PlanetView;
 	faction: Faction;
 	handlers?: {
 		manufacturing?: (e: React.MouseEvent) => void;
@@ -46,15 +44,20 @@ interface PlanetAdornmentsProps {
 }
 
 const PlanetAdornments: React.FC<PlanetAdornmentsProps> = ({
+	planet,
 	faction,
 	handlers = {},
 	interactive = false,
 }) => {
-	const renderAdornment = (config: AdornmentConfig) => {
-		const { type, position, showForNeutral } = config;
+	// Get available features using shared logic
+	const availableFeatures = getAvailablePlanetFeatures(planet, faction);
+	const availableFeatureTypes = new Set(availableFeatures.map(f => f.type));
 
-		// Skip if neutral faction and adornment shouldn't show for neutral
-		if (faction === "neutral" && !showForNeutral) {
+	const renderAdornment = (config: AdornmentConfig) => {
+		const { type, position } = config;
+
+		// Skip if this feature is not available for this planet/faction combination
+		if (!availableFeatureTypes.has(type)) {
 			return null;
 		}
 

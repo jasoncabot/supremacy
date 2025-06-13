@@ -247,6 +247,36 @@ const batteryImages: Record<BatterySubtype, string> = {
 	lnr_series_ii: lnr2,
 };
 
+// Ship mapping (mock - to be filled with actual ship imports later)
+const shipImages: Record<string, string> = {
+	// Capital ships
+	imperial_star_destroyer: "/path/to/imperial_star_destroyer.png",
+	imperial_ii_star_destroyer: "/path/to/imperial_ii_star_destroyer.png",
+	super_star_destroyer: "/path/to/super_star_destroyer.png",
+	victory_star_destroyer: "/path/to/victory_star_destroyer.png",
+	victory_ii_star_destroyer: "/path/to/victory_ii_star_destroyer.png",
+	mon_calamari_cruiser: "/path/to/mon_calamari_cruiser.png",
+	alliance_dreadnaught: "/path/to/alliance_dreadnaught.png",
+	imperial_dreadnaught: "/path/to/imperial_dreadnaught.png",
+	
+	// Cruisers and frigates
+	assault_frigate: "/path/to/assault_frigate.png",
+	nebulon_b_frigate: "/path/to/nebulon_b_frigate.png",
+	carrack_light_cruiser: "/path/to/carrack_light_cruiser.png",
+	lancer_frigate: "/path/to/lancer_frigate.png",
+	interdictor_cruiser: "/path/to/interdictor_cruiser.png",
+	strike_cruiser: "/path/to/strike_cruiser.png",
+	
+	// Smaller ships
+	corellian_corvette: "/path/to/corellian_corvette.png",
+	corellian_gunship: "/path/to/corellian_gunship.png",
+	bulk_transport: "/path/to/bulk_transport.png",
+	medium_transport: "/path/to/medium_transport.png",
+	
+	// Default fallback
+	default_ship: "/path/to/default_ship.png",
+};
+
 // Manufacturing mappings
 const shipyardImages: Record<ShipyardSubtype, string> = {
 	orbital_shipyard: shipyard,
@@ -342,6 +372,15 @@ export function getManufacturingCardImage(
 		case "mine":
 			return mineImages[resource.subtype] || mineImages["mine"]; // fallback
 	}
+}
+
+/**
+ * Get the appropriate card image for a ship
+ * @param subtype - The ship subtype to get the image for
+ * @returns The image URL string
+ */
+export function getShipCardImage(subtype: string): string {
+	return shipImages[subtype] || shipImages["default_ship"];
 }
 
 /**

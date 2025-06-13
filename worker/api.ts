@@ -287,10 +287,43 @@ export type MissionType =
 	| "subdue_uprising"
 	| "troop_training_research";
 
+export type PersonnelResource = ResourceBase & {
+	type: "personnel";
+	subtype: PersonnelSubtype;
+	injured: boolean;
+	imprisoned: boolean;
+};
+
 export type MissionResource = ResourceBase & {
 	type: "mission";
 	subtype: MissionType;
+	target: ResourceBase;
+	agents: PersonnelResource[];
+	decoys: PersonnelResource[];
 };
+
+// Fleet-related types
+export type FleetUnit = ResourceBase & {
+	type: "ship" | "squadron" | "troop" | "personnel";
+	subtype: string;
+};
+
+export interface FleetData {
+	id: string;
+	name: string;
+	ships: FleetUnit[];
+	fighters: FleetUnit[];
+	troops: FleetUnit[];
+	personnel: FleetUnit[];
+}
+
+export interface PlanetFleets {
+	fleets: FleetData[];
+}
+
+export interface PlanetMissions {
+	missions: MissionResource[];
+}
 
 export type ActionableResource =
 	| "mission"
@@ -372,6 +405,8 @@ export interface PlanetState {
 	isDiscovered: boolean;
 	defenses: PlanetDefenses;
 	manufacturing: PlanetManufacturing;
+	fleets: PlanetFleets;
+	missions: PlanetMissions;
 }
 
 // View: What a specific faction knows or believes
@@ -389,6 +424,8 @@ export interface PlanetView {
 		commander?: string | null;
 		defenses?: PlanetDefenses;
 		manufacturing?: PlanetManufacturing;
+		fleets?: PlanetFleets;
+		missions?: PlanetMissions;
 	};
 	discovered: boolean;
 }

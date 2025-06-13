@@ -10,6 +10,8 @@ import {
 	GameView,
 	PlanetDefenses,
 	PlanetManufacturing,
+	PlanetFleets,
+	PlanetMissions,
 	PlanetMetadata,
 	PlanetState,
 	PlanetView,
@@ -23,6 +25,11 @@ import {
 	ShipyardSubtype,
 	TrainingFacilitySubtype,
 	ConstructionYardSubtype,
+	MissionType,
+	CapitalShipSubtype,
+	FleetData,
+	MissionResource,
+	PersonnelResource,
 } from "../api";
 import {
 	characterNames,
@@ -372,6 +379,230 @@ function generateManufacturing(
 	return manufacturing;
 }
 
+// Helper function to generate random fleet data for a planet
+function generateFleets(
+	planetOwner: FactionMetadata | "Neutral",
+): PlanetFleets {
+	const fleets: FleetData[] = [];
+
+	// Only generate fleets for owned planets
+	if (planetOwner === "Neutral") {
+		return { fleets };
+	}
+
+	// Generate 0-2 fleets per planet
+	const fleetCount = Math.floor(Math.random() * 3);
+
+	for (let i = 0; i < fleetCount; i++) {
+		const fleetId = crypto.randomUUID();
+		const fleet: FleetData = {
+			id: `fleet:${fleetId}`,
+			name: planetOwner === "Empire" 
+				? `Imperial Fleet ${i + 1}`
+				: `Rebel Fleet ${i + 1}`,
+			ships: [],
+			fighters: [],
+			troops: [],
+			personnel: [],
+		};
+
+		// Generate ships
+		const shipTypes: CapitalShipSubtype[] = planetOwner === "Empire"
+			? [
+				"imperial_star_destroyer",
+				"imperial_ii_star_destroyer",
+				"victory_destroyer", 
+				"victory_ii_star_destroyer",
+				"imperial_dreadnaught",
+				"interdictor_cruiser"
+			]
+			: [
+				"mon_calamari_cruiser",
+				"assault_frigate", 
+				"nebulon_b_frigate",
+				"corellian_corvette",
+				"bulk_cruiser",
+				"alliance_dreadnaught"
+			];
+
+		const shipCount = Math.floor(Math.random() * 3) + 1;
+		for (let j = 0; j < shipCount; j++) {
+			const shipType = shipTypes[Math.floor(Math.random() * shipTypes.length)];
+			fleet.ships.push({
+				id: `ship:${shipType}:${crypto.randomUUID()}`,
+				name: `${shipType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${j + 1}`,
+				type: "ship",
+				subtype: shipType,
+				status: Math.random() < 0.8 ? "active" : "en-route",
+			});
+		}
+
+		// Generate fighter squadrons
+		const fighterTypes: SquadronSubtype[] = planetOwner === "Empire"
+			? ["tie_fighter", "tie_bomber", "tie_interceptor", "tie_defender"]
+			: ["x_wing", "y_wing", "a_wing", "b_wing"];
+
+		const fighterCount = Math.floor(Math.random() * 4) + 1;
+		for (let j = 0; j < fighterCount; j++) {
+			const fighterType = fighterTypes[Math.floor(Math.random() * fighterTypes.length)];
+			fleet.fighters.push({
+				id: `squadron:${fighterType}:${crypto.randomUUID()}`,
+				name: `${fighterType.replace(/_/g, ' ').toUpperCase()} Squadron ${j + 1}`,
+				type: "squadron",
+				subtype: fighterType,
+				status: Math.random() < 0.9 ? "active" : "en-route",
+			});
+		}
+
+		// Generate troops
+		const troopTypes: TroopSubtype[] = planetOwner === "Empire"
+			? [
+				"imperial_army_regiment",
+				"imperial_fleet_regiment", 
+				"stormtrooper_regiment",
+				"dark_trooper_regiment"
+			]
+			: [
+				"alliance_army_regiment",
+				"alliance_fleet_regiment",
+				"mon_calamari_regiment",
+				"wookie_regiment"
+			];
+
+		const troopCount = Math.floor(Math.random() * 2) + 1;
+		for (let j = 0; j < troopCount; j++) {
+			const troopType = troopTypes[Math.floor(Math.random() * troopTypes.length)];
+			fleet.troops.push({
+				id: `troop:${troopType}:${crypto.randomUUID()}`,
+				name: `${troopType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${j + 1}`,
+				type: "troop",
+				subtype: troopType,
+				status: Math.random() < 0.85 ? "active" : "en-route",
+			});
+		}
+
+		// Generate personnel
+		const personnelTypes: PersonnelSubtype[] = planetOwner === "Empire"
+			? ["imperial_commandos", "imperial_espionage_droid", "noghri_death_commandos"]
+			: ["bothan_spies", "guerillas", "infiltrators"];
+
+		const personnelCount = Math.floor(Math.random() * 3) + 1;
+		for (let j = 0; j < personnelCount; j++) {
+			const personnelType = personnelTypes[Math.floor(Math.random() * personnelTypes.length)];
+			fleet.personnel.push({
+				id: `personnel:${personnelType}:${crypto.randomUUID()}`,
+				name: `${personnelType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${j + 1}`,
+				type: "personnel",
+				subtype: personnelType,
+				status: Math.random() < 0.8 ? "active" : "en-route",
+			});
+		}
+
+		fleets.push(fleet);
+	}
+
+	return { fleets };
+}
+
+// Helper function to generate random mission data for a planet
+function generateMissions(
+	planetOwner: FactionMetadata | "Neutral",
+	planetMetadataList: PlanetMetadata[],
+): PlanetMissions {
+	const missions: MissionResource[] = [];
+
+	// Only generate missions for owned planets
+	if (planetOwner === "Neutral") {
+		return { missions };
+	}
+
+	// Generate 0-3 active missions per planet
+	const missionCount = Math.floor(Math.random() * 4);
+
+	const missionTypes: MissionType[] = planetOwner === "Empire"
+		? [
+			"espionage",
+			"assassination", 
+			"subdue_uprising",
+			"facility_design_research",
+			"ship_design_research",
+			"abduction"
+		]
+		: [
+			"reconnaissance",
+			"sabotage",
+			"rescue",
+			"incite_uprising", 
+			"recruitment",
+			"diplomacy",
+			"jedi_training"
+		];
+
+	for (let i = 0; i < missionCount; i++) {
+		const missionType = missionTypes[Math.floor(Math.random() * missionTypes.length)];
+		const missionId = crypto.randomUUID();
+
+		// Generate target (random planet from available planets)
+		const targetPlanet = planetMetadataList[Math.floor(Math.random() * planetMetadataList.length)];
+		const target = {
+			id: targetPlanet.id,
+			name: targetPlanet.name,
+			status: "active" as const,
+		};
+
+		// Generate agents
+		const agents: PersonnelResource[] = [];
+		const agentCount = Math.floor(Math.random() * 3) + 1;
+		const agentTypes: PersonnelSubtype[] = planetOwner === "Empire"
+			? ["imperial_commandos", "imperial_espionage_droid", "noghri_death_commandos"]
+			: ["bothan_spies", "guerillas", "infiltrators", "longprobe_y_wing_recon_team"];
+
+		for (let j = 0; j < agentCount; j++) {
+			const agentType = agentTypes[Math.floor(Math.random() * agentTypes.length)];
+			agents.push({
+				id: `agent:${agentType}:${crypto.randomUUID()}`,
+				name: `${agentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Agent ${j + 1}`,
+				type: "personnel",
+				subtype: agentType,
+				injured: false,
+				imprisoned: false,
+				status: "active",
+			});
+		}
+
+		// Generate decoys
+		const decoys: PersonnelResource[] = [];
+		const decoyCount = Math.floor(Math.random() * 2);
+		for (let j = 0; j < decoyCount; j++) {
+			const decoyType = agentTypes[Math.floor(Math.random() * agentTypes.length)];
+			decoys.push({
+				id: `decoy:${decoyType}:${crypto.randomUUID()}`,
+				name: `${decoyType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Decoy ${j + 1}`,
+				type: "personnel",
+				subtype: decoyType,
+				injured: false,
+				imprisoned: false,
+				status: "active",
+			});
+		}
+
+		const mission: MissionResource = {
+			id: `mission:${missionType}:${missionId}`,
+			name: `${missionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Mission`,
+			type: "mission",
+			subtype: missionType,
+			status: "active",
+			target,
+			agents,
+			decoys,
+		};
+
+		missions.push(mission);
+	}
+
+	return { missions };
+}
+
 export class GamesDurableObject extends DurableObject<Env> {
 	state: DurableObjectState;
 	env: Env;
@@ -409,6 +640,9 @@ export class GamesDurableObject extends DurableObject<Env> {
 
 		// Create a lookup map for planet metadata
 		const planetMetadataMap = new Map(allPlanets.map((p) => [p.id, p]));
+		
+		// Collect all planet metadata for mission targets
+		const planetMetadataList: PlanetMetadata[] = [];
 
 		for (const sector of sectorMetadata) {
 			// Add sector to sectors record
@@ -430,6 +664,9 @@ export class GamesDurableObject extends DurableObject<Env> {
 					picture: planetMeta.picture,
 					position: planetMeta.location,
 				};
+
+				// Add to list for mission generation
+				planetMetadataList.push(planetMetadata);
 
 				// Create planet state
 				const owner: FactionMetadata | "Neutral" =
@@ -453,6 +690,8 @@ export class GamesDurableObject extends DurableObject<Env> {
 					isDiscovered: sector.isInnerRim, // Inner rim planets start discovered
 					defenses: generateDefenses(owner, usedCharacters),
 					manufacturing: generateManufacturing(owner),
+					fleets: generateFleets(owner),
+					missions: generateMissions(owner, planetMetadataList),
 				};
 
 				planets[planetId] = planetState;
@@ -525,6 +764,8 @@ export class GamesDurableObject extends DurableObject<Env> {
 							commander: isOwner ? planetState.commander : undefined,
 							defenses: isOwner ? planetState.defenses : undefined,
 							manufacturing: isOwner ? planetState.manufacturing : undefined,
+							fleets: isOwner ? planetState.fleets : undefined,
+							missions: isOwner ? planetState.missions : undefined,
 						};
 					}
 
@@ -574,6 +815,8 @@ export class GamesDurableObject extends DurableObject<Env> {
 							commander: isOwner ? planetState.commander : undefined,
 							defenses: isOwner ? planetState.defenses : undefined,
 							manufacturing: isOwner ? planetState.manufacturing : undefined,
+							fleets: isOwner ? planetState.fleets : undefined,
+							missions: isOwner ? planetState.missions : undefined,
 						};
 					}
 

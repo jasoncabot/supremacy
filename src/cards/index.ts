@@ -5,4 +5,5 @@ export {
 	getCharacterImages,
 	getCharacterImage,
 	hasCharacterImage,
+	getShipCardImage,
 } from "./cards";

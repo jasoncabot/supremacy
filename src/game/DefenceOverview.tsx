@@ -1,4 +1,3 @@
-import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import {
 	BoltIcon,
 	RocketLaunchIcon,
@@ -8,9 +7,10 @@ import {
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react"; // Added React import
 import { DefenceCategory, DefenseResource, PlanetView } from "../../worker/api";
-import MiniCardView from "./MiniCardView";
 import { SelectableItem } from "../hooks/useSelectionContext";
 import { getCardImage } from "../cards";
+import { TabGroupComponent } from "./components/TabGroupComponent";
+import { ResourceList } from "./components/ResourceList";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: DefenseResource): string => {
@@ -75,91 +75,56 @@ export const DefenceOverview: React.FC<{
 		return ""; // No overlay
 	}
 
+	const getImagePairs = (resource: DefenseResource) => [{
+		overlay: getOverlayImage(resource),
+		foreground: getCardImage(resource),
+		background: getBackgroundImage(resource),
+	}];
+
+	const getSelectableItem = (resource: DefenseResource): SelectableItem => ({
+		id: resource.id,
+		type: resource.type,
+		subtype: resource.subtype,
+		name: resource.name,
+		status: resource.status,
+	} as SelectableItem);
+
+	const owner = planet.state?.owner || "Neutral";
+
+	const tabs = categories.map((category) => {
+		const hasResources = resources[category.id].length > 0;
+		const categoryResources = resources[category.id];
+
+		return {
+			id: category.id,
+			name: category.name,
+			icon: category.icon,
+			content: (
+				<ResourceList
+					resources={categoryResources}
+					getImagePairs={getImagePairs}
+					getSelectableItem={getSelectableItem}
+					emptyMessage={
+						planet.state?.owner === "Neutral"
+							? `This neutral planet has no ${category.name.toLowerCase()}.`
+							: planet.state?.owner
+								? `No ${category.name.toLowerCase()} deployed on this planet.`
+								: `Planet details not available. You may need to control this planet to see its defenses.`
+					}
+				/>
+			),
+			hasResources,
+			owner
+		};
+	});
+
 	return (
-		<TabGroup
-			className="flex w-full flex-col"
-			selectedIndex={categories.findIndex((cat) => cat.id === selectedCategory)}
-			onChange={(index) => setSelectedCategory(categories[index].id)}
-		>
-			<TabList className="flex space-x-1 rounded-md bg-slate-800 p-1">
-				{categories.map((category) => {
-					const CategoryIcon = category.icon;
-					const hasResources = resources[category.id].length > 0;
-					const owner = planet.state?.owner || "Neutral";
-
-					return (
-						<Tab
-							key={category.id}
-							title={category.name}
-							className={({ selected }) =>
-								`flex w-full items-center justify-center rounded-lg py-2 text-sm ${
-									selected
-										? "bg-slate-700 text-white shadow"
-										: "cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white"
-								} ${!hasResources && !selected ? "opacity-50" : ""} ${
-									owner === "Empire" && hasResources ? "text-blue-300" : ""
-								} ${
-									owner === "Rebellion" && hasResources ? "text-red-300" : ""
-								} transition-all duration-100 ease-in-out`
-							}
-						>
-							<CategoryIcon className="h-10 w-10" />
-						</Tab>
-					);
-				})}
-			</TabList>
-
-			<TabPanels className="mt-2 flex-1 flex-grow">
-				{categories.map((category) => (
-					<TabPanel key={category.id} className="rounded-md p-1">
-						<div className="flex flex-col">
-							<div className="flex-grow overflow-auto scrollbar-none">
-								{resources[category.id].length > 0 ? (
-									<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-										{resources[category.id].map((resource: DefenseResource) => {
-											const imagePairs = [
-												{
-													overlay: getOverlayImage(resource),
-													foreground: getCardImage(resource),
-													background: getBackgroundImage(resource),
-												},
-											];
-
-											// Create selectable item data
-											const selectableItem = {
-												id: resource.id,
-												type: category.id, // defence category
-												subtype: resource.subtype,
-												name: resource.name,
-												status: resource.status,
-											} as SelectableItem;
-
-											return (
-												<MiniCardView
-													key={resource.id}
-													imagePairs={imagePairs}
-													displayText={resource.name}
-													selectableItem={selectableItem}
-												/>
-											);
-										})}
-									</div>
-								) : (
-									<div className="flex flex-1 items-center justify-center">
-										<p className="text-center text-slate-400">
-											{planet.state?.owner === "Neutral"
-												? `This neutral planet has no ${category.name.toLowerCase()}.`
-												: planet.state?.owner
-													? `No ${category.name.toLowerCase()} deployed on this planet.`
-													: `Planet details not available. You may need to control this planet to see its defenses.`}
-										</p>
-									</div>
-								)}
-							</div>
-						</div>
-					</TabPanel>
-				))}
-			</TabPanels>
-		</TabGroup>
+		<TabGroupComponent
+			tabs={tabs}
+			selectedTab={selectedCategory}
+			onTabChange={(tabId) => setSelectedCategory(tabId as DefenceCategory)}
+			className="flex-1"
+			iconOnly={true}
+		/>
 	);
 };

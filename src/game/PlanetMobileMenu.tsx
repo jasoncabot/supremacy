@@ -2,6 +2,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import React from "react";
 import { PlanetView } from "../../worker/api";
 import { getMenuAdornmentByTypeAndFaction, type Faction } from "../adornments";
+import { getAvailablePlanetFeatures } from "./planetFeatures";
 
 interface PlanetMobileMenuProps {
 	planet: PlanetView;
@@ -26,36 +27,24 @@ const PlanetMobileMenu: React.FC<PlanetMobileMenuProps> = ({
 			? "neutral"
 			: planet.state?.owner || "neutral";
 
-	const allMenuItems = [
-		{
-			label: "Fleets",
-			onClick: onFleets,
-			icon: getMenuAdornmentByTypeAndFaction("fleet", faction),
-			showForNeutral: false,
-		},
-		{
-			label: "Defence",
-			onClick: onDefence,
-			icon: getMenuAdornmentByTypeAndFaction("defence", faction),
-			showForNeutral: true,
-		},
-		{
-			label: "Manufacturing",
-			onClick: onManufacturing,
-			icon: getMenuAdornmentByTypeAndFaction("manufacturing", faction),
-			showForNeutral: true,
-		},
-		{
-			label: "Missions",
-			onClick: onMissions,
-			icon: getMenuAdornmentByTypeAndFaction("mission", faction),
-			showForNeutral: false,
-		},
-	];
+	// Get available features using shared logic
+	const availableFeatures = getAvailablePlanetFeatures(planet, faction);
 
-	const menuItems = allMenuItems.filter(
-		(item) => faction !== "neutral" || item.showForNeutral,
-	);
+	// Map features to menu items with handlers
+	const menuItems = availableFeatures.map((feature) => {
+		const handlerMap = {
+			manufacturing: onManufacturing,
+			fleet: onFleets,
+			defence: onDefence,
+			mission: onMissions,
+		};
+
+		return {
+			label: feature.label,
+			onClick: handlerMap[feature.type],
+			icon: getMenuAdornmentByTypeAndFaction(feature.type, faction),
+		};
+	});
 
 	return (
 		<Menu as="div" className="relative cursor-pointer">

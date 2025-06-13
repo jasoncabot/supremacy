@@ -34,6 +34,7 @@ const PlanetCore: React.FC<PlanetCoreProps> = ({
 			{/* Adornments positioned around planet - only show if discovered */}
 			{planet.discovered && (
 				<PlanetAdornments
+					planet={planet}
 					faction={faction}
 					handlers={handlers}
 					interactive={interactive}
