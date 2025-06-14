@@ -1,5 +1,6 @@
 import {
 	BatterySubtype,
+	CapitalShipSubtype,
 	CharacterIdentifiers,
 	ConstructionYardSubtype,
 	DefenseResource,
@@ -130,6 +131,38 @@ import refinery from "./refinery.png";
 import shipyard from "./shipyard.png";
 import training from "./training.png";
 
+// Ship images
+import alliance_dreadnaught from "./alliance_dreadnaught.png";
+import alliance_escort_carrier from "./alliance_escort_carrier.png";
+import assault_frigate from "./assault_frigate.png";
+import assault_transport from "./assault_transport.png";
+import bulk_cruiser from "./bulk_cruiser.png";
+import bulk_transport from "./bulk_transport.png";
+import bulwark_battlecruiser from "./bulwark_battlecruiser.png";
+import carrack_light_cruiser from "./carrack_light_cruiser.png";
+import cc_7700_frigate from "./cc7700_frigate.png";
+import cc_9600_frigate from "./cc9600_frigate.png";
+import corellian_corvette from "./corellian_corvette.png";
+import corellian_gunship from "./corellian_gunship.png";
+import dauntless_cruiser from "./dauntless_cruiser.png";
+import death_star from "./death_star.png";
+import galleon from "./galleon.png";
+import imperial_dreadnaught from "./imperial_dreadnaught.png";
+import imperial_escort_carrier from "./imperial_escort_carrier.png";
+import imperial_ii_star_destroyer from "./imperial_ii_star_destroyer.png";
+import imperial_star_destroyer from "./imperial_star_destroyer.png";
+import interdictor_cruiser from "./interdictor_cruiser.png";
+import lancer_frigate from "./lancer_frigate.png";
+import liberator_cruiser from "./liberator_cruiser.png";
+import medium_transport from "./medium_transport.png";
+import mon_calamari_cruiser from "./mon_calamari_cruiser.png";
+import nebulon_b_frigate from "./nebulon_b_frigate.png";
+import star_galleon from "./star_galleon.png";
+import strike_cruiser from "./strike_cruiser.png";
+import super_star_destroyer from "./super_star_destroyer.png";
+import victory_destroyer from "./victory_star_destroyer.png";
+import victory_ii_star_destroyer from "./victory_ii_star_destroyer.png";
+
 // Character mapping
 const characterImages: Record<CharacterIdentifiers, string> = {
 	ackbar: gial_ackbar,
@@ -247,34 +280,37 @@ const batteryImages: Record<BatterySubtype, string> = {
 	lnr_series_ii: lnr2,
 };
 
-// Ship mapping (mock - to be filled with actual ship imports later)
-const shipImages: Record<string, string> = {
-	// Capital ships
-	imperial_star_destroyer: "/path/to/imperial_star_destroyer.png",
-	imperial_ii_star_destroyer: "/path/to/imperial_ii_star_destroyer.png",
-	super_star_destroyer: "/path/to/super_star_destroyer.png",
-	victory_star_destroyer: "/path/to/victory_star_destroyer.png",
-	victory_ii_star_destroyer: "/path/to/victory_ii_star_destroyer.png",
-	mon_calamari_cruiser: "/path/to/mon_calamari_cruiser.png",
-	alliance_dreadnaught: "/path/to/alliance_dreadnaught.png",
-	imperial_dreadnaught: "/path/to/imperial_dreadnaught.png",
-	
-	// Cruisers and frigates
-	assault_frigate: "/path/to/assault_frigate.png",
-	nebulon_b_frigate: "/path/to/nebulon_b_frigate.png",
-	carrack_light_cruiser: "/path/to/carrack_light_cruiser.png",
-	lancer_frigate: "/path/to/lancer_frigate.png",
-	interdictor_cruiser: "/path/to/interdictor_cruiser.png",
-	strike_cruiser: "/path/to/strike_cruiser.png",
-	
-	// Smaller ships
-	corellian_corvette: "/path/to/corellian_corvette.png",
-	corellian_gunship: "/path/to/corellian_gunship.png",
-	bulk_transport: "/path/to/bulk_transport.png",
-	medium_transport: "/path/to/medium_transport.png",
-	
-	// Default fallback
-	default_ship: "/path/to/default_ship.png",
+const shipImages: Record<CapitalShipSubtype, string> = {
+	alliance_dreadnaught: alliance_dreadnaught,
+	alliance_escort_carrier: alliance_escort_carrier,
+	assault_frigate: assault_frigate,
+	assault_transport: assault_transport,
+	bulk_cruiser: bulk_cruiser,
+	bulk_transport: bulk_transport,
+	bulwark_battlecruiser: bulwark_battlecruiser,
+	carrack_light_cruiser: carrack_light_cruiser,
+	cc_7700_frigate: cc_7700_frigate,
+	cc_9600_frigate: cc_9600_frigate,
+	corellian_corvette: corellian_corvette,
+	corellian_gunship: corellian_gunship,
+	dauntless_cruiser: dauntless_cruiser,
+	death_star: death_star,
+	galleon: galleon,
+	imperial_dreadnaught: imperial_dreadnaught,
+	imperial_escort_carrier: imperial_escort_carrier,
+	imperial_ii_star_destroyer: imperial_ii_star_destroyer,
+	imperial_star_destroyer: imperial_star_destroyer,
+	interdictor_cruiser: interdictor_cruiser,
+	lancer_frigate: lancer_frigate,
+	liberator_cruiser: liberator_cruiser,
+	medium_transport: medium_transport,
+	mon_calamari_cruiser: mon_calamari_cruiser,
+	nebulon_b_frigate: nebulon_b_frigate,
+	star_galleon: star_galleon,
+	strike_cruiser: strike_cruiser,
+	super_star_destroyer: super_star_destroyer,
+	victory_destroyer: victory_destroyer,
+	victory_ii_star_destroyer: victory_ii_star_destroyer,
 };
 
 // Manufacturing mappings
@@ -379,8 +415,8 @@ export function getManufacturingCardImage(
  * @param subtype - The ship subtype to get the image for
  * @returns The image URL string
  */
-export function getShipCardImage(subtype: string): string {
-	return shipImages[subtype] || shipImages["default_ship"];
+export function getShipCardImage(subtype: CapitalShipSubtype): string {
+	return shipImages[subtype];
 }
 
 /**

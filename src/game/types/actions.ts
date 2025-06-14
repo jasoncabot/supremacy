@@ -128,7 +128,7 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 			label: "Create Fleet",
 			type: "create_fleet",
 			validTargets: ["fleet"],
-			requiresTarget: true,
+			requiresTarget: false,
 		},
 		{
 			id: "scrap-capital-ship",

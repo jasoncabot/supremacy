@@ -9,7 +9,7 @@ interface BackgroundMusicProviderProps {
 
 export const BackgroundMusicProvider: React.FC<BackgroundMusicProviderProps> = ({
 	children,
-	autoStart = true,
+	autoStart = false,
 	startDelay = 1000,
 }) => {
 	const { playBackgroundMusic } = useSoundManager();

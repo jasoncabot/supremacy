@@ -231,11 +231,16 @@ export type ShipResource = ResourceBase & {
 	type: "capital_ship";
 	subtype: CapitalShipSubtype;
 	damage: "low" | "medium" | "high";
+	// Each ship carries its own complement
+	fighters: DefenseResource[]; // Squadron DefenseResources
+	troops: DefenseResource[]; // Troop DefenseResources  
+	personnel: DefenseResource[]; // Personnel DefenseResources
 };
 
 export type FleetResource = ResourceBase & {
 	type: "fleet";
 	subtype: "fleet";
+	ships: ShipResource[]; // Fleet contains ships, each ship carries its own complement
 };
 
 export type ShipyardSubtype = "orbital_shipyard" | "advanced_shipyard";
@@ -302,23 +307,8 @@ export type MissionResource = ResourceBase & {
 	decoys: PersonnelResource[];
 };
 
-// Fleet-related types
-export type FleetUnit = ResourceBase & {
-	type: "ship" | "squadron" | "troop" | "personnel";
-	subtype: string;
-};
-
-export interface FleetData {
-	id: string;
-	name: string;
-	ships: FleetUnit[];
-	fighters: FleetUnit[];
-	troops: FleetUnit[];
-	personnel: FleetUnit[];
-}
-
 export interface PlanetFleets {
-	fleets: FleetData[];
+	fleets: FleetResource[];
 }
 
 export interface PlanetMissions {

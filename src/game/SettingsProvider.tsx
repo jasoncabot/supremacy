@@ -6,8 +6,8 @@ import {
 } from "../hooks/useSettings";
 
 const defaultSettings: GameSettings = {
-	soundEnabled: true,
-	musicEnabled: true,
+	soundEnabled: false,
+	musicEnabled: false,
 	soundVolume: 0.7,
 	musicVolume: 0.5,
 };

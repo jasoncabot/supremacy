@@ -25,14 +25,34 @@ export const useSoundManager = (): SoundManager => {
 
 	// Initialize audio elements
 	useEffect(() => {
-		if (!audioContextRef.current) {
-			try {
-				audioContextRef.current = new (window.AudioContext ||
-					(window as unknown as { webkitAudioContext: typeof AudioContext })
-						.webkitAudioContext)();
-			} catch (error) {
-				console.warn("Could not create AudioContext:", error);
+		// Only initialize audio if either sound or music is enabled
+		if (!settings.soundEnabled && !settings.musicEnabled) {
+			return;
+		}
+
+		// Initialize AudioContext with user gesture handling
+		const initializeAudioContext = () => {
+			if (!audioContextRef.current) {
+				try {
+					audioContextRef.current = new (window.AudioContext ||
+						(window as unknown as { webkitAudioContext: typeof AudioContext })
+							.webkitAudioContext)();
+					
+					// Handle suspended context (due to autoplay policies)
+					if (audioContextRef.current.state === 'suspended') {
+						// Context will be resumed when user first interacts with audio
+						console.info('AudioContext suspended - will resume on first user interaction');
+					}
+				} catch (error) {
+					console.info("AudioContext not available, audio will be disabled:", error);
+					return false;
+				}
 			}
+			return true;
+		};
+
+		if (!initializeAudioContext()) {
+			return;
 		}
 
 		// Capture current ref values at the start of the effect
@@ -50,7 +70,7 @@ export const useSoundManager = (): SoundManager => {
 
 				// Handle loading errors gracefully
 				audio.addEventListener("error", () => {
-					console.warn(`Failed to load sound file: ${src}`);
+					console.info(`Sound file not available: ${src}`);
 				});
 
 				currentAudioCache.set(type as SoundType, audio);
@@ -63,7 +83,7 @@ export const useSoundManager = (): SoundManager => {
 						source.connect(audioContextRef.current.destination);
 						currentAudioSources.set(type as SoundType, source);
 					} catch (error) {
-						console.warn(`Failed to create audio source for ${type}:`, error);
+						console.info(`Audio source not available for ${type}:`, error);
 					}
 				}
 			}
@@ -78,7 +98,7 @@ export const useSoundManager = (): SoundManager => {
 
 			// Handle loading errors gracefully
 			newBackgroundMusic.addEventListener("error", () => {
-				console.warn(`Failed to load background music: ${music.first}`);
+				console.info(`Background music file not available: ${music.first}`);
 			});
 
 			backgroundMusicRef.current = newBackgroundMusic;
@@ -93,8 +113,8 @@ export const useSoundManager = (): SoundManager => {
 					source.connect(audioContextRef.current.destination);
 					backgroundMusicSourceRef.current = source;
 				} catch (error) {
-					console.warn(
-						"Failed to create audio source for background music:",
+					console.info(
+						"Audio source not available for background music:",
 						error,
 					);
 				}
@@ -111,7 +131,7 @@ export const useSoundManager = (): SoundManager => {
 				backgroundMusicRef.current.pause();
 			}
 		};
-	}, [settings.soundVolume, settings.musicVolume]);
+	}, [settings.soundVolume, settings.musicVolume, settings.soundEnabled, settings.musicEnabled]);
 
 	// Update volumes when settings change
 	useEffect(() => {
@@ -137,16 +157,23 @@ export const useSoundManager = (): SoundManager => {
 			const audio = audioCache.current.get(type);
 			if (audio) {
 				try {
+					// Resume AudioContext if suspended (handles autoplay policies)
+					if (audioContextRef.current?.state === 'suspended') {
+						audioContextRef.current.resume().catch((error) => {
+							console.info('Could not resume AudioContext:', error);
+						});
+					}
+
 					// Reset to start and play
 					audio.currentTime = 0;
 					audio.play().catch((error) => {
 						// Ignore autoplay policy errors and silent mode
 						if (error.name !== "NotAllowedError") {
-							console.warn(`Failed to play sound ${type}:`, error);
+							console.info(`Sound ${type} could not play:`, error);
 						}
 					});
 				} catch (error) {
-					console.warn(`Failed to play sound ${type}:`, error);
+					console.info(`Failed to play sound ${type}:`, error);
 				}
 			}
 		},
@@ -156,10 +183,17 @@ export const useSoundManager = (): SoundManager => {
 	const playBackgroundMusic = useCallback(() => {
 		if (!settings.musicEnabled || !backgroundMusicRef.current) return;
 
+		// Resume AudioContext if suspended (handles autoplay policies)
+		if (audioContextRef.current?.state === 'suspended') {
+			audioContextRef.current.resume().catch((error) => {
+				console.info('Could not resume AudioContext:', error);
+			});
+		}
+
 		backgroundMusicRef.current.play().catch((error) => {
 			// Ignore autoplay policy errors and silent mode
 			if (error.name !== "NotAllowedError") {
-				console.warn("Failed to play background music:", error);
+				console.info("Background music could not play:", error);
 			}
 		});
 	}, [settings.musicEnabled]);

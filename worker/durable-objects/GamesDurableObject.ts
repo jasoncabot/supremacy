@@ -27,7 +27,8 @@ import {
 	ConstructionYardSubtype,
 	MissionType,
 	CapitalShipSubtype,
-	FleetData,
+	FleetResource,
+	DefenseResource,
 	MissionResource,
 	PersonnelResource,
 } from "../api";
@@ -383,7 +384,7 @@ function generateManufacturing(
 function generateFleets(
 	planetOwner: FactionMetadata | "Neutral",
 ): PlanetFleets {
-	const fleets: FleetData[] = [];
+	const fleets: FleetResource[] = [];
 
 	// Only generate fleets for owned planets
 	if (planetOwner === "Neutral") {
@@ -395,15 +396,15 @@ function generateFleets(
 
 	for (let i = 0; i < fleetCount; i++) {
 		const fleetId = crypto.randomUUID();
-		const fleet: FleetData = {
+		const fleet: FleetResource = {
 			id: `fleet:${fleetId}`,
 			name: planetOwner === "Empire" 
 				? `Imperial Fleet ${i + 1}`
 				: `Rebel Fleet ${i + 1}`,
+			type: "fleet",
+			subtype: "fleet",
+			status: "active",
 			ships: [],
-			fighters: [],
-			troops: [],
-			personnel: [],
 		};
 
 		// Generate ships
@@ -428,73 +429,73 @@ function generateFleets(
 		const shipCount = Math.floor(Math.random() * 3) + 1;
 		for (let j = 0; j < shipCount; j++) {
 			const shipType = shipTypes[Math.floor(Math.random() * shipTypes.length)];
+			
+			// Generate fighters for this ship
+			const fighterTypes: SquadronSubtype[] = planetOwner === "Empire"
+				? ["tie_fighter", "tie_bomber", "tie_interceptor", "tie_defender"]
+				: ["x_wing", "y_wing", "a_wing", "b_wing"];
+			
+			const fighterCount = Math.floor(Math.random() * 3) + 1;
+			const shipFighters: DefenseResource[] = [];
+			for (let k = 0; k < fighterCount; k++) {
+				const fighterType = fighterTypes[Math.floor(Math.random() * fighterTypes.length)];
+				shipFighters.push({
+					id: `squadron:${fighterType}:${crypto.randomUUID()}`,
+					name: `${fighterType.replace(/_/g, ' ').toUpperCase()} Squadron ${k + 1}`,
+					type: "squadron",
+					subtype: fighterType,
+					status: Math.random() < 0.9 ? "active" : "en-route",
+				});
+			}
+
+			// Generate troops for this ship
+			const troopTypes: TroopSubtype[] = planetOwner === "Empire"
+				? ["imperial_army_regiment", "imperial_fleet_regiment", "stormtrooper_regiment", "dark_trooper_regiment"]
+				: ["alliance_army_regiment", "alliance_fleet_regiment", "mon_calamari_regiment", "wookie_regiment"];
+
+			const troopCount = Math.floor(Math.random() * 2) + 1;
+			const shipTroops: DefenseResource[] = [];
+			for (let k = 0; k < troopCount; k++) {
+				const troopType = troopTypes[Math.floor(Math.random() * troopTypes.length)];
+				shipTroops.push({
+					id: `troop:${troopType}:${crypto.randomUUID()}`,
+					name: `${troopType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${k + 1}`,
+					type: "troop",
+					subtype: troopType,
+					status: Math.random() < 0.85 ? "active" : "en-route",
+				});
+			}
+
+			// Generate personnel for this ship
+			const personnelTypes: PersonnelSubtype[] = planetOwner === "Empire"
+				? ["imperial_commandos", "imperial_espionage_droid", "noghri_death_commandos"]
+				: ["bothan_spies", "guerillas", "infiltrators"];
+
+			const personnelCount = Math.floor(Math.random() * 2) + 1;
+			const shipPersonnel: DefenseResource[] = [];
+			for (let k = 0; k < personnelCount; k++) {
+				const personnelType = personnelTypes[Math.floor(Math.random() * personnelTypes.length)];
+				shipPersonnel.push({
+					id: `personnel:${personnelType}:${crypto.randomUUID()}`,
+					name: `${personnelType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${k + 1}`,
+					type: "personnel",
+					subtype: personnelType,
+					status: Math.random() < 0.8 ? "active" : "en-route",
+					injured: Math.random() < 0.1, // 10% chance of being injured
+					imprisoned: Math.random() < 0.05, // 5% chance of being imprisoned
+				});
+			}
+
 			fleet.ships.push({
 				id: `ship:${shipType}:${crypto.randomUUID()}`,
 				name: `${shipType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${j + 1}`,
-				type: "ship",
+				type: "capital_ship",
 				subtype: shipType,
 				status: Math.random() < 0.8 ? "active" : "en-route",
-			});
-		}
-
-		// Generate fighter squadrons
-		const fighterTypes: SquadronSubtype[] = planetOwner === "Empire"
-			? ["tie_fighter", "tie_bomber", "tie_interceptor", "tie_defender"]
-			: ["x_wing", "y_wing", "a_wing", "b_wing"];
-
-		const fighterCount = Math.floor(Math.random() * 4) + 1;
-		for (let j = 0; j < fighterCount; j++) {
-			const fighterType = fighterTypes[Math.floor(Math.random() * fighterTypes.length)];
-			fleet.fighters.push({
-				id: `squadron:${fighterType}:${crypto.randomUUID()}`,
-				name: `${fighterType.replace(/_/g, ' ').toUpperCase()} Squadron ${j + 1}`,
-				type: "squadron",
-				subtype: fighterType,
-				status: Math.random() < 0.9 ? "active" : "en-route",
-			});
-		}
-
-		// Generate troops
-		const troopTypes: TroopSubtype[] = planetOwner === "Empire"
-			? [
-				"imperial_army_regiment",
-				"imperial_fleet_regiment", 
-				"stormtrooper_regiment",
-				"dark_trooper_regiment"
-			]
-			: [
-				"alliance_army_regiment",
-				"alliance_fleet_regiment",
-				"mon_calamari_regiment",
-				"wookie_regiment"
-			];
-
-		const troopCount = Math.floor(Math.random() * 2) + 1;
-		for (let j = 0; j < troopCount; j++) {
-			const troopType = troopTypes[Math.floor(Math.random() * troopTypes.length)];
-			fleet.troops.push({
-				id: `troop:${troopType}:${crypto.randomUUID()}`,
-				name: `${troopType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${j + 1}`,
-				type: "troop",
-				subtype: troopType,
-				status: Math.random() < 0.85 ? "active" : "en-route",
-			});
-		}
-
-		// Generate personnel
-		const personnelTypes: PersonnelSubtype[] = planetOwner === "Empire"
-			? ["imperial_commandos", "imperial_espionage_droid", "noghri_death_commandos"]
-			: ["bothan_spies", "guerillas", "infiltrators"];
-
-		const personnelCount = Math.floor(Math.random() * 3) + 1;
-		for (let j = 0; j < personnelCount; j++) {
-			const personnelType = personnelTypes[Math.floor(Math.random() * personnelTypes.length)];
-			fleet.personnel.push({
-				id: `personnel:${personnelType}:${crypto.randomUUID()}`,
-				name: `${personnelType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} ${j + 1}`,
-				type: "personnel",
-				subtype: personnelType,
-				status: Math.random() < 0.8 ? "active" : "en-route",
+				damage: Math.random() < 0.7 ? "low" : Math.random() < 0.5 ? "medium" : "high",
+				fighters: shipFighters,
+				troops: shipTroops,
+				personnel: shipPersonnel,
 			});
 		}
 
