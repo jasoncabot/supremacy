@@ -1,22 +1,22 @@
 import {
-	CharacterIdentifiers,
-	PersonnelSubtype,
-	TroopSubtype,
-	SquadronSubtype,
-	ShieldSubtype,
 	BatterySubtype,
-	ShipyardSubtype,
-	TrainingFacilitySubtype,
+	CharacterIdentifier,
 	ConstructionYardSubtype,
-	RefinerySubtype,
 	MineSubtype,
+	PersonnelSubtype,
+	RefinerySubtype,
+	ShieldSubtype,
+	ShipyardSubtype,
+	SquadronSubtype,
+	TrainingFacilitySubtype,
+	TroopSubtype,
 } from "./api";
 
 /**
  * Display names for all character identifiers
  */
-export const characterNames: Record<CharacterIdentifiers, string> = {
-	ackbar: "Admiral Ackbar",
+export const characterNames: Record<CharacterIdentifier, string> = {
+	ackbar: "Ackbar",
 	adar_tallon: "Adar Tallon",
 	afyon: "Afyon",
 	bane_nothos: "Bane Nothos",
@@ -27,52 +27,52 @@ export const characterNames: Record<CharacterIdentifiers, string> = {
 	bren_derlin: "Bren Derlin",
 	carlist_rieekan: "Carlist Rieekan",
 	chewbacca: "Chewbacca",
-	covell: "Freja Covell",
+	covell: "Covell",
 	crix_madine: "Crix Madine",
-	daala: "Admiral Daala",
+	daala: "Daala",
 	darth_vader: "Darth Vader",
-	dorja: "Captain Dorja",
-	drayson: "Hiram Drayson",
+	dorja: "Dorja",
+	drayson: "Drayson",
 	emperor_palpatine: "Emperor Palpatine",
 	garindan: "Garindan",
 	garm_bel_iblis: "Garm Bel Iblis",
-	grammel: "Colonel Grammel",
-	griff: "Amise Griff",
+	grammel: "Grammel",
+	griff: "Griff",
 	han_solo: "Han Solo",
 	huoba_neva: "Huoba Neva",
-	jan_dodonna: "General Dodonna",
-	jerjerrod: "Moff Jerjerrod",
+	jan_dodonna: "Jan Dodonna",
+	jerjerrod: "Jerjerrod",
 	kaiya_andrimetrum: "Kaiya Andrimetrum",
-	klev: "Titus Klev",
+	klev: "Klev",
 	labansat: "Labansat",
 	lando_calrissian: "Lando Calrissian",
-	leia_organa: "Princess Leia",
+	leia_organa: "Leia Organa",
 	luke_skywalker: "Luke Skywalker",
 	mawshiye: "Ma'w'shiye",
 	mazer_rackus: "Mazer Rackus",
 	menndo: "Menndo",
 	mon_mothma: "Mon Mothma",
-	narra: "Arhul Narra",
-	needa: "Captain Needa",
+	narra: "Narra",
+	needa: "Needa",
 	niles_ferrier: "Niles Ferrier",
 	noval_garaint: "Noval Garaint",
 	orlok: "Orlok",
 	orrimaarko: "Orrimaarko",
-	ozzel: "Admiral Ozzel",
-	page: "Judder Page",
-	pellaeon: "Captain Pellaeon",
-	piett: "Admiral Piett",
+	ozzel: "Ozzel",
+	page: "Page",
+	pellaeon: "Pellaeon",
+	piett: "Piett",
 	pter_thanas: "Pter Thanas",
 	roget_jiriss: "Roget Jiriss",
 	sarin_virgilio: "Sarin Virgilio",
-	screed: "Admiral Screed",
+	screed: "Screed",
 	shenir_rix: "Shenir Rix",
 	syub_snunb: "Syub Snunb",
 	talon_karrde: "Talon Karrde",
-	thrawn: "Grand Admiral Thrawn",
+	thrawn: "Thrawn",
 	tura_raftican: "Tura Raftican",
 	vanden_willard: "Vanden Willard",
-	veers: "General Veers",
+	veers: "Veers",
 	villar: "Villar",
 	wedge_antilles: "Wedge Antilles",
 	zuggs: "Zuggs",
@@ -82,15 +82,15 @@ export const characterNames: Record<CharacterIdentifiers, string> = {
  * Display names for personnel subtypes
  */
 export const personnelNames: Record<PersonnelSubtype, string> = {
-	characters: "Character", // This is used for the character type itself
-	bothan_spies: "Bothan Spy Network",
-	guerillas: "Guerrilla Cell",
-	infiltrators: "Infiltrator Team",
+	character: "Character", // This is used for the character type itself
+	bothan_spy: "Bothan Spy Network",
+	guerilla: "Guerrilla Cell",
+	infiltrator: "Infiltrator Team",
 	longprobe_y_wing_recon_team: "Longprobe Y-Wing Recon",
-	imperial_commandos: "Imperial Commandos",
+	imperial_commando: "Imperial Commandos",
 	imperial_espionage_droid: "Espionage Droid",
 	imperial_probe_droid: "Probe Droid",
-	noghri_death_commandos: "Noghri Death Commandos",
+	noghri_death_commando: "Noghri Death Commandos",
 };
 
 /**
@@ -144,7 +144,7 @@ export const batteryNames: Record<BatterySubtype, string> = {
 /**
  * Get the display name for a character by their identifier
  */
-export function getCharacterName(characterId: CharacterIdentifiers): string {
+export function getCharacterName(characterId: CharacterIdentifier): string {
 	return characterNames[characterId];
 }
 

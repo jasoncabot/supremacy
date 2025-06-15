@@ -1,7 +1,7 @@
 import {
 	BatterySubtype,
 	CapitalShipSubtype,
-	CharacterIdentifiers,
+	CharacterIdentifier,
 	ConstructionYardSubtype,
 	DefenseResource,
 	ManufacturingResource,
@@ -160,11 +160,11 @@ import nebulon_b_frigate from "./nebulon_b_frigate.png";
 import star_galleon from "./star_galleon.png";
 import strike_cruiser from "./strike_cruiser.png";
 import super_star_destroyer from "./super_star_destroyer.png";
-import victory_destroyer from "./victory_star_destroyer.png";
 import victory_ii_star_destroyer from "./victory_ii_star_destroyer.png";
+import victory_destroyer from "./victory_star_destroyer.png";
 
 // Character mapping
-const characterImages: Record<CharacterIdentifiers, string> = {
+const characterImages: Record<CharacterIdentifier, string> = {
 	ackbar: gial_ackbar,
 	adar_tallon: adar_tallon,
 	afyon: afyon,
@@ -229,15 +229,15 @@ const characterImages: Record<CharacterIdentifiers, string> = {
 
 // Personnel non-character mapping
 const personnelImages: Record<PersonnelSubtype, string> = {
-	characters: luke_skywalker, // Default character image
-	bothan_spies: bothan_spy,
-	guerillas: guerilla,
-	infiltrators: infiltrator,
+	character: luke_skywalker, // Default character image
+	bothan_spy: bothan_spy,
+	guerilla: guerilla,
+	infiltrator: infiltrator,
 	longprobe_y_wing_recon_team: longprobe_ywing,
-	imperial_commandos: commandos,
+	imperial_commando: commandos,
 	imperial_espionage_droid: espionage_droid,
 	imperial_probe_droid: probe_droid,
-	noghri_death_commandos: noghri_death_commando,
+	noghri_death_commando: noghri_death_commando,
 };
 
 // Troop mapping
@@ -347,16 +347,17 @@ export const rawMaterialImage = rawMaterial;
 export function getCardImage(resource: DefenseResource): string {
 	switch (resource.type) {
 		case "personnel":
-			if (resource.subtype === "characters") {
+			if (resource.subtype === "character") {
+				// resource.id = type.subtype.id, extract the id
+				const characterId = resource.id.split(":")[2] as CharacterIdentifier;
 				// For characters, use the resource ID to lookup the character image
 				return (
-					characterImages[resource.id as CharacterIdentifiers] ||
-					characterImages["luke_skywalker"]
+					characterImages[characterId] || characterImages["luke_skywalker"]
 				); // fallback
 			} else {
 				// For other personnel, use the subtype
 				return (
-					personnelImages[resource.subtype] || personnelImages["bothan_spies"]
+					personnelImages[resource.subtype] || personnelImages["bothan_spy"]
 				); // fallback
 			}
 
@@ -433,7 +434,7 @@ export function getCharacterImages(): Record<string, string> {
  * @returns The image URL or undefined if not found
  */
 export function getCharacterImage(
-	characterId: CharacterIdentifiers,
+	characterId: CharacterIdentifier,
 ): string | undefined {
 	return characterImages[characterId];
 }

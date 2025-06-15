@@ -81,7 +81,7 @@ export interface ResourceBase {
 	status: ResourceStatus;
 }
 
-export type CharacterIdentifiers =
+export type CharacterIdentifier =
 	| "ackbar"
 	| "adar_tallon"
 	| "afyon"
@@ -145,15 +145,15 @@ export type CharacterIdentifiers =
 
 export type BatterySubtype = "kdy_150" | "lnr_series_i" | "lnr_series_ii";
 export type PersonnelSubtype =
-	| "characters" // 'special' type for named characters
-	| "bothan_spies"
-	| "guerillas"
-	| "infiltrators"
+	| "character" // 'special' type for named characters
+	| "bothan_spy"
+	| "guerilla"
+	| "infiltrator"
 	| "longprobe_y_wing_recon_team"
-	| "imperial_commandos"
+	| "imperial_commando"
 	| "imperial_espionage_droid"
 	| "imperial_probe_droid"
-	| "noghri_death_commandos";
+	| "noghri_death_commando";
 export type ShieldSubtype =
 	| "death_star_shield"
 	| "gen_core_level_i"
@@ -233,7 +233,7 @@ export type ShipResource = ResourceBase & {
 	damage: "low" | "medium" | "high";
 	// Each ship carries its own complement
 	fighters: DefenseResource[]; // Squadron DefenseResources
-	troops: DefenseResource[]; // Troop DefenseResources  
+	troops: DefenseResource[]; // Troop DefenseResources
 	personnel: DefenseResource[]; // Personnel DefenseResources
 };
 

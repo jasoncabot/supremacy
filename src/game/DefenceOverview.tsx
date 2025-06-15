@@ -62,7 +62,7 @@ export const DefenceOverview: React.FC<{
 	];
 
 	function getOverlayImage(resource: DefenseResource) {
-		if (resource.type !== "personnel" || resource.subtype !== "characters") {
+		if (resource.type !== "personnel" || resource.subtype !== "character") {
 			return ""; // No overlay for non-personnel resources
 		}
 		// if the resource is injured or imprisoned, return an overlay image

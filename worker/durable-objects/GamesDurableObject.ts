@@ -16,7 +16,7 @@ import {
 	PlanetState,
 	PlanetView,
 	SectorMetadata,
-	CharacterIdentifiers,
+	CharacterIdentifier,
 	PersonnelSubtype,
 	TroopSubtype,
 	SquadronSubtype,
@@ -55,7 +55,7 @@ import {
 // Helper function to generate random defense resources for a planet
 function generateDefenses(
 	planetOwner: FactionMetadata | "Neutral",
-	usedCharacters: Set<CharacterIdentifiers> = new Set(),
+	usedCharacters: Set<CharacterIdentifier> = new Set(),
 ): PlanetDefenses {
 	const defenses: PlanetDefenses = {
 		personnel: [],
@@ -71,7 +71,7 @@ function generateDefenses(
 	}
 
 	// Generate personnel (mix of characters and regular personnel)
-	const availableCharacters: CharacterIdentifiers[] =
+	const availableCharacters: CharacterIdentifier[] =
 		planetOwner === "Empire"
 			? [
 					"darth_vader",
@@ -97,15 +97,15 @@ function generateDefenses(
 	const regularPersonnelTypes: PersonnelSubtype[] =
 		planetOwner === "Empire"
 			? [
-					"imperial_commandos",
+					"imperial_commando",
 					"imperial_espionage_droid",
 					"imperial_probe_droid",
-					"noghri_death_commandos",
+					"noghri_death_commando",
 				]
 			: [
-					"bothan_spies",
-					"guerillas",
-					"infiltrators",
+					"bothan_spy",
+					"guerilla",
+					"infiltrator",
 					"longprobe_y_wing_recon_team",
 				];
 
@@ -123,7 +123,7 @@ function generateDefenses(
 				id: `personnel:character:${character}`,
 				name: characterNames[character],
 				type: "personnel",
-				subtype: "characters",
+				subtype: "character",
 				injured: Math.random() < 0.05, // Characters less likely to be injured
 				imprisoned: false,
 				status: Math.random() < 0.8 ? "active" : "en-route",
@@ -468,8 +468,8 @@ function generateFleets(
 
 			// Generate personnel for this ship
 			const personnelTypes: PersonnelSubtype[] = planetOwner === "Empire"
-				? ["imperial_commandos", "imperial_espionage_droid", "noghri_death_commandos"]
-				: ["bothan_spies", "guerillas", "infiltrators"];
+				? ["imperial_commando", "imperial_espionage_droid", "noghri_death_commando"]
+				: ["bothan_spy", "guerilla", "infiltrator"];
 
 			const personnelCount = Math.floor(Math.random() * 2) + 1;
 			const shipPersonnel: DefenseResource[] = [];
@@ -555,8 +555,8 @@ function generateMissions(
 		const agents: PersonnelResource[] = [];
 		const agentCount = Math.floor(Math.random() * 3) + 1;
 		const agentTypes: PersonnelSubtype[] = planetOwner === "Empire"
-			? ["imperial_commandos", "imperial_espionage_droid", "noghri_death_commandos"]
-			: ["bothan_spies", "guerillas", "infiltrators", "longprobe_y_wing_recon_team"];
+			? ["imperial_commando", "imperial_espionage_droid", "noghri_death_commando"]
+			: ["bothan_spy", "guerilla", "infiltrator", "longprobe_y_wing_recon_team"];
 
 		for (let j = 0; j < agentCount; j++) {
 			const agentType = agentTypes[Math.floor(Math.random() * agentTypes.length)];
@@ -637,7 +637,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 		const planets: Record<string, PlanetState> = {};
 
 		// Generate sectors and planets using metadata
-		const usedCharacters = new Set<CharacterIdentifiers>();
+		const usedCharacters = new Set<CharacterIdentifier>();
 
 		// Create a lookup map for planet metadata
 		const planetMetadataMap = new Map(allPlanets.map((p) => [p.id, p]));
