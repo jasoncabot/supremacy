@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useGame } from "../hooks/useGame";
 import { Loading } from "../Loading";
+import { ActionQueueProvider } from "./ActionQueueContext";
 import { BackgroundMusicProvider } from "./BackgroundMusicProvider";
 import Filters, { FilterType } from "./Filters";
 import FloatingWindows from "./FloatingWindows";
@@ -129,21 +130,23 @@ const GameScreen: React.FC = () => {
 	return (
 		<BackgroundMusicProvider>
 			<GameProvider>
-				<WindowProvider>
-					<GlobalKeyboardHandler
-						onGlobalSearch={() => {
-							// TODO: Implement global search functionality
-							console.log("Global search triggered");
-						}}
-						onNavigateToFinder={() => {
-							// TODO: Implement navigation to finder route
-							console.log("Navigate to finder triggered");
-						}}
-					/>
-					<SelectionProvider>
-						<GameScreenContent />
-					</SelectionProvider>
-				</WindowProvider>
+				<ActionQueueProvider>
+					<WindowProvider>
+						<GlobalKeyboardHandler
+							onGlobalSearch={() => {
+								// TODO: Implement global search functionality
+								console.log("Global search triggered");
+							}}
+							onNavigateToFinder={() => {
+								// TODO: Implement navigation to finder route
+								console.log("Navigate to finder triggered");
+							}}
+						/>
+						<SelectionProvider>
+							<GameScreenContent />
+						</SelectionProvider>
+					</WindowProvider>
+				</ActionQueueProvider>
 			</GameProvider>
 		</BackgroundMusicProvider>
 	);

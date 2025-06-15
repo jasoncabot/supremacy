@@ -104,16 +104,21 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	};
 
 	const onTouchStart = (e: React.TouchEvent) => {
+		// Check if touch target is any button, input, select, or other interactive element
+		const targetElement = e.target as HTMLElement;
 		if (
-			(e.target as HTMLElement).closest('button[aria-label="Close"]') ||
-			(e.target as HTMLElement).closest('button[aria-label="Minimize"]')
+			targetElement.closest('button') ||
+			targetElement.closest('input') ||
+			targetElement.closest('select') ||
+			targetElement.closest('textarea') ||
+			targetElement.closest('[role="button"]') ||
+			targetElement.closest('a[href]')
 		) {
-			// If close or minimize buttons were touched, don't activate dragging
+			// If any interactive element was touched, don't activate dragging
 			return;
 		}
 
 		// Check if the touch started on a scrollable element
-		const targetElement = e.target as HTMLElement;
 		const isScrollableElement = (element: HTMLElement): boolean => {
 			if (!element) return false;
 
@@ -348,7 +353,13 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				</div>
 			</div>
 
-			<div className="scrollbar-none flex max-h-[500px] flex-1 overflow-y-auto overscroll-contain">
+			<div
+				className={`flex flex-1 ${
+					windowInfo.type === "fleets"
+						? "h-[500px] overscroll-contain"
+						: "scrollbar-none max-h-[500px] overflow-y-auto overscroll-contain"
+				}`}
+			>
 				{children}
 			</div>
 		</div>

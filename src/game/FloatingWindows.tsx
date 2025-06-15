@@ -33,7 +33,7 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 						case "manufacturing":
 							return "w-[350px] min-h-[400px] md:min-h-[500px]"; // Medium width for manufacturing
 						case "fleets":
-							return "w-[300px] min-h-[400px] md:min-h-[500px]"; // Standard width for fleets
+							return "w-[400px] min-h-[400px] md:min-h-[500px]"; // Standard width for fleets
 						case "defence":
 							return "w-[300px] min-h-[400px] md:min-h-[500px]"; // Standard width for defence
 						case "missions":

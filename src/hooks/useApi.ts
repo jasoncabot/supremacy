@@ -22,12 +22,14 @@ interface ApiHook<TResponse> {
 	) => Promise<TResponse>;
 }
 
+import { generateShortId } from "../utils/uuid";
+
 // Standard headers that should be included in all API requests
 function getClientId(): string {
 	const key = "supremacy:client:id";
 	let clientId = localStorage.getItem(key);
 	if (!clientId) {
-		const randomPart = Math.random().toString(36).substring(2, 7);
+		const randomPart = generateShortId();
 		clientId = `web${randomPart}`;
 		localStorage.setItem(key, clientId);
 	}

@@ -1,16 +1,21 @@
-import React, { useState } from "react";
-import { 
-	RocketLaunchIcon, 
-	UserGroupIcon, 
+import {
+	CommandLineIcon,
+	RocketLaunchIcon,
+	UserGroupIcon,
 	UsersIcon,
-	CommandLineIcon 
 } from "@heroicons/react/24/outline";
-import { PlanetView, ShipResource, DefenseResource, FleetResource } from "../../worker/api";
-import { TwoColumnLayout } from "./components/TwoColumnLayout";
-import { TabGroupComponent } from "./components/TabGroupComponent";
-import { ResourceList } from "./components/ResourceList";
-import { SelectableItem } from "../hooks/useSelectionContext";
+import React, { useState } from "react";
+import {
+	DefenseResource,
+	FleetResource,
+	PlanetView,
+	ShipResource,
+} from "../../worker/api";
 import { getCardImage, getShipCardImage } from "../cards";
+import { SelectableItem } from "../hooks/useSelectionContext";
+import { ResourceList } from "./components/ResourceList";
+import { TabGroupComponent } from "./components/TabGroupComponent";
+import { TwoColumnLayout } from "./components/TwoColumnLayout";
 
 type FleetResourceType = "capital_ship" | "squadron" | "troop" | "personnel";
 
@@ -19,15 +24,23 @@ export const FleetsOverview: React.FC<{
 }> = ({ planet }) => {
 	const [selectedFleet, setSelectedFleet] = useState<string | null>(null);
 	const [selectedShip, setSelectedShip] = useState<string | null>(null);
-	const [selectedCategory, setSelectedCategory] = useState<FleetResourceType>("capital_ship");
-	
+	const [selectedCategory, setSelectedCategory] =
+		useState<FleetResourceType>("capital_ship");
+
 	// Get fleets from planet data, or use empty array if no fleets
 	const fleets = planet.state?.fleets?.fleets || [];
-	const fleet: FleetResource | undefined = selectedFleet ? fleets.find(f => f.id === selectedFleet) : undefined;
-	const ship = selectedShip && fleet ? fleet.ships.find(s => s.id === selectedShip) : null;
+	const fleet: FleetResource | undefined = selectedFleet
+		? fleets.find((f) => f.id === selectedFleet)
+		: undefined;
+	const ship =
+		selectedShip && fleet
+			? fleet.ships.find((s) => s.id === selectedShip)
+			: null;
 
 	// Helper function to get background image based on resource state
-	const getBackgroundImage = (resource: ShipResource | DefenseResource): string => {
+	const getBackgroundImage = (
+		resource: ShipResource | DefenseResource,
+	): string => {
 		switch (resource.status) {
 			case "active":
 				return "/path/to/active_bg.png";
@@ -54,7 +67,9 @@ export const FleetsOverview: React.FC<{
 	}
 
 	// Unified image function for fleet resources
-	function getFleetResourceCardImage(resource: ShipResource | DefenseResource): string {
+	function getFleetResourceCardImage(
+		resource: ShipResource | DefenseResource,
+	): string {
 		switch (resource.type) {
 			case "personnel":
 			case "squadron":
@@ -69,18 +84,27 @@ export const FleetsOverview: React.FC<{
 		}
 	}
 
-	const getImagePairs = (resource: ShipResource | DefenseResource) => [{
-		overlay: getOverlayImage(resource),
-		foreground: getFleetResourceCardImage(resource),
-		background: getBackgroundImage(resource),
-	}];
+	const getImagePairs = (resource: ShipResource | DefenseResource) => [
+		{
+			overlay: getOverlayImage(resource),
+			foreground: getFleetResourceCardImage(resource),
+			background: getBackgroundImage(resource),
+		},
+	];
 
-	const getSelectableItem = (resource: ShipResource | DefenseResource): SelectableItem => {
+	const getSelectableItem = (
+		resource: ShipResource | DefenseResource,
+	): SelectableItem => {
 		return resource as SelectableItem;
 	};
 
-	// Get resources by category - for ships, show all ships in fleet; for others, show selected ship's complement
-	const getResources = (): Record<FleetResourceType, (ShipResource | DefenseResource)[]> => {
+	// Get resources by category - for ships, show all ships in fleet; for others, show totals from all ships or selected ship's complement
+	const getResources = (): {
+		capital_ship: ShipResource[];
+		squadron: DefenseResource[];
+		troop: DefenseResource[];
+		personnel: DefenseResource[];
+	} => {
 		if (selectedCategory === "capital_ship") {
 			return {
 				capital_ship: fleet?.ships || [],
@@ -89,18 +113,39 @@ export const FleetsOverview: React.FC<{
 				personnel: [],
 			};
 		}
-		
-		// For squadron/troop/personnel, show the selected ship's complement
-		if (ship) {
-			return {
-				capital_ship: [],
-				squadron: ship.fighters || [],
-				troop: ship.troops || [],
-				personnel: ship.personnel || [],
-			};
+
+		// For squadron/troop/personnel, aggregate from all ships in fleet or show selected ship's complement
+		if (fleet) {
+			if (ship) {
+				// Show only selected ship's complement
+				return {
+					capital_ship: [],
+					squadron: ship.fighters || [],
+					troop: ship.troops || [],
+					personnel: ship.personnel || [],
+				};
+			} else {
+				// Aggregate from all ships in the fleet
+				const allSquadrons: DefenseResource[] = [];
+				const allTroops: DefenseResource[] = [];
+				const allPersonnel: DefenseResource[] = [];
+
+				fleet.ships.forEach((fleetShip) => {
+					if (fleetShip.fighters) allSquadrons.push(...fleetShip.fighters);
+					if (fleetShip.troops) allTroops.push(...fleetShip.troops);
+					if (fleetShip.personnel) allPersonnel.push(...fleetShip.personnel);
+				});
+
+				return {
+					capital_ship: [],
+					squadron: allSquadrons,
+					troop: allTroops,
+					personnel: allPersonnel,
+				};
+			}
 		}
-		
-		// No ship selected, show empty arrays
+
+		// No fleet selected, show empty arrays
 		return {
 			capital_ship: [],
 			squadron: [],
@@ -116,11 +161,19 @@ export const FleetsOverview: React.FC<{
 		name: string;
 		icon: React.ElementType;
 	}[] = [
-		{ id: "capital_ship", name: "Ships", icon: RocketLaunchIcon },
 		{ id: "squadron", name: "Fighters", icon: CommandLineIcon },
 		{ id: "troop", name: "Troops", icon: UserGroupIcon },
 		{ id: "personnel", name: "Personnel", icon: UsersIcon },
 	];
+
+	if (!selectedShip) {
+		// Don't show ships unless only a fleet is selected
+		categories.unshift({
+			id: "capital_ship",
+			name: "Ships",
+			icon: RocketLaunchIcon,
+		});
+	}
 
 	const tabs = categories.map((category) => {
 		const categoryResources = resources[category.id];
@@ -142,28 +195,30 @@ export const FleetsOverview: React.FC<{
 			);
 		} else {
 			// For squadron/troop/personnel tabs
-			if (!ship) {
+			if (!fleet || fleet.ships.length === 0) {
 				content = (
-					<div className="flex items-center justify-center h-full">
+					<div className="flex h-full items-center justify-center">
 						<p className="text-center text-slate-400 italic">
-							{fleet && fleet.ships.length > 0 
-								? `Select a ship from the left panel to view its ${category.name.toLowerCase()}`
-								: `No ships available to view ${category.name.toLowerCase()}`
-							}
+							No ships available to view {category.name.toLowerCase()}
 						</p>
 					</div>
 				);
 			} else {
+				// Show either fleet total or individual ship's complement
+				const headerText = ship
+					? `${category.name} aboard ${ship.name}`
+					: `All ${category.name} in ${fleet.name}`;
+
 				content = (
 					<div className="space-y-2">
-						<div className="text-sm text-gray-400 mb-2 p-2 bg-slate-800 rounded">
-							{category.name} aboard <span className="text-gray-200">{ship.name}</span>
+						<div className="mb-2 rounded bg-slate-800 p-2 text-sm text-gray-400">
+							{headerText}
 						</div>
 						<ResourceList
 							resources={categoryResources}
 							getImagePairs={getImagePairs}
 							getSelectableItem={getSelectableItem}
-							emptyMessage={`No ${category.name.toLowerCase()} aboard this ship`}
+							emptyMessage={`No ${category.name.toLowerCase()} ${ship ? "aboard this ship" : "in this fleet"}`}
 						/>
 					</div>
 				);
@@ -174,98 +229,94 @@ export const FleetsOverview: React.FC<{
 			id: category.id,
 			name: category.name,
 			icon: category.icon,
-			content
+			content,
 		};
 	});
 
-	const leftPanel = (
-		<div className="flex flex-col h-full">
-			<h3 className="text-lg font-semibold text-gray-300 mb-4">Fleets</h3>
-			<div className="space-y-2 flex-1 overflow-auto">
-				{fleets.length > 0 ? fleets.map((fleetItem) => (
-					<div key={fleetItem.id} className="space-y-1">
-						<div
-							className={`p-3 rounded-lg cursor-pointer transition-colors ${
-								selectedFleet === fleetItem.id
-									? "bg-slate-700 border border-slate-600"
-									: "bg-slate-800 hover:bg-slate-700"
-							}`}
-							onClick={() => {
-								setSelectedFleet(fleetItem.id);
-								setSelectedShip(null); // Clear ship selection when changing fleets
-							}}
-						>
-							<div className="text-gray-300 font-medium">{fleetItem.name}</div>
-							<div className="text-sm text-gray-500">
-								{fleetItem.ships.length} ships
-							</div>
-						</div>
-						
-						{/* Show ships when fleet is selected */}
-						{selectedFleet === fleetItem.id && fleetItem.ships.length > 0 && (
-							<div className="ml-4 space-y-1">
-								{fleetItem.ships.map((shipItem) => (
-									<div
-										key={shipItem.id}
-										className={`p-2 rounded-lg cursor-pointer transition-colors text-sm ${
-											selectedShip === shipItem.id
-												? "bg-slate-600 border border-slate-500"
-												: "bg-slate-800 hover:bg-slate-600"
-										}`}
-										onClick={(e) => {
-											e.stopPropagation(); // Prevent fleet selection
-											setSelectedShip(shipItem.id);
-										}}
-									>
-										<div className="text-gray-300">{shipItem.name}</div>
-										<div className="text-xs text-gray-500">
-											{shipItem.subtype.replace(/_/g, ' ')}
-										</div>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-				)) : (
-					<p className="text-center text-slate-400 italic">
-						No fleets deployed on {planet.metadata.name}
-					</p>
-				)}
+	const rightPanel =
+		selectedFleet && fleet ? (
+			<div className="flex h-full flex-col p-4">
+				<h3 className="mb-4 text-lg font-semibold text-gray-300">
+					{fleet.name}
+				</h3>
+				<TabGroupComponent
+					tabs={tabs}
+					selectedTab={selectedCategory}
+					onTabChange={(tabId) => {
+						setSelectedCategory(tabId as FleetResourceType);
+						// Clear ship selection when switching to ships tab
+						if (tabId === "capital_ship") {
+							setSelectedShip(null);
+						}
+					}}
+					className="flex-1"
+					iconOnly={true}
+				/>
 			</div>
-		</div>
-	);
-
-	const rightPanel = selectedFleet && fleet ? (
-		<div className="flex flex-col h-full">
-			<h3 className="text-lg font-semibold text-gray-300 mb-4">{fleet.name}</h3>
-			<TabGroupComponent
-				tabs={tabs}
-				selectedTab={selectedCategory}
-				onTabChange={(tabId) => {
-					setSelectedCategory(tabId as FleetResourceType);
-					// Clear ship selection when switching to ships tab
-					if (tabId === "capital_ship") {
-						setSelectedShip(null);
-					}
-				}}
-				className="flex-1"
-				iconOnly={true}
-			/>
-		</div>
-	) : (
-		<div className="flex items-center justify-center h-full">
-			<p className="text-center text-slate-400 italic">
-				Select a fleet to view its details
-			</p>
-		</div>
-	);
+		) : (
+			<div className="flex h-full items-center justify-center p-4">
+				<p className="text-center text-slate-400 italic">
+					Select a fleet to view its details
+				</p>
+			</div>
+		);
 
 	return (
-		<div className="pr-2 text-gray-300 flex-1 flex flex-col">
+		<div className="flex h-full flex-1 flex-col text-gray-300">
 			<TwoColumnLayout
-				leftPanel={leftPanel}
+				leftPanel={
+					<div className="space-y-1 p-4">
+						{fleets.map((fleetItem) => (
+							<div key={fleetItem.id} className="space-y-1">
+								<div
+									className={`cursor-pointer rounded-lg p-3 transition-colors ${
+										selectedFleet === fleetItem.id
+											? "border border-slate-600 bg-slate-700"
+											: "bg-slate-800 hover:bg-slate-700"
+									}`}
+									onClick={() => {
+										setSelectedFleet(fleetItem.id);
+										setSelectedShip(null); // Clear ship selection when changing fleets
+									}}
+								>
+									<div className="font-medium text-gray-300">
+										{fleetItem.name}
+									</div>
+									<div className="text-sm text-gray-500">
+										{fleetItem.ships.length} ships
+									</div>
+								</div>
+
+								{/* Show ships when fleet is selected */}
+								{selectedFleet === fleetItem.id &&
+									fleetItem.ships.length > 0 && (
+										<div className="ml-4">
+											{fleetItem.ships.map((shipItem) => (
+												<div
+													key={shipItem.id}
+													className={`cursor-pointer rounded-lg p-2 text-sm transition-colors ${
+														selectedShip === shipItem.id
+															? "border border-slate-500 bg-slate-600"
+															: "bg-slate-800 hover:bg-slate-600"
+													}`}
+													onClick={(e) => {
+														e.stopPropagation(); // Prevent fleet selection
+														setSelectedShip(shipItem.id);
+													}}
+												>
+													<div className="text-gray-300">{shipItem.name}</div>
+													<div className="text-xs text-gray-500">
+														{shipItem.subtype.replace(/_/g, " ")}
+													</div>
+												</div>
+											))}
+										</div>
+									)}
+							</div>
+						))}
+					</div>
+				}
 				rightPanel={rightPanel}
-				className="flex-1"
 			/>
 		</div>
 	);

@@ -272,13 +272,21 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 			<div className="flex gap-3 pt-4">
 				<button
 					onClick={handleConfirm}
-					className="flex-1 cursor-pointer rounded bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700"
+					onTouchEnd={(e) => {
+						// Prevent any potential event bubbling issues on mobile
+						e.stopPropagation();
+					}}
+					className="flex-1 cursor-pointer rounded bg-green-600 px-4 py-2 font-medium text-white transition-colors hover:bg-green-700 active:bg-green-800"
 				>
 					Confirm {actionDef.label}
 				</button>
 				<button
 					onClick={cancelActionConfirmation}
-					className="flex-1 cursor-pointer rounded bg-slate-600 px-4 py-2 font-medium text-white transition-colors hover:bg-slate-700"
+					onTouchEnd={(e) => {
+						// Prevent any potential event bubbling issues on mobile
+						e.stopPropagation();
+					}}
+					className="flex-1 cursor-pointer rounded bg-slate-600 px-4 py-2 font-medium text-white transition-colors hover:bg-slate-700 active:bg-slate-800"
 				>
 					Cancel
 				</button>

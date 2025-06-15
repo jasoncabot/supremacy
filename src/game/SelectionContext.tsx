@@ -8,11 +8,14 @@ import {
 import { useWindowContext } from "../hooks/useWindowContext";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
 import { WindowInfo } from "./WindowInfo";
+import { useActionQueue } from "./ActionQueueContextDef";
+import { ActionTarget } from "./types/actions";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	const { handleOpenWindow, handleCloseWindow } = useWindowContext();
+	const { moveUnit, scrapUnit, createFleet } = useActionQueue();
 	const [selectedItems, setSelectedItems] = useState<SelectableItem[]>([]);
 	const [selectionMode, setSelectionKind] = useState<SelectionKind>("none");
 	const [selectionState, setSelectionState] = useState<SelectionState>("idle");
@@ -134,13 +137,108 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		}
 	};
 
-	const executeAction = () => {
-		if (currentAction && selectedItems.length > 0 && targetItem) {
-			console.log(
-				`Selected items ${selectedItems.map((item) => `${item.type}:${item.id}`).join(", ")} performing action ${currentAction} on target ${targetItem.type}:${targetItem.id}`,
-			);
+	// Helper function to create proper ActionTarget from SelectableItem
+	const createActionTarget = (item: SelectableItem): ActionTarget | null => {
+		const itemType = item.type;
+		switch (itemType) {
+			case "planet":
+				return {
+					type: "planet",
+					id: item.id,
+					data: item as unknown as import("../../worker/api").PlanetView,
+				};
+			case "capital_ship":
+				return {
+					type: "ship",
+					id: item.id,
+				};
+			case "fleet":
+				return {
+					type: "fleet",
+					id: item.id,
+				};
+			case "shipyard":
+			case "training_facility":
+			case "construction_yard":
+			case "refinery":
+			case "mine":
+				return {
+					type: "structure",
+					id: item.id,
+					data: item as unknown as import("../../worker/api").ManufacturingResource,
+				};
+			case "personnel":
+			case "troop":
+			case "squadron":
+			case "shield":
+			case "battery":
+				return {
+					type: "unit",
+					id: item.id,
+					data: item as unknown as import("../../worker/api").DefenseResource,
+				};
+			default: {
+				// This should never happen if all cases are covered
+				const exhaustiveCheck: never = itemType;
+				console.warn(`Unknown item type for action target: ${exhaustiveCheck}`);
+				return null;
+			}
 		}
+	};
+
+	const executeAction = () => {
+		if (!pendingActionDetails) return;
+
+		const { actionDef, sources, target } = pendingActionDetails;
+
+		console.log(
+			`Executing action ${actionDef.type} on ${sources.length} source(s)${target ? ` with target ${target.type}:${target.id}` : ""}`,
+		);
+
+		// Handle different action types
+		switch (actionDef.type) {
+			case "create_fleet": {
+				// For create fleet, we expect a single ship source
+				if (sources.length === 1 && sources[0].type === "capital_ship") {
+					const ship = sources[0];
+					const newFleetName = `Fleet ${ship.name}`;
+					createFleet(ship.id, newFleetName);
+				}
+				break;
+			}
+			case "move": {
+				// For move actions, add to queue with target
+				if (target) {
+					const actionTarget = createActionTarget(target);
+					if (actionTarget) {
+						sources.forEach((source) => {
+							moveUnit(source.id, source.type, actionTarget);
+						});
+					}
+				}
+				break;
+			}
+			case "scrap": {
+				// For scrap actions, add to queue without target
+				sources.forEach((source) => {
+					scrapUnit(source.id, source.type);
+				});
+				break;
+			}
+			default: {
+				alert(JSON.stringify(pendingActionDetails, null, 2));
+				console.warn(
+					`Unhandled action type: ${actionDef.type} for sources:`,
+					sources,
+				);
+				break;
+			}
+		}
+
+		// Clear the action state
 		clearSelection();
+		setPendingActionDetails(null);
+		setSelectionState("idle");
 	};
 
 	const getWindowTitle = (
@@ -219,8 +317,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				pendingActionDetails.target,
 			);
 
-			// Here you would dispatch the actual game action
-			// For now we just log and clear
+			// Execute the action using the action queue
+			executeAction();
 		}
 
 		// Close the action detail window
@@ -230,9 +328,6 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			type: "action-detail",
 			position: { x: 0, y: 0 },
 		});
-
-		setPendingActionDetails(null);
-		clearSelection();
 	};
 
 	const cancelActionConfirmation = () => {
