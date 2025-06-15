@@ -31,6 +31,7 @@ interface SelectionContextType {
 		actionDef: ActionDefinition;
 		sources: SelectableItem[];
 		target?: SelectableItem;
+		missionData?: { agents?: string[]; decoys?: string[]; missionType?: string };
 	} | null;
 	toggleSelectionKind: (mode: SelectionKind) => void;
 	selectItem: (item: SelectableItem) => void;
@@ -51,7 +52,8 @@ interface SelectionContextType {
 		sources: SelectableItem[],
 		target?: SelectableItem,
 	) => void;
-	confirmAction: () => void;
+	updateMissionData: (missionData: { agents?: string[]; decoys?: string[]; missionType?: string }) => void;
+	confirmAction: (missionData?: { agents?: string[]; decoys?: string[]; missionType?: string }) => void;
 	cancelActionConfirmation: () => void;
 }
 
@@ -73,6 +75,7 @@ export const SelectionContext = createContext<SelectionContextType>({
 	executeAction: () => {},
 	cancelTargetSelection: () => {},
 	showActionConfirmation: () => {},
+	updateMissionData: () => {},
 	confirmAction: () => {},
 	cancelActionConfirmation: () => {},
 });

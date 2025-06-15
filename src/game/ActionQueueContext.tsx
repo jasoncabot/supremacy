@@ -13,6 +13,7 @@ export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({ childre
 			id: generateUUID(),
 			timestamp: Date.now(),
 		};
+		console.log("Adding action to queue:", newAction);
 		setActions(prev => [...prev, newAction]);
 	};
 
@@ -87,13 +88,36 @@ export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({ childre
 		});
 	};
 
-	const executeMission = (personnelId: string, target: ActionTarget, missionType?: string) => {
+	const executeMission = (personnelId: string, target: ActionTarget, missionType?: string, missionData?: { agents?: string[]; decoys?: string[] }) => {
+		console.log("executeMission called with:", {
+			personnelId,
+			target,
+			missionType,
+			missionData
+		});
+		
+		const actionData: Record<string, unknown> = {};
+		
+		if (missionType) {
+			actionData.missionType = missionType;
+		}
+		
+		if (missionData?.agents) {
+			actionData.agents = missionData.agents;
+		}
+		
+		if (missionData?.decoys) {
+			actionData.decoys = missionData.decoys;
+		}
+		
+		console.log("Adding mission action with data:", actionData);
+		
 		addAction({
 			type: "mission" as ActionType,
 			sourceId: personnelId,
 			sourceType: "personnel",
 			target,
-			data: missionType ? { missionType } : undefined,
+			data: actionData,
 		});
 	};
 

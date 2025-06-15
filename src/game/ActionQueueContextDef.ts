@@ -15,7 +15,7 @@ export interface ActionQueueContextType {
 	renameUnit: (sourceId: string, sourceType: string, newName: string) => void;
 	bombardTarget: (fleetId: string, target: ActionTarget) => void;
 	assaultTarget: (fleetId: string, target: ActionTarget) => void;
-	executeMission: (personnelId: string, target: ActionTarget, missionType?: string) => void;
+	executeMission: (personnelId: string, target: ActionTarget, missionType?: string, missionData?: { agents?: string[]; decoys?: string[] }) => void;
 	issueCommand: (personnelId: string, commandType: string, data?: Record<string, unknown>) => void;
 	buildItem: (structureId: string, structureType: string, buildType: string, data?: Record<string, unknown>) => void;
 	stopProduction: (structureId: string, structureType: string) => void;

@@ -18,6 +18,7 @@ interface ActionDetailWindowProps {
 		actionDef: ActionDefinition;
 		sources: SelectableItem[];
 		target?: SelectableItem;
+		missionData?: { agents?: string[]; decoys?: string[]; missionType?: string };
 	};
 }
 
@@ -25,18 +26,26 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 	actionDetails,
 }) => {
 	const { confirmAction, cancelActionConfirmation } = useSelectionContext();
-	const { actionDef, sources, target } = actionDetails;
+	const { actionDef, sources, target, missionData } = actionDetails;
 
-	// Local state for action-specific options
-	const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-	const [selectedDecoys, setSelectedDecoys] = useState<string[]>([]);
+	// Local state for action-specific options - initialize with existing data
+	const [selectedAgents, setSelectedAgents] = useState<string[]>(missionData?.agents || []);
+	const [selectedDecoys, setSelectedDecoys] = useState<string[]>(missionData?.decoys || []);
 	const [selectedMissionType, setSelectedMissionType] =
-		useState<MissionType | null>(null);
+		useState<MissionType | null>(missionData?.missionType as MissionType || null);
 
 	const handleConfirm = () => {
-		// You can access selectedAgents, selectedDecoys, selectedMissionType here
-		// and pass them along with the action confirmation
-		confirmAction();
+		// For mission actions, pass the mission data directly to confirmAction
+		if (actionDef.type === "mission") {
+			confirmAction({
+				agents: selectedAgents,
+				decoys: selectedDecoys,
+				missionType: selectedMissionType || undefined,
+			});
+		} else {
+			// For non-mission actions, confirm without mission data
+			confirmAction();
+		}
 	};
 
 	// Helper function to get display name for items
@@ -73,8 +82,16 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 					(s) => s.type === "troop" || s.type === "squadron",
 				);
 
+				const hasExistingData = missionData && (missionData.agents?.length || missionData.decoys?.length || missionData.missionType);
+
 				return (
 					<div className="space-y-4">
+						{hasExistingData && (
+							<div className="text-sm text-slate-400 italic">
+								Modify mission configuration below:
+							</div>
+						)}
+						
 						<div className="space-y-2">
 							<label className="block text-sm font-medium text-slate-300">
 								Mission Type
@@ -261,6 +278,57 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 							{target.type}
 						</span>
 						<span className="text-white">{getDisplayName(target)}</span>
+					</div>
+				</div>
+			)}
+
+			{/* Current Mission Data (if any) */}
+			{actionDef.type === "mission" && missionData && (
+				<div className="space-y-2">
+					<h4 className="text-sm font-medium text-slate-300">Current Mission Configuration</h4>
+					<div className="rounded bg-slate-800/50 p-3 space-y-2">
+						{missionData.missionType && (
+							<div className="flex items-center gap-2 text-sm">
+								<span className="text-slate-400">Mission Type:</span>
+								<span className="rounded bg-purple-600/20 px-2 py-1 text-xs text-purple-300 capitalize">
+									{missionData.missionType}
+								</span>
+							</div>
+						)}
+						
+						{missionData.agents && missionData.agents.length > 0 && (
+							<div className="flex items-center gap-2 text-sm">
+								<span className="text-slate-400">Selected Agents:</span>
+								<div className="flex flex-wrap gap-1">
+									{missionData.agents.map((agentId) => {
+										const agent = sources.find(s => s.id === agentId);
+										return agent ? (
+											<span key={agentId} className="rounded bg-blue-600/20 px-2 py-1 text-xs text-blue-300">
+												<UserIcon className="inline size-3 mr-1" />
+												{getDisplayName(agent)}
+											</span>
+										) : null;
+									})}
+								</div>
+							</div>
+						)}
+
+						{missionData.decoys && missionData.decoys.length > 0 && (
+							<div className="flex items-center gap-2 text-sm">
+								<span className="text-slate-400">Selected Decoys:</span>
+								<div className="flex flex-wrap gap-1">
+									{missionData.decoys.map((decoyId) => {
+										const decoy = sources.find(s => s.id === decoyId);
+										return decoy ? (
+											<span key={decoyId} className="rounded bg-orange-600/20 px-2 py-1 text-xs text-orange-300">
+												<EyeIcon className="inline size-3 mr-1" />
+												{getDisplayName(decoy)}
+											</span>
+										) : null;
+									})}
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			)}

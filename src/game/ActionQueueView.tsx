@@ -45,9 +45,14 @@ const ActionQueueView: React.FC = () => {
 			case "assault":
 				return `Assault ${getTargetName(action)}`;
 			case "mission": {
-				const data = action.data as { missionType?: string } | undefined;
+				const data = action.data as { missionType?: string; agents?: string[]; decoys?: string[] } | undefined;
 				const missionType = data?.missionType ? ` (${data.missionType})` : "";
-				return `Execute mission${missionType} at ${getTargetName(action)}`;
+				const agentCount = data?.agents?.length || 0;
+				const decoyCount = data?.decoys?.length || 0;
+				const details = agentCount > 0 || decoyCount > 0 
+					? ` - ${agentCount} agent(s), ${decoyCount} decoy(s)` 
+					: "";
+				return `Execute mission${missionType} at ${getTargetName(action)}${details}`;
 			}
 			case "build": {
 				const data = action.data as { buildType?: string } | undefined;
@@ -93,10 +98,23 @@ const ActionQueueView: React.FC = () => {
 			case "assault":
 				return `${baseDescription}\n\nGround assault will attempt to capture or destroy enemy installations on the planet surface.`;
 			case "mission": {
-				const data = action.data as { missionType?: string } | undefined;
-				const missionDetails = data?.missionType
-					? `\nMission type: ${data.missionType}`
-					: "";
+				const data = action.data as { 
+					missionType?: string; 
+					agents?: string[]; 
+					decoys?: string[] 
+				} | undefined;
+
+				let missionDetails = "";
+				if (data?.missionType) {
+					missionDetails += `\nMission type: ${data.missionType}`;
+				}
+				if (data?.agents && data.agents.length > 0) {
+					missionDetails += `\nAgents assigned: ${data.agents.length} (${data.agents.join(", ")})`;
+				}
+				if (data?.decoys && data.decoys.length > 0) {
+					missionDetails += `\nDecoys assigned: ${data.decoys.length} (${data.decoys.join(", ")})`;
+				}
+				
 				return `${baseDescription}\n\nPersonnel will execute a special mission at the target location.${missionDetails}`;
 			}
 			case "build": {
@@ -221,7 +239,7 @@ const ActionQueueView: React.FC = () => {
 						<div className="flex items-center gap-1 rounded-lg bg-gray-700 p-1">
 							<button
 								onClick={() => setViewMode("compact")}
-								className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+								className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium transition-colors ${
 									viewMode === "compact"
 										? "bg-gray-600 text-white"
 										: "text-gray-300 hover:bg-gray-600 hover:text-white"
@@ -232,7 +250,7 @@ const ActionQueueView: React.FC = () => {
 							</button>
 							<button
 								onClick={() => setViewMode("detailed")}
-								className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+								className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium transition-colors ${
 									viewMode === "detailed"
 										? "bg-gray-600 text-white"
 										: "text-gray-300 hover:bg-gray-600 hover:text-white"
@@ -250,7 +268,7 @@ const ActionQueueView: React.FC = () => {
 						{actions.length > 0 && (
 							<button
 								onClick={clearActions}
-								className="rounded bg-red-600 px-3 py-1 text-sm text-white transition-colors hover:bg-red-700"
+								className="cursor-pointer rounded bg-red-600 px-3 py-1 text-sm text-white transition-colors hover:bg-red-700"
 							>
 								Clear All
 							</button>
@@ -298,14 +316,14 @@ const ActionQueueView: React.FC = () => {
 									<div className="ml-2 flex items-center gap-1">
 										<button
 											onClick={() => setDetailViewAction(action)}
-											className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-blue-400"
+											className="cursor-pointer rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-blue-400"
 											title="View details"
 										>
 											<EyeIcon className="h-3.5 w-3.5" />
 										</button>
 										<button
 											onClick={() => removeAction(action.id)}
-											className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-red-400"
+											className="cursor-pointer rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-red-400"
 											title="Remove this order"
 										>
 											<TrashIcon className="h-3.5 w-3.5" />
@@ -375,14 +393,14 @@ const ActionQueueView: React.FC = () => {
 									<div className="ml-4 flex items-center gap-2">
 										<button
 											onClick={() => setDetailViewAction(action)}
-											className="rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-blue-400"
+											className="cursor-pointer rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-blue-400"
 											title="View details"
 										>
 											<EyeIcon className="h-4 w-4" />
 										</button>
 										<button
 											onClick={() => removeAction(action.id)}
-											className="rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-red-400"
+											className="cursor-pointer rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-red-400"
 											title="Remove this order"
 										>
 											<TrashIcon className="h-4 w-4" />
@@ -406,7 +424,7 @@ const ActionQueueView: React.FC = () => {
 							</h3>
 							<button
 								onClick={() => setDetailViewAction(null)}
-								className="rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200"
+								className="cursor-pointer rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200"
 							>
 								<XMarkIcon className="h-5 w-5" />
 							</button>
@@ -534,13 +552,13 @@ const ActionQueueView: React.FC = () => {
 									removeAction(detailViewAction.id);
 									setDetailViewAction(null);
 								}}
-								className="rounded bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
+								className="cursor-pointer rounded bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
 							>
 								Remove Action
 							</button>
 							<button
 								onClick={() => setDetailViewAction(null)}
-								className="rounded bg-gray-600 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-700"
+								className="cursor-pointer rounded bg-gray-600 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-700"
 							>
 								Close
 							</button>

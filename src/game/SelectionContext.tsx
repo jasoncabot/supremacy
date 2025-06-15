@@ -15,7 +15,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	const { handleOpenWindow, handleCloseWindow } = useWindowContext();
-	const { moveUnit, scrapUnit, createFleet } = useActionQueue();
+	const { moveUnit, scrapUnit, createFleet, executeMission } = useActionQueue();
 	const [selectedItems, setSelectedItems] = useState<SelectableItem[]>([]);
 	const [selectionMode, setSelectionKind] = useState<SelectionKind>("none");
 	const [selectionState, setSelectionState] = useState<SelectionState>("idle");
@@ -31,6 +31,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		actionDef: ActionDefinition;
 		sources: SelectableItem[];
 		target?: SelectableItem;
+		missionData?: { agents?: string[]; decoys?: string[]; missionType?: string };
 	} | null>(null);
 
 	const toggleSelectionKind = (mode: SelectionKind) => {
@@ -186,10 +187,11 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		}
 	};
 
-	const executeAction = () => {
-		if (!pendingActionDetails) return;
+	const executeAction = (actionDetails?: typeof pendingActionDetails) => {
+		const details = actionDetails || pendingActionDetails;
+		if (!details) return;
 
-		const { actionDef, sources, target } = pendingActionDetails;
+		const { actionDef, sources, target } = details;
 
 		console.log(
 			`Executing action ${actionDef.type} on ${sources.length} source(s)${target ? ` with target ${target.type}:${target.id}` : ""}`,
@@ -223,6 +225,26 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				sources.forEach((source) => {
 					scrapUnit(source.id, source.type);
 				});
+				break;
+			}
+			case "mission": {
+				// For mission actions, use the primary personnel unit and include mission data
+				const primaryAgent = sources.find((source) => source.type === "personnel");
+				if (primaryAgent && target) {
+					const actionTarget = createActionTarget(target);
+					if (actionTarget) {
+						const missionType = details.missionData?.missionType;
+						const agents = details.missionData?.agents;
+						const decoys = details.missionData?.decoys;
+						
+						executeMission(
+							primaryAgent.id, 
+							actionTarget, 
+							missionType,
+							{ agents, decoys }
+						);
+					}
+				}
 				break;
 			}
 			default: {
@@ -307,18 +329,35 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		handleOpenWindow(actionWindow);
 	};
 
-	const confirmAction = () => {
+	const updateMissionData = (missionData: { agents?: string[]; decoys?: string[]; missionType?: string }) => {
 		if (pendingActionDetails) {
+			setPendingActionDetails({
+				...pendingActionDetails,
+				missionData,
+			});
+		}
+	};
+
+	const confirmAction = (missionData?: { agents?: string[]; decoys?: string[]; missionType?: string }) => {
+		if (pendingActionDetails) {
+			// Update pending action details with mission data if provided
+			const updatedActionDetails = missionData ? {
+				...pendingActionDetails,
+				missionData,
+			} : pendingActionDetails;
+
 			console.log(
-				`Confirmed action: ${pendingActionDetails.actionId} (${pendingActionDetails.actionDef.label})`,
+				`Confirmed action: ${updatedActionDetails.actionId} (${updatedActionDetails.actionDef.label})`,
 				"Sources:",
-				pendingActionDetails.sources,
+				updatedActionDetails.sources,
 				"Target:",
-				pendingActionDetails.target,
+				updatedActionDetails.target,
+				"Mission Data:",
+				updatedActionDetails.missionData,
 			);
 
-			// Execute the action using the action queue
-			executeAction();
+			// Execute the action using the action queue with updated details
+			executeAction(updatedActionDetails);
 		}
 
 		// Close the action detail window
@@ -362,6 +401,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				executeAction,
 				cancelTargetSelection,
 				showActionConfirmation,
+				updateMissionData,
 				confirmAction,
 				cancelActionConfirmation,
 			}}
