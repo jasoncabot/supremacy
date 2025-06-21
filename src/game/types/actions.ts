@@ -2,11 +2,13 @@
 import type {
 	ActionableResource,
 	DefenseResource,
+	FleetResource,
 	ManufacturingResource,
-	MissionType,
+	MissionResource,
 	PlanetView,
+	ShipResource,
 } from "../../../worker/api";
-import { SelectableItem } from "../../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../../hooks/useSelectionContext";
 
 // Base target types
 export interface PlanetTarget {
@@ -18,25 +20,37 @@ export interface PlanetTarget {
 export interface ShipTarget {
 	type: "ship";
 	id: string;
-	// Ship data will be implemented when ship types are available
+	data: ShipResource;
+	planetId: string; // Targetting a ship requires knowing the planet it is currently at but we don't care about the fleet it is a part of
 }
 
 export interface FleetTarget {
 	type: "fleet";
 	id: string;
-	// Fleet data will be implemented when fleet types are available
+	data: FleetResource;
+	planetId: string; // Targetting a fleet requires knowing the planet it is currently at
 }
 
 export interface StructureTarget {
 	type: "structure";
 	id: string;
 	data: ManufacturingResource;
+	planetId: string; // not really required but it doesn't hurt
 }
 
 export interface UnitTarget {
 	type: "unit";
 	id: string;
 	data: DefenseResource;
+	planetId: string; // Targetting a unit requires knowing the planet it is currently at
+	shipId?: string; // we also need to know if it's on a ship or on the planet itself
+}
+
+export interface MissionTarget {
+	type: "mission";
+	id: string;
+	data: MissionResource;
+	planetId: string; // Targetting a mission requires knowing the planet it is currently at
 }
 
 // Union type for all possible targets
@@ -45,7 +59,8 @@ export type ActionTarget =
 	| ShipTarget
 	| FleetTarget
 	| StructureTarget
-	| UnitTarget;
+	| UnitTarget
+	| MissionTarget;
 
 // Action types for each unit category
 export type FleetActionType =
@@ -66,7 +81,7 @@ export type StructureActionType = "build" | "stop";
 export type MissionActionType = "abort";
 
 // Build action types (long-running)
-export type BuildActionType = "ship" | "training" | "construction_yard";
+export type BuildActionType = "ship" | "unit" | "structure";
 
 // Union type for all action types
 export type ActionType =
@@ -86,7 +101,6 @@ export interface ActionDefinition {
 	type: ActionType;
 	validTargets: ActionTarget["type"][];
 	requiresTarget: boolean;
-	missionType?: MissionType;
 }
 
 // Mapping of unit types to their available actions
@@ -326,7 +340,7 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 
 // Helper function to get available actions for selected items
 export function getAvailableActions(
-	selectedItems: SelectableItem[],
+	selectedItems: SelectableItemWithLocation[],
 ): ActionDefinition[] {
 	if (selectedItems.length === 0) return [];
 

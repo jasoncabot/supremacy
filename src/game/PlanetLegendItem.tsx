@@ -1,7 +1,7 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
+import { getPlanetImage, getPlanetSize, PlanetOwner } from "../legend/legend";
 import { FilterType } from "./Filters";
-import { getPlanetSize, getPlanetImage, PlanetOwner } from "../legend/legend";
 import StarLegend from "./StarLegend";
 
 interface PlanetLegendItemProps {
@@ -9,7 +9,6 @@ interface PlanetLegendItemProps {
 	filter: FilterType;
 	x: number;
 	y: number;
-	pixelSize: number;
 }
 
 const getFilterRelevanceSize = (
@@ -77,7 +76,6 @@ const PlanetLegendItem: React.FC<PlanetLegendItemProps> = ({
 	filter,
 	x,
 	y,
-	pixelSize,
 }) => {
 	const owner = planet.state?.owner as PlanetOwner | undefined;
 
@@ -103,15 +101,15 @@ const PlanetLegendItem: React.FC<PlanetLegendItemProps> = ({
 			style={{
 				left: `${x}px`,
 				top: `${y}px`,
-				width: `${pixelSize}px`,
-				height: `${pixelSize}px`,
+				width: `15px`,
+				height: `15px`,
 			}}
 		>
 			<img
 				src={planetImage}
 				alt={planet.metadata.name}
 				title={planet.metadata.name}
-				className={`absolute drop-shadow-sm w-[${pixelSize}px] h-[${pixelSize}px] ${
+				className={`absolute h-[15px] w-[15px] drop-shadow-sm ${
 					planet.discovered ? "opacity-100" : "opacity-60"
 				}`}
 			/>

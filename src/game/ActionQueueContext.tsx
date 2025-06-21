@@ -1,10 +1,29 @@
 import React, { ReactNode, useState } from "react";
-import { QueuedAction, CreateFleetActionData } from "./types/actionQueue";
-import { ActionType, ActionTarget } from "./types/actions";
-import { ActionQueueContext, ActionQueueContextType } from "./ActionQueueContextDef";
-import { generateUUID } from "../utils/uuid";
 
-export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+import { AssignedCommandType, MissionType } from "../../worker/api";
+import { generateUUID } from "../utils/uuid";
+import {
+	ActionQueueContext,
+	ActionQueueContextType,
+} from "./ActionQueueContextDef";
+import {
+	CreateFleetActionData,
+	MissionActionData,
+	QueuedAction,
+} from "./types/actionQueue";
+import {
+	ActionTarget,
+	ActionType,
+	FleetTarget,
+	MissionTarget,
+	ShipTarget,
+	StructureTarget,
+	UnitTarget,
+} from "./types/actions";
+
+export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({
+	children,
+}) => {
 	const [actions, setActions] = useState<QueuedAction[]>([]);
 
 	const addAction = (action: Omit<QueuedAction, "id" | "timestamp">) => {
@@ -14,21 +33,21 @@ export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({ childre
 			timestamp: Date.now(),
 		};
 		console.log("Adding action to queue:", newAction);
-		setActions(prev => [...prev, newAction]);
+		setActions((prev) => [...prev, newAction]);
 	};
 
 	const removeAction = (actionId: string) => {
-		setActions(prev => prev.filter(action => action.id !== actionId));
+		setActions((prev) => prev.filter((action) => action.id !== actionId));
 	};
 
 	const clearActions = () => {
 		setActions([]);
 	};
 
-	const createFleet = (sourceShipId: string, newFleetName: string): string => {
+	const createFleet = (ships: ShipTarget[], newFleetName: string): string => {
 		// Generate a new fleet ID using the same pattern as the server
 		const newFleetId = `fleet:${generateUUID()}`;
-		
+
 		const createFleetData: CreateFleetActionData = {
 			newFleetId,
 			newFleetName,
@@ -36,122 +55,114 @@ export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({ childre
 
 		addAction({
 			type: "create_fleet" as ActionType,
-			sourceId: sourceShipId,
-			sourceType: "capital_ship",
+			sources: ships,
 			data: createFleetData,
 		});
 
 		return newFleetId;
 	};
 
-	const moveUnit = (sourceId: string, sourceType: string, target: ActionTarget) => {
+	const moveUnit = (unit: UnitTarget, destination: ActionTarget) => {
 		addAction({
 			type: "move" as ActionType,
-			sourceId,
-			sourceType,
-			target,
+			sources: [unit],
+			target: destination,
 		});
 	};
 
-	const scrapUnit = (sourceId: string, sourceType: string) => {
+	const scrap = (item: UnitTarget | StructureTarget | ShipTarget) => {
 		addAction({
 			type: "scrap" as ActionType,
-			sourceId,
-			sourceType,
+			sources: [item],
 		});
 	};
 
-	const renameUnit = (sourceId: string, sourceType: string, newName: string) => {
+	const renameUnit = (unit: UnitTarget, newName: string) => {
 		addAction({
 			type: "rename" as ActionType,
-			sourceId,
-			sourceType,
+			sources: [unit],
 			data: { newName },
 		});
 	};
 
-	const bombardTarget = (fleetId: string, target: ActionTarget) => {
+	const bombardTarget = (fleet: FleetTarget, target: ActionTarget) => {
 		addAction({
 			type: "bombard" as ActionType,
-			sourceId: fleetId,
-			sourceType: "fleet",
+			sources: [fleet],
 			target,
 		});
 	};
 
-	const assaultTarget = (fleetId: string, target: ActionTarget) => {
+	const assaultTarget = (fleet: FleetTarget, target: ActionTarget) => {
 		addAction({
 			type: "assault" as ActionType,
-			sourceId: fleetId,
-			sourceType: "fleet",
+			sources: [fleet],
 			target,
 		});
 	};
 
-	const executeMission = (personnelId: string, target: ActionTarget, missionType?: string, missionData?: { agents?: string[]; decoys?: string[] }) => {
-		console.log("executeMission called with:", {
-			personnelId,
-			target,
-			missionType,
-			missionData
-		});
-		
+	const executeMission = (
+		sources: UnitTarget[],
+		target: ActionTarget,
+		missionType: MissionType,
+		missionData?: MissionActionData,
+	) => {
 		const actionData: Record<string, unknown> = {};
-		
+
 		if (missionType) {
 			actionData.missionType = missionType;
 		}
-		
+
 		if (missionData?.agents) {
 			actionData.agents = missionData.agents;
 		}
-		
+
 		if (missionData?.decoys) {
 			actionData.decoys = missionData.decoys;
 		}
-		
-		console.log("Adding mission action with data:", actionData);
-		
+
 		addAction({
 			type: "mission" as ActionType,
-			sourceId: personnelId,
-			sourceType: "personnel",
+			sources: sources,
 			target,
 			data: actionData,
 		});
 	};
 
-	const issueCommand = (personnelId: string, commandType: string, data?: Record<string, unknown>) => {
+	const assignCommand = (
+		unit: UnitTarget,
+		commandType: AssignedCommandType,
+	) => {
 		addAction({
 			type: "command" as ActionType,
-			sourceId: personnelId,
-			sourceType: "personnel",
-			data: { commandType, ...data },
+			sources: [unit],
+			data: { commandType },
 		});
 	};
 
-	const buildItem = (structureId: string, structureType: string, buildType: string, data?: Record<string, unknown>) => {
+	const buildItem = (
+		structures: StructureTarget[],
+		buildType: string,
+		data?: Record<string, unknown>,
+	) => {
 		addAction({
 			type: "build" as ActionType,
-			sourceId: structureId,
-			sourceType: structureType,
+			sources: structures,
 			data: { buildType, ...data },
 		});
 	};
 
-	const stopProduction = (structureId: string, structureType: string) => {
+	const stopProduction = (structures: StructureTarget[]) => {
 		addAction({
 			type: "stop" as ActionType,
-			sourceId: structureId,
-			sourceType: structureType,
+			sources: structures,
 		});
 	};
 
-	const abortMission = (missionId: string) => {
+	const abortMission = (mission: MissionTarget) => {
 		addAction({
 			type: "abort" as ActionType,
-			sourceId: missionId,
-			sourceType: "mission",
+			sources: [mission],
 		});
 	};
 
@@ -162,12 +173,12 @@ export const ActionQueueProvider: React.FC<{ children: ReactNode }> = ({ childre
 		clearActions,
 		createFleet,
 		moveUnit,
-		scrapUnit,
+		scrap,
 		renameUnit,
 		bombardTarget,
 		assaultTarget,
 		executeMission,
-		issueCommand,
+		assignCommand,
 		buildItem,
 		stopProduction,
 		abortMission,

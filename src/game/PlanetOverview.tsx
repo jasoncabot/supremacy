@@ -1,14 +1,14 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
 import { type Faction } from "../adornments";
-import { SelectableItem, useSelectionContext } from "../hooks/useSelectionContext";
+import { usePlanetWindowHandlers } from "../hooks/usePlanetWindowHandlers";
+import { SelectableItemWithLocation, useSelectionContext } from "../hooks/useSelectionContext";
 import { getPlanetById } from "../planets";
 import { FilterType } from "./Filters";
 import LoyaltyBar from "./LoyaltyBar";
 import PlanetCore from "./PlanetCore";
 import PlanetMobileMenu from "./PlanetMobileMenu";
 import ResourceBar from "./ResourceBar";
-import { usePlanetWindowHandlers } from "./usePlanetWindowHandlers";
 
 interface PlanetOverviewProps {
 	planet: PlanetView;
@@ -17,7 +17,7 @@ interface PlanetOverviewProps {
 
 const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 	const { selectionState, selectItem } = useSelectionContext();
-	
+
 	const {
 		handleViewFleets,
 		handleViewDefence,
@@ -32,7 +32,10 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 				...planet,
 				type: "planet" as const,
 				id: planet.metadata.id,
-			} as SelectableItem;
+				location: {
+					planetId: planet.metadata.id,
+				},
+			} as SelectableItemWithLocation;
 			selectItem(planetAsSelectableItem);
 		}
 		// If no selection is in progress, the mobile menu will handle the interaction

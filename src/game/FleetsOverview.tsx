@@ -12,7 +12,7 @@ import {
 	ShipResource,
 } from "../../worker/api";
 import { getCardImage, getShipCardImage } from "../cards";
-import { SelectableItem } from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
 import { ResourceList } from "./components/ResourceList";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { TwoColumnLayout } from "./components/TwoColumnLayout";
@@ -53,7 +53,7 @@ export const FleetsOverview: React.FC<{
 		}
 	};
 
-	function getOverlayImage(resource: ShipResource | DefenseResource) {
+	const getOverlayImage = (resource: ShipResource | DefenseResource) => {
 		// For personnel, check for injured/imprisoned status
 		if (resource.type === "personnel") {
 			if (resource.injured) {
@@ -64,12 +64,12 @@ export const FleetsOverview: React.FC<{
 			}
 		}
 		return ""; // No overlay for other types
-	}
+	};
 
 	// Unified image function for fleet resources
-	function getFleetResourceCardImage(
+	const getFleetResourceCardImage = (
 		resource: ShipResource | DefenseResource,
-	): string {
+	) => {
 		switch (resource.type) {
 			case "personnel":
 			case "squadron":
@@ -82,7 +82,7 @@ export const FleetsOverview: React.FC<{
 			default:
 				return "/path/to/default_card.png";
 		}
-	}
+	};
 
 	const getImagePairs = (resource: ShipResource | DefenseResource) => [
 		{
@@ -94,8 +94,15 @@ export const FleetsOverview: React.FC<{
 
 	const getSelectableItem = (
 		resource: ShipResource | DefenseResource,
-	): SelectableItem => {
-		return resource as SelectableItem;
+	): SelectableItemWithLocation => {
+		return {
+			...resource,
+			location: {
+				planetId: planet.metadata.id,
+				fleetId: fleet?.id || null,
+				shipId: ship?.id || null,
+			},
+		} as SelectableItemWithLocation;
 	};
 
 	// Get resources by category - for ships, show all ships in fleet; for others, show totals from all ships or selected ship's complement

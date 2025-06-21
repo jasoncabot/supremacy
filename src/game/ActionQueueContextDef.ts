@@ -1,33 +1,58 @@
 import { createContext, useContext } from "react";
-import { QueuedAction } from "./types/actionQueue";
-import { ActionTarget } from "./types/actions";
+import { AssignedCommandType, MissionType } from "../../worker/api";
+import {
+	BuildActionData,
+	MissionActionData,
+	QueuedAction,
+} from "./types/actionQueue";
+import {
+	ActionTarget,
+	FleetTarget,
+	MissionTarget,
+	ShipTarget,
+	StructureTarget,
+	UnitTarget,
+} from "./types/actions";
 
 export interface ActionQueueContextType {
 	actions: QueuedAction[];
 	addAction: (action: Omit<QueuedAction, "id" | "timestamp">) => void;
 	removeAction: (actionId: string) => void;
 	clearActions: () => void;
-	
+
 	// Specific action functions for type safety and consistency
-	createFleet: (sourceShipId: string, newFleetName: string) => string; // Returns the new fleet ID
-	moveUnit: (sourceId: string, sourceType: string, target: ActionTarget) => void;
-	scrapUnit: (sourceId: string, sourceType: string) => void;
-	renameUnit: (sourceId: string, sourceType: string, newName: string) => void;
-	bombardTarget: (fleetId: string, target: ActionTarget) => void;
-	assaultTarget: (fleetId: string, target: ActionTarget) => void;
-	executeMission: (personnelId: string, target: ActionTarget, missionType?: string, missionData?: { agents?: string[]; decoys?: string[] }) => void;
-	issueCommand: (personnelId: string, commandType: string, data?: Record<string, unknown>) => void;
-	buildItem: (structureId: string, structureType: string, buildType: string, data?: Record<string, unknown>) => void;
-	stopProduction: (structureId: string, structureType: string) => void;
-	abortMission: (missionId: string) => void;
+	createFleet: (ships: ShipTarget[], newFleetName: string) => string;
+	moveUnit: (unit: UnitTarget, destination: ActionTarget) => void;
+	scrap: (unit: UnitTarget | StructureTarget | ShipTarget) => void;
+	renameUnit: (unit: UnitTarget, newName: string) => void;
+	bombardTarget: (fleet: FleetTarget, target: ActionTarget) => void;
+	assaultTarget: (fleet: FleetTarget, target: ActionTarget) => void;
+	executeMission: (
+		sources: UnitTarget[],
+		target: ActionTarget,
+		missionType: MissionType,
+		missionData?: MissionActionData,
+	) => void;
+	assignCommand: (unit: UnitTarget, commandType: AssignedCommandType) => void;
+	buildItem: (
+		structures: StructureTarget[],
+		buildType: string,
+		data?: BuildActionData,
+	) => void;
+	stopProduction: (structures: StructureTarget[]) => void;
+	abortMission: (mission: MissionTarget) => void;
 }
 
-export const ActionQueueContext = createContext<ActionQueueContextType | undefined>(undefined);
+export const ActionQueueContext = createContext<
+	ActionQueueContextType | undefined
+>(undefined);
 
 export const useActionQueue = (): ActionQueueContextType => {
 	const context = useContext(ActionQueueContext);
 	if (!context) {
-		throw new Error("useActionQueue must be used within an ActionQueueProvider");
+		throw new Error(
+			"useActionQueue must be used within an ActionQueueProvider",
+		);
 	}
 	return context;
 };

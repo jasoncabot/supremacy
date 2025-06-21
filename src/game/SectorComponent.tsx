@@ -36,7 +36,6 @@ const SectorComponent: React.FC<SectorComponentProps> = ({
 			{/* Planets container */}
 			<div className="relative h-full w-full p-1">
 				{planets.map((planet, index) => {
-					const pixelSize = 15; // All planet images are 15x15px
 
 					// Responsive usable area calculation (sector size - 2px padding)
 					// Mobile: 80px - 2px = 78px, SM: 96px - 2px = 94px, MD: 112px - 2px = 110px, LG+: 120px - 2px = 118px
@@ -48,6 +47,7 @@ const SectorComponent: React.FC<SectorComponentProps> = ({
 					};
 
 					const usableArea = getUsableArea();
+					const pixelSize = Math.min(usableArea / 3, 20); // Ensure planets fit within the sector
 					const planetX = planet.metadata.position
 						? Math.min(
 								Math.max(planet.metadata.position.x * usableArea, 0),
@@ -70,7 +70,6 @@ const SectorComponent: React.FC<SectorComponentProps> = ({
 							filter={filter}
 							x={planetX}
 							y={planetY}
-							pixelSize={pixelSize}
 						/>
 					);
 				})}

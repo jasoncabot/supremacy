@@ -292,6 +292,8 @@ export type MissionType =
 	| "subdue_uprising"
 	| "troop_training_research";
 
+export type AssignedCommandType = "admiral" | "general" | "commander";
+
 export type PersonnelResource = ResourceBase & {
 	type: "personnel";
 	subtype: PersonnelSubtype;

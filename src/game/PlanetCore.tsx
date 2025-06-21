@@ -4,6 +4,8 @@ import { type Faction } from "../adornments";
 import { FilterType } from "./Filters";
 import PlanetAdornments from "./PlanetAdornments";
 import StarLegend from "./StarLegend";
+import { ViewfinderCircleIcon } from "@heroicons/react/24/outline";
+import { useSelectionContext } from "../hooks/useSelectionContext";
 
 interface PlanetCoreProps {
 	planet: PlanetView;
@@ -29,8 +31,13 @@ const PlanetCore: React.FC<PlanetCoreProps> = ({
 	onPlanetClick,
 	interactive = false,
 }) => {
+	const { selectionState } = useSelectionContext();
+	const isTargetMode = selectionState === "awaiting-target";
+
 	return (
-		<div className="relative flex items-center justify-center">
+		<div
+			className={`relative flex items-center justify-center ${isTargetMode ? "cursor-pointer" : ""}`}
+		>
 			{/* Adornments positioned around planet - only show if discovered */}
 			{planet.discovered && (
 				<PlanetAdornments
@@ -54,6 +61,13 @@ const PlanetCore: React.FC<PlanetCoreProps> = ({
 				className={`h-[37px] w-[37px] shrink-0`}
 				onClick={onPlanetClick}
 			/>
+
+			{/* Display targeting icon when in target selection mode */}
+			{isTargetMode && (
+				<div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded">
+					<ViewfinderCircleIcon className="h-10 w-10 text-red-500 drop-shadow-lg" />
+				</div>
+			)}
 		</div>
 	);
 };

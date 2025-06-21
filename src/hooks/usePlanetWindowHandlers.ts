@@ -1,6 +1,6 @@
 import { PlanetView } from "../../worker/api";
+import { WindowInfoType } from "../game/WindowInfo";
 import { useWindowContext } from "../hooks/useWindowContext";
-import { WindowInfoType } from "./WindowInfo";
 
 interface WindowConfig {
 	type: WindowInfoType;

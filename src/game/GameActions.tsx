@@ -1,6 +1,6 @@
-import React, { useState } from "react";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import React, { useState } from "react";
 import { GameAction } from "../../worker/api";
 import { useGame } from "../hooks/useGame";
 import { useActionQueue } from "./ActionQueueContextDef";
@@ -80,7 +80,7 @@ const GameActions: React.FC<GameActionsProps> = ({ onEndTurn }) => {
 							</DialogTitle>
 							<button
 								onClick={() => setShowActionQueue(false)}
-								className="rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200"
+								className="cursor-pointer rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200"
 							>
 								<XMarkIcon className="h-5 w-5" />
 							</button>

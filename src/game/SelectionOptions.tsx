@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import React from "react";
 import {
-	SelectionKind,
+	SelectionMode,
 	useSelectionContext,
 } from "../hooks/useSelectionContext";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
@@ -25,13 +25,13 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 		selectedItems,
 		selectionState,
 		currentAction,
-		toggleSelectionKind,
+		toggleSelectionMode: toggleSelectionKind,
 		startTargetSelection,
 		cancelTargetSelection,
 		showActionConfirmation,
 	} = useSelectionContext();
 
-	const getButtonClasses = (mode: SelectionKind) => {
+	const getButtonClasses = (mode: SelectionMode) => {
 		const baseClasses =
 			"flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-sm transition-colors";
 		const activeClasses = "bg-indigo-600 text-white";

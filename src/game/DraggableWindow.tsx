@@ -107,12 +107,12 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		// Check if touch target is any button, input, select, or other interactive element
 		const targetElement = e.target as HTMLElement;
 		if (
-			targetElement.closest('button') ||
-			targetElement.closest('input') ||
-			targetElement.closest('select') ||
-			targetElement.closest('textarea') ||
+			targetElement.closest("button") ||
+			targetElement.closest("input") ||
+			targetElement.closest("select") ||
+			targetElement.closest("textarea") ||
 			targetElement.closest('[role="button"]') ||
-			targetElement.closest('a[href]')
+			targetElement.closest("a[href]")
 		) {
 			// If any interactive element was touched, don't activate dragging
 			return;
@@ -163,16 +163,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		// Add Tailwind classes to the body to prevent scrolling when dragging
 		const preventBodyScroll = () => {
 			if (dragging) {
-				// Use the custom CSS class defined in index.css
-				document.documentElement.classList.add("overflow-hidden");
 				document.body.classList.add("window-dragging");
-				// Apply cursor-grabbing globally when dragging
-				document.body.style.cursor = "grabbing";
 			} else {
-				document.documentElement.classList.remove("overflow-hidden");
 				document.body.classList.remove("window-dragging");
-				// Reset cursor
-				document.body.style.cursor = "";
 			}
 		};
 
@@ -318,16 +311,17 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 					</button>
 				)}
 
-				<h2
-					className={
-						`flex-1 ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none py-2 text-center font-semibold text-white select-none` +
-						(windowInfo.type === "sector" ? " text-xl" : " text-xs")
-					}
+				<div
+					className={`flex flex-1 items-center ${dragging ? "cursor-grabbing" : "cursor-grab"} touch-none text-center font-semibold text-white select-none ${windowInfo.type === "sector" ? "text-xl" : "text-xs"}`}
 					onMouseDown={onMouseDown}
 					onTouchStart={onTouchStart}
 				>
-					{windowInfo.title}
-				</h2>
+					<h2
+						className={`flex-1 ${windowInfo.type === "sector" ? "pl-20" : ""}`}
+					>
+						{windowInfo.title}
+					</h2>
+				</div>
 
 				<div className="mx-2 my-2 flex items-start space-x-2">
 					<button

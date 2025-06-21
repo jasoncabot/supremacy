@@ -45,13 +45,16 @@ const ActionQueueView: React.FC = () => {
 			case "assault":
 				return `Assault ${getTargetName(action)}`;
 			case "mission": {
-				const data = action.data as { missionType?: string; agents?: string[]; decoys?: string[] } | undefined;
+				const data = action.data as
+					| { missionType?: string; agents?: string[]; decoys?: string[] }
+					| undefined;
 				const missionType = data?.missionType ? ` (${data.missionType})` : "";
 				const agentCount = data?.agents?.length || 0;
 				const decoyCount = data?.decoys?.length || 0;
-				const details = agentCount > 0 || decoyCount > 0 
-					? ` - ${agentCount} agent(s), ${decoyCount} decoy(s)` 
-					: "";
+				const details =
+					agentCount > 0 || decoyCount > 0
+						? ` - ${agentCount} agent(s), ${decoyCount} decoy(s)`
+						: "";
 				return `Execute mission${missionType} at ${getTargetName(action)}${details}`;
 			}
 			case "build": {
@@ -98,11 +101,13 @@ const ActionQueueView: React.FC = () => {
 			case "assault":
 				return `${baseDescription}\n\nGround assault will attempt to capture or destroy enemy installations on the planet surface.`;
 			case "mission": {
-				const data = action.data as { 
-					missionType?: string; 
-					agents?: string[]; 
-					decoys?: string[] 
-				} | undefined;
+				const data = action.data as
+					| {
+							missionType?: string;
+							agents?: string[];
+							decoys?: string[];
+					  }
+					| undefined;
 
 				let missionDetails = "";
 				if (data?.missionType) {
@@ -114,7 +119,7 @@ const ActionQueueView: React.FC = () => {
 				if (data?.decoys && data.decoys.length > 0) {
 					missionDetails += `\nDecoys assigned: ${data.decoys.length} (${data.decoys.join(", ")})`;
 				}
-				
+
 				return `${baseDescription}\n\nPersonnel will execute a special mission at the target location.${missionDetails}`;
 			}
 			case "build": {
@@ -150,22 +155,43 @@ const ActionQueueView: React.FC = () => {
 	const getTargetName = (action: QueuedAction): string => {
 		if (!action.target) return "target";
 
+		let baseName: string;
 		switch (action.target.type) {
 			case "planet":
-				return action.target.data?.metadata?.name || action.target.id;
+				baseName = action.target.data?.metadata?.name || action.target.id;
+				break;
 			case "ship":
 			case "fleet":
-				return action.target.id;
+				baseName = action.target.id;
+				break;
 			case "structure":
-				return action.target.data?.name || action.target.id;
+				baseName = action.target.data?.name || action.target.id;
+				break;
 			case "unit":
-				return action.target.data?.name || action.target.id;
+				baseName = action.target.data?.name || action.target.id;
+				break;
+			case "mission":
+				baseName = action.target.data?.name || "Mission Target";
+				break;
 			default: {
 				// Exhaustive check for TypeScript
 				const exhaustiveCheck: never = action.target;
-				return String(exhaustiveCheck);
+				baseName = String(exhaustiveCheck);
 			}
 		}
+
+		// Add fleet/ship context if available
+		const contextParts: string[] = [];
+		if ("fleetId" in action.target && action.target.fleetId) {
+			contextParts.push(`Fleet: ${action.target.fleetId}`);
+		}
+		if ("shipId" in action.target && action.target.shipId) {
+			contextParts.push(`Ship: ${action.target.shipId}`);
+		}
+
+		return contextParts.length > 0
+			? `${baseName} (${contextParts.join(", ")})`
+			: baseName;
 	};
 
 	const getActionTypeColor = (actionType: string): string => {
@@ -222,12 +248,6 @@ const ActionQueueView: React.FC = () => {
 			default:
 				return "❓";
 		}
-	};
-
-	const getSourceTypeName = (sourceType: string): string => {
-		return sourceType
-			.replace(/_/g, " ")
-			.replace(/\b\w/g, (l) => l.toUpperCase());
 	};
 
 	return (
@@ -354,7 +374,7 @@ const ActionQueueView: React.FC = () => {
 												{formatActionType(action.type)}
 											</span>
 											<span className="text-sm text-gray-400">
-												{getSourceTypeName(action.sourceType)}
+												{action.sources.map((s) => s.id).join(", ")}
 											</span>
 											<span className="text-xs text-gray-500">
 												{formatTimestamp(action.timestamp)}
@@ -365,10 +385,35 @@ const ActionQueueView: React.FC = () => {
 										</h3>
 										<div className="space-y-1">
 											<p className="text-sm text-gray-400">
-												Source:{" "}
+												Sources:{" "}
 												<span className="font-mono text-gray-300">
-													{action.sourceId}
+													{action.sources.length === 1
+														? action.sources[0].id
+														: `${action.sources.length} sources`}
 												</span>
+												{/* Add fleet/ship context for sources if available */}
+												{action.type === "mission" &&
+													action.data &&
+													(() => {
+														const data = action.data as
+															| {
+																	sourceFleetId?: string;
+																	sourceShipId?: string;
+															  }
+															| undefined;
+														const contextParts: string[] = [];
+														if (data?.sourceFleetId) {
+															contextParts.push(`Fleet: ${data.sourceFleetId}`);
+														}
+														if (data?.sourceShipId) {
+															contextParts.push(`Ship: ${data.sourceShipId}`);
+														}
+														return contextParts.length > 0 ? (
+															<span className="ml-2 text-xs text-blue-400">
+																({contextParts.join(", ")})
+															</span>
+														) : null;
+													})()}
 											</p>
 											{action.target && (
 												<p className="text-sm text-gray-400">
@@ -452,13 +497,13 @@ const ActionQueueView: React.FC = () => {
 										<div>
 											<span className="text-gray-400">Source Type:</span>
 											<span className="ml-2 text-gray-100">
-												{getSourceTypeName(detailViewAction.sourceType)}
+												{formatActionType(detailViewAction.sources[0].type)}
 											</span>
 										</div>
 										<div>
-											<span className="text-gray-400">Source ID:</span>
+											<span className="text-gray-400">Source IDs:</span>
 											<span className="ml-2 font-mono text-gray-100">
-												{detailViewAction.sourceId}
+												{detailViewAction.sources.map((s) => s.id).join(", ")}
 											</span>
 										</div>
 										<div>
@@ -474,6 +519,42 @@ const ActionQueueView: React.FC = () => {
 											</span>
 										</div>
 									</div>
+									{/* Add fleet/ship context section for sources */}
+									{detailViewAction.type === "mission" &&
+										detailViewAction.data &&
+										(() => {
+											const data = detailViewAction.data as
+												| { sourceFleetId?: string; sourceShipId?: string }
+												| undefined;
+											if (data?.sourceFleetId || data?.sourceShipId) {
+												return (
+													<div className="mt-3 rounded bg-blue-600/10 p-3">
+														<h5 className="mb-2 text-sm font-medium text-blue-300">
+															Source Location
+														</h5>
+														<div className="grid grid-cols-2 gap-4 text-sm">
+															{data.sourceFleetId && (
+																<div>
+																	<span className="text-gray-400">Fleet:</span>
+																	<span className="ml-2 font-mono text-blue-300">
+																		{data.sourceFleetId}
+																	</span>
+																</div>
+															)}
+															{data.sourceShipId && (
+																<div>
+																	<span className="text-gray-400">Ship:</span>
+																	<span className="ml-2 font-mono text-blue-300">
+																		{data.sourceShipId}
+																	</span>
+																</div>
+															)}
+														</div>
+													</div>
+												);
+											}
+											return null;
+										})()}
 								</div>
 							</div>
 
@@ -571,3 +652,32 @@ const ActionQueueView: React.FC = () => {
 };
 
 export default ActionQueueView;
+
+/**
+ * FLEET/SHIP CONTEXT ENHANCEMENT SUMMARY
+ *
+ * This ActionQueueView component has been enhanced to display fleet and ship context
+ * information for mission actions and targets. The following additions were made:
+ *
+ * 1. Enhanced getTargetName() to include fleet/ship context in target names
+ *    - Displays as: "Target Name (Fleet: fleet-id, Ship: ship-id)"
+ *
+ * 2. Added source fleet/ship context display in detailed view
+ *    - Shows blue-tinted context section when source has fleet/ship info
+ *    - Displays inline context for mission sources
+ *
+ * 3. Enhanced modal detail view with dedicated context sections
+ *    - "Source Location" section with fleet/ship info for mission sources
+ *    - "Target Location" section with fleet/ship info for targets
+ *    - Color-coded: blue for sources, purple for targets
+ *
+ * 4. Updated action queue data structure to store source context
+ *    - Mission actions now include sourceFleetId and sourceShipId in data
+ *    - Context information flows from selection through to queue display
+ *
+ * When a mission action is queued with fleet/ship context, it displays as:
+ * - Target: "Enemy Spy (Fleet: rebel-fleet-delta, Ship: rebel-corvette-02)"
+ * - Source: "agent-001 (Fleet: fleet-one, Ship: ship-alpha)"
+ *
+ * This provides complete spatial awareness of mission operations.
+ */

@@ -14,9 +14,9 @@ import {
 	PlanetView,
 } from "../../worker/api";
 import { getManufacturingCardImage } from "../cards";
-import { SelectableItem } from "../hooks/useSelectionContext";
-import MiniCardView from "./MiniCardView";
 import { rawMaterialImage } from "../cards/cards";
+import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
+import MiniCardView from "./MiniCardView";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: ManufacturingResource): string => {
@@ -84,7 +84,7 @@ export const ManufacturingOverview: React.FC<{
 
 	return (
 		<TabGroup
-			className="flex w-full flex-col"
+			className="flex h-full w-full flex-col"
 			selectedIndex={categories.findIndex((cat) => cat.id === selectedCategory)}
 			onChange={(index) => setSelectedCategory(categories[index].id)}
 		>
@@ -122,7 +122,7 @@ export const ManufacturingOverview: React.FC<{
 				})}
 			</TabList>
 
-			<TabPanels className="mt-2 flex-1 flex-grow">
+			<TabPanels className="mt-2 h-[200px] flex-1 flex-grow">
 				{categories.map((category) => {
 					if (category.id === "build") {
 						return (
@@ -220,7 +220,7 @@ export const ManufacturingOverview: React.FC<{
 						return (
 							<TabPanel key={category.id} className="rounded-md p-1">
 								<div className="flex flex-col">
-									<div className="flex-grow overflow-auto scrollbar-none">
+									<div className="scrollbar-none flex-grow overflow-auto">
 										{(() => {
 											const totalNaturalResources =
 												planet.state?.naturalResources ?? 0;
@@ -272,7 +272,10 @@ export const ManufacturingOverview: React.FC<{
 																	subtype: item.resource.subtype,
 																	name: item.resource.name,
 																	status: item.resource.status,
-																} as SelectableItem;
+																	location: {
+																		planetId: planet.metadata.id,
+																	},
+																} as SelectableItemWithLocation;
 
 																return (
 																	<MiniCardView
@@ -330,9 +333,12 @@ export const ManufacturingOverview: React.FC<{
 					}
 
 					return (
-						<TabPanel key={category.id} className="rounded-md p-1">
+						<TabPanel
+							key={category.id}
+							className="h-full overflow-scroll rounded-md p-1"
+						>
 							<div className="flex flex-col">
-								<div className="flex-grow overflow-auto scrollbar-none">
+								<div className="scrollbar-none flex-grow overflow-auto">
 									{resources[category.id as ManufacturingCategory]?.length >
 									0 ? (
 										<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -353,7 +359,10 @@ export const ManufacturingOverview: React.FC<{
 														subtype: resource.subtype,
 														name: resource.name,
 														status: resource.status,
-													} as SelectableItem;
+														location: {
+															planetId: planet.metadata.id,
+														},
+													} as SelectableItemWithLocation;
 
 													return (
 														<MiniCardView

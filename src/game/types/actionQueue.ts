@@ -1,11 +1,11 @@
 // Action queue types for the game
+import { AssignedCommandType } from "../../../worker/api";
 import type { ActionTarget, ActionType } from "./actions";
 
 export interface QueuedAction {
 	id: string; // Unique ID for this queued action
 	type: ActionType;
-	sourceId: string; // ID of the resource performing the action
-	sourceType: string; // Type of the resource (ship, fleet, etc.)
+	sources: ActionTarget[]; // List of sources for the action (e.g., ships, personnel)
 	target?: ActionTarget; // Optional target for the action
 	data?: Record<string, unknown>; // Additional action-specific data
 	timestamp: number; // When the action was queued
@@ -26,7 +26,7 @@ export interface MissionActionData extends Record<string, unknown> {
 }
 
 export interface CommandActionData extends Record<string, unknown> {
-	commandType: string; // The type of command to issue
+	rank: AssignedCommandType; // The type of command to assign
 }
 
 export interface BuildActionData extends Record<string, unknown> {

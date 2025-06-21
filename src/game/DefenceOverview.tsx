@@ -7,10 +7,10 @@ import {
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react"; // Added React import
 import { DefenceCategory, DefenseResource, PlanetView } from "../../worker/api";
-import { SelectableItem } from "../hooks/useSelectionContext";
 import { getCardImage } from "../cards";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { ResourceList } from "./components/ResourceList";
+import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: DefenseResource): string => {
@@ -75,19 +75,27 @@ export const DefenceOverview: React.FC<{
 		return ""; // No overlay
 	}
 
-	const getImagePairs = (resource: DefenseResource) => [{
-		overlay: getOverlayImage(resource),
-		foreground: getCardImage(resource),
-		background: getBackgroundImage(resource),
-	}];
+	const getImagePairs = (resource: DefenseResource) => [
+		{
+			overlay: getOverlayImage(resource),
+			foreground: getCardImage(resource),
+			background: getBackgroundImage(resource),
+		},
+	];
 
-	const getSelectableItem = (resource: DefenseResource): SelectableItem => ({
-		id: resource.id,
-		type: resource.type,
-		subtype: resource.subtype,
-		name: resource.name,
-		status: resource.status,
-	} as SelectableItem);
+	const getSelectableItem = (
+		resource: DefenseResource,
+	): SelectableItemWithLocation =>
+		({
+			id: resource.id,
+			type: resource.type,
+			subtype: resource.subtype,
+			name: resource.name,
+			status: resource.status,
+			location: {
+				planetId: planet.metadata.id,
+			},
+		}) as SelectableItemWithLocation;
 
 	const owner = planet.state?.owner || "Neutral";
 
@@ -114,7 +122,7 @@ export const DefenceOverview: React.FC<{
 				/>
 			),
 			hasResources,
-			owner
+			owner,
 		};
 	});
 

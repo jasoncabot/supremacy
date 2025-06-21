@@ -3,57 +3,80 @@ import {
 	DefenseResource,
 	FleetResource,
 	ManufacturingResource,
+	MissionResource,
+	MissionType,
 	PlanetView,
 	ShipResource,
 } from "../../worker/api";
 import type { ActionDefinition } from "../game/types/actions";
 
-export type SelectableItem =
+type SelectableItem =
 	| DefenseResource
 	| ManufacturingResource
 	| ShipResource
 	| FleetResource
+	| MissionResource
 	| (PlanetView & { type: "planet"; id: string });
 
-export type SelectionKind = "none" | "single" | "multiple" | "target";
+export type SelectableItemWithLocation = SelectableItem & {
+	location: {
+		planetId?: string;
+		fleetId?: string;
+		shipId?: string;
+	};
+};
+
+export type SelectionMode = "none" | "single" | "multiple" | "target";
 
 export type SelectionState = "idle" | "awaiting-target" | "action-confirmation";
 
 interface SelectionContextType {
-	selectedItems: SelectableItem[];
-	selectionMode: SelectionKind;
+	selectedItems: SelectableItemWithLocation[];
+	selectionMode: SelectionMode;
 	selectionState: SelectionState;
 	currentAction: string | null;
-	targetItem: SelectableItem | null;
+	targetItem: SelectableItemWithLocation | null;
 	// Add action confirmation state
 	pendingActionDetails: {
 		actionId: string;
 		actionDef: ActionDefinition;
-		sources: SelectableItem[];
-		target?: SelectableItem;
-		missionData?: { agents?: string[]; decoys?: string[]; missionType?: string };
+		sources: SelectableItemWithLocation[];
+		target?: SelectableItemWithLocation;
+		missionData?: {
+			agents?: string[];
+			decoys?: string[];
+			missionType?: string;
+		};
 	} | null;
-	toggleSelectionKind: (mode: SelectionKind) => void;
-	selectItem: (item: SelectableItem) => void;
+	toggleSelectionMode: (mode: SelectionMode) => void;
+	selectItem: (item: SelectableItemWithLocation) => void;
 	deselectItem: (itemId: string) => void;
 	clearSelection: () => void;
 	isSelected: (itemId: string) => boolean;
 	startTargetSelection: (
 		actionId: string,
 		actionDef?: ActionDefinition,
-		sourceUnits?: SelectableItem[],
+		sourceUnits?: SelectableItemWithLocation[],
 	) => void;
-	selectTarget: (target: SelectableItem) => void;
+	selectTarget: (target: SelectableItemWithLocation) => void;
 	executeAction: () => void;
 	cancelTargetSelection: () => void;
 	showActionConfirmation: (
 		actionId: string,
 		actionDef: ActionDefinition,
-		sources: SelectableItem[],
-		target?: SelectableItem,
+		sources: SelectableItemWithLocation[],
+		target?: SelectableItemWithLocation,
 	) => void;
-	updateMissionData: (missionData: { agents?: string[]; decoys?: string[]; missionType?: string }) => void;
-	confirmAction: (missionData?: { agents?: string[]; decoys?: string[]; missionType?: string }) => void;
+	updateMissionData: (missionData: {
+		agents?: string[];
+		decoys?: string[];
+		missionType?: MissionType;
+	}) => void;
+	confirmAction: (missionData?: {
+		agents?: string[];
+		decoys?: string[];
+		missionType: MissionType;
+	}) => void;
 	cancelActionConfirmation: () => void;
 }
 
@@ -65,7 +88,7 @@ export const SelectionContext = createContext<SelectionContextType>({
 	currentAction: null,
 	targetItem: null,
 	pendingActionDetails: null,
-	toggleSelectionKind: () => {},
+	toggleSelectionMode: () => {},
 	selectItem: () => {},
 	deselectItem: () => {},
 	clearSelection: () => {},

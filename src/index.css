@@ -27,6 +27,7 @@ body.window-dragging {
 	height: 100%;
 	overflow: hidden;
 	touch-action: none;
+	cursor: grabbing;
 	-webkit-overflow-scrolling: none;
 	overscroll-behavior: none;
 }

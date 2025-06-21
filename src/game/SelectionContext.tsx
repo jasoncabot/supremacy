@@ -1,40 +1,77 @@
 import React, { ReactNode, useState } from "react";
 import {
-	SelectableItem,
+	DefenseResource,
+	FleetResource,
+	ManufacturingResource,
+	MissionResource,
+	MissionType,
+	PlanetView,
+	ShipResource,
+} from "../../worker/api";
+import {
+	SelectableItemWithLocation,
 	SelectionContext,
-	SelectionKind,
+	SelectionMode,
 	SelectionState,
 } from "../hooks/useSelectionContext";
 import { useWindowContext } from "../hooks/useWindowContext";
-import { getAvailableActions, type ActionDefinition } from "./types/actions";
-import { WindowInfo } from "./WindowInfo";
 import { useActionQueue } from "./ActionQueueContextDef";
-import { ActionTarget } from "./types/actions";
+import {
+	ActionTarget,
+	FleetTarget,
+	getAvailableActions,
+	MissionTarget,
+	PlanetTarget,
+	ShipTarget,
+	StructureTarget,
+	UnitTarget,
+	type ActionDefinition,
+} from "./types/actions";
+import { WindowInfo } from "./WindowInfo";
 
 export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	const { handleOpenWindow, handleCloseWindow } = useWindowContext();
-	const { moveUnit, scrapUnit, createFleet, executeMission } = useActionQueue();
-	const [selectedItems, setSelectedItems] = useState<SelectableItem[]>([]);
-	const [selectionMode, setSelectionKind] = useState<SelectionKind>("none");
+	const {
+		executeMission,
+		createFleet,
+		moveUnit,
+		scrap,
+		renameUnit,
+		bombardTarget,
+		assaultTarget,
+		assignCommand,
+		buildItem,
+		stopProduction,
+		abortMission,
+	} = useActionQueue();
+	const [selectedItems, setSelectedItems] = useState<
+		SelectableItemWithLocation[]
+	>([]);
+	const [selectionMode, setSelectionKind] = useState<SelectionMode>("none");
 	const [selectionState, setSelectionState] = useState<SelectionState>("idle");
 	const [currentAction, setCurrentAction] = useState<string | null>(null);
 	const [currentActionDef, setCurrentActionDef] =
 		useState<ActionDefinition | null>(null);
-	const [actionSourceUnits, setActionSourceUnits] = useState<SelectableItem[]>(
-		[],
-	);
-	const [targetItem, setTargetItem] = useState<SelectableItem | null>(null);
+	const [actionSourceUnits, setActionSourceUnits] = useState<
+		SelectableItemWithLocation[]
+	>([]);
+	const [targetItem, setTargetItem] =
+		useState<SelectableItemWithLocation | null>(null);
 	const [pendingActionDetails, setPendingActionDetails] = useState<{
 		actionId: string;
 		actionDef: ActionDefinition;
-		sources: SelectableItem[];
-		target?: SelectableItem;
-		missionData?: { agents?: string[]; decoys?: string[]; missionType?: string };
+		sources: SelectableItemWithLocation[];
+		target?: SelectableItemWithLocation;
+		missionData?: {
+			agents?: string[];
+			decoys?: string[];
+			missionType?: MissionType;
+		};
 	} | null>(null);
 
-	const toggleSelectionKind = (mode: SelectionKind) => {
+	const toggleSelectionKind = (mode: SelectionMode) => {
 		if (mode === selectionMode) {
 			// If clicking the active mode, turn it off
 			setSelectionKind("none");
@@ -50,7 +87,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		}
 	};
 
-	const selectItem = (item: SelectableItem) => {
+	const selectItem = (item: SelectableItemWithLocation) => {
 		if (selectionMode === "none") return;
 
 		if (selectionMode === "target") {
@@ -97,7 +134,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const startTargetSelection = (
 		actionId: string,
 		actionDef?: ActionDefinition,
-		sourceUnits?: SelectableItem[],
+		sourceUnits?: SelectableItemWithLocation[],
 	) => {
 		// Find the action definition if not provided
 		let resolvedActionDef = actionDef;
@@ -120,8 +157,17 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		setTargetItem(null);
 	};
 
-	const selectTarget = (target: SelectableItem) => {
-		setTargetItem(target);
+	const selectTarget = (target: SelectableItemWithLocation) => {
+		const targetWithContext: SelectableItemWithLocation = {
+			...target,
+			location: {
+				planetId: target.location?.planetId || undefined,
+				fleetId: target.location?.fleetId || undefined,
+				shipId: target.location?.shipId || undefined,
+			},
+		};
+
+		setTargetItem(targetWithContext);
 		// Show action confirmation window instead of automatically executing
 		if (currentAction && currentActionDef) {
 			// Use action source units if available, otherwise fall back to selected items
@@ -132,32 +178,45 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 					currentAction,
 					currentActionDef,
 					sources,
-					target,
+					targetWithContext,
 				);
 			}
 		}
 	};
 
-	// Helper function to create proper ActionTarget from SelectableItem
-	const createActionTarget = (item: SelectableItem): ActionTarget | null => {
-		const itemType = item.type;
+	// Helper function to create proper ActionTarget from SelectableItemWithContext
+	const createActionTarget = (
+		targetItem: SelectableItemWithLocation,
+	): ActionTarget | null => {
+		const itemType = targetItem.type;
 		switch (itemType) {
 			case "planet":
 				return {
 					type: "planet",
-					id: item.id,
-					data: item as unknown as import("../../worker/api").PlanetView,
-				};
+					id: targetItem.id,
+					data: targetItem as unknown as PlanetView,
+				} as PlanetTarget;
+			case "mission":
+				return {
+					type: "mission",
+					id: targetItem.id,
+					data: targetItem as unknown as MissionResource,
+					planetId: targetItem.location.planetId,
+				} as MissionTarget;
 			case "capital_ship":
 				return {
 					type: "ship",
-					id: item.id,
-				};
+					id: targetItem.id,
+					data: targetItem as unknown as ShipResource,
+					planetId: targetItem.location.planetId,
+				} as ShipTarget;
 			case "fleet":
 				return {
 					type: "fleet",
-					id: item.id,
-				};
+					id: targetItem.id,
+					data: targetItem as unknown as FleetResource,
+					planetId: targetItem.location.planetId,
+				} as FleetTarget;
 			case "shipyard":
 			case "training_facility":
 			case "construction_yard":
@@ -165,9 +224,10 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			case "mine":
 				return {
 					type: "structure",
-					id: item.id,
-					data: item as unknown as import("../../worker/api").ManufacturingResource,
-				};
+					id: targetItem.id,
+					data: targetItem as unknown as ManufacturingResource,
+					planetId: targetItem.location.planetId,
+				} as StructureTarget;
 			case "personnel":
 			case "troop":
 			case "squadron":
@@ -175,9 +235,11 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			case "battery":
 				return {
 					type: "unit",
-					id: item.id,
-					data: item as unknown as import("../../worker/api").DefenseResource,
-				};
+					id: targetItem.id,
+					data: targetItem as unknown as DefenseResource,
+					planetId: targetItem.location.planetId,
+					shipId: targetItem.location.shipId,
+				} as UnitTarget;
 			default: {
 				// This should never happen if all cases are covered
 				const exhaustiveCheck: never = itemType;
@@ -193,18 +255,20 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 
 		const { actionDef, sources, target } = details;
 
-		console.log(
-			`Executing action ${actionDef.type} on ${sources.length} source(s)${target ? ` with target ${target.type}:${target.id}` : ""}`,
-		);
-
 		// Handle different action types
 		switch (actionDef.type) {
 			case "create_fleet": {
 				// For create fleet, we expect a single ship source
 				if (sources.length === 1 && sources[0].type === "capital_ship") {
-					const ship = sources[0];
-					const newFleetName = `Fleet ${ship.name}`;
-					createFleet(ship.id, newFleetName);
+					const ships = sources.map((x) => createActionTarget(x) as ShipTarget);
+					const newFleetName = `New Fleet ${sources[0].name || sources[0].id}`;
+					const newFleetId = createFleet(ships, newFleetName);
+					if (newFleetId) {
+						// Optionally, you can handle the new fleet ID here
+						console.log(`Created new fleet with ID: ${newFleetId}`);
+					} else {
+						console.warn("Failed to create fleet with provided ships.");
+					}
 				}
 				break;
 			}
@@ -214,7 +278,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 					const actionTarget = createActionTarget(target);
 					if (actionTarget) {
 						sources.forEach((source) => {
-							moveUnit(source.id, source.type, actionTarget);
+							moveUnit(createActionTarget(source) as UnitTarget, actionTarget);
 						});
 					}
 				}
@@ -223,27 +287,120 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 			case "scrap": {
 				// For scrap actions, add to queue without target
 				sources.forEach((source) => {
-					scrapUnit(source.id, source.type);
+					scrap(
+						createActionTarget(source) as
+							| UnitTarget
+							| StructureTarget
+							| ShipTarget,
+					);
 				});
 				break;
 			}
 			case "mission": {
 				// For mission actions, use the primary personnel unit and include mission data
-				const primaryAgent = sources.find((source) => source.type === "personnel");
-				if (primaryAgent && target) {
+				if (target) {
 					const actionTarget = createActionTarget(target);
-					if (actionTarget) {
-						const missionType = details.missionData?.missionType;
+					const actionSourceUnits = sources
+						.map((source) => createActionTarget(source))
+						.filter((x) => x !== null) as UnitTarget[];
+					const missionType = details.missionData?.missionType;
+					if (actionTarget && missionType) {
 						const agents = details.missionData?.agents;
 						const decoys = details.missionData?.decoys;
-						
-						executeMission(
-							primaryAgent.id, 
-							actionTarget, 
-							missionType,
-							{ agents, decoys }
+
+						executeMission(actionSourceUnits, actionTarget, missionType, {
+							agents,
+							decoys,
+						});
+					}
+				}
+				break;
+			}
+			case "rename": {
+				renameUnit(
+					createActionTarget(sources[0]) as UnitTarget,
+					`something new`, // TODO: prompt and gather data
+				);
+				break;
+			}
+			case "bombard": {
+				// For bombard actions, we expect a fleet source and a target
+				if (sources.length === 1 && sources[0].type === "fleet" && target) {
+					const actionTarget = createActionTarget(target);
+					if (actionTarget) {
+						bombardTarget(
+							createActionTarget(sources[0]) as FleetTarget,
+							actionTarget,
 						);
 					}
+				} else {
+					console.warn("Bombard action requires exactly one fleet source.");
+				}
+				break;
+			}
+
+			case "assault": {
+				// For assault actions, we expect a fleet source and a target
+				if (sources.length === 1 && sources[0].type === "fleet" && target) {
+					const actionTarget = createActionTarget(target);
+					if (actionTarget) {
+						assaultTarget(
+							createActionTarget(sources[0]) as FleetTarget,
+							actionTarget,
+						);
+					}
+				} else {
+					console.warn("Assault action requires exactly one fleet source.");
+				}
+				break;
+			}
+			case "command": {
+				// For command actions, we expect a single unit source
+				if (sources.length === 1 && sources[0].type === "personnel") {
+					assignCommand(
+						createActionTarget(sources[0]) as UnitTarget,
+						"admiral", // TODO: prompt and gather command type
+					);
+				} else {
+					console.warn("Command action requires exactly one personnel source.");
+				}
+				break;
+			}
+			case "build": {
+				// For build actions, we expect structure sources and optional data
+				const structures = sources.map(
+					(source) => createActionTarget(source) as StructureTarget,
+				);
+				if (structures.length > 0) {
+					buildItem(structures, "ship", {
+						buildType: "ship", // TODO: prompt and gather build type
+					});
+				} else {
+					console.warn("Build action requires at least one structure source.");
+				}
+				break;
+			}
+			case "stop": {
+				// For stop production actions, we expect structure sources
+				const structures = sources.map(
+					(source) => createActionTarget(source) as StructureTarget,
+				);
+				if (structures.length > 0) {
+					stopProduction(structures);
+				} else {
+					console.warn("Stop action requires at least one structure source.");
+				}
+				break;
+			}
+			case "abort": {
+				// For abort mission actions, we expect a mission target
+				if (target && target.type === "mission") {
+					const actionTarget = createActionTarget(target);
+					if (actionTarget) {
+						abortMission(actionTarget as MissionTarget);
+					}
+				} else {
+					console.warn("Abort action requires a valid mission target.");
 				}
 				break;
 			}
@@ -265,8 +422,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 
 	const getWindowTitle = (
 		actionDef: ActionDefinition,
-		sources: SelectableItem[],
-		target: SelectableItem | undefined,
+		sources: SelectableItemWithLocation[],
+		target: SelectableItemWithLocation | undefined,
 	) => {
 		if (actionDef.type === "mission") {
 			const agents = sources.filter((item) => item.type === "personnel");
@@ -305,8 +462,8 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 	const showActionConfirmation = (
 		actionId: string,
 		actionDef: ActionDefinition,
-		sources: SelectableItem[],
-		target?: SelectableItem,
+		sources: SelectableItemWithLocation[],
+		target?: SelectableItemWithLocation,
 	) => {
 		setPendingActionDetails({
 			actionId,
@@ -329,7 +486,11 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		handleOpenWindow(actionWindow);
 	};
 
-	const updateMissionData = (missionData: { agents?: string[]; decoys?: string[]; missionType?: string }) => {
+	const updateMissionData = (missionData: {
+		agents?: string[];
+		decoys?: string[];
+		missionType?: MissionType;
+	}) => {
 		if (pendingActionDetails) {
 			setPendingActionDetails({
 				...pendingActionDetails,
@@ -338,23 +499,19 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		}
 	};
 
-	const confirmAction = (missionData?: { agents?: string[]; decoys?: string[]; missionType?: string }) => {
+	const confirmAction = (missionData?: {
+		agents?: string[];
+		decoys?: string[];
+		missionType: MissionType;
+	}) => {
 		if (pendingActionDetails) {
 			// Update pending action details with mission data if provided
-			const updatedActionDetails = missionData ? {
-				...pendingActionDetails,
-				missionData,
-			} : pendingActionDetails;
-
-			console.log(
-				`Confirmed action: ${updatedActionDetails.actionId} (${updatedActionDetails.actionDef.label})`,
-				"Sources:",
-				updatedActionDetails.sources,
-				"Target:",
-				updatedActionDetails.target,
-				"Mission Data:",
-				updatedActionDetails.missionData,
-			);
+			const updatedActionDetails = missionData
+				? {
+						...pendingActionDetails,
+						missionData,
+					}
+				: pendingActionDetails;
 
 			// Execute the action using the action queue with updated details
 			executeAction(updatedActionDetails);
@@ -391,7 +548,7 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				currentAction,
 				targetItem,
 				pendingActionDetails,
-				toggleSelectionKind,
+				toggleSelectionMode: toggleSelectionKind,
 				selectItem,
 				deselectItem,
 				clearSelection,
