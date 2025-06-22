@@ -2,6 +2,7 @@ import React from "react";
 import { useGame } from "../hooks/useGame";
 import { FilterType } from "./Filters";
 import Notifications from "./Notifications";
+import OrdersPage from "./OrdersPage";
 import SectorOverview from "./SectorOverview";
 import { MenuView } from "./SideMenu";
 
@@ -31,6 +32,10 @@ const GameContent: React.FC<GameContentProps> = ({ activeView, filter }) => {
 						onMarkRead={markNotificationAsRead}
 					/>
 				</div>
+			)}
+
+			{activeView === "orders" && (
+				<OrdersPage />
 			)}
 
 			{activeView === "finder" && (

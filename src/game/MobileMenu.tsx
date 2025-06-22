@@ -3,6 +3,7 @@ import {
 	ArrowLeftEndOnRectangleIcon,
 	BellAlertIcon,
 	BookOpenIcon,
+	ClipboardDocumentListIcon,
 	Cog6ToothIcon,
 	EllipsisHorizontalIcon,
 	GlobeAltIcon,
@@ -12,6 +13,7 @@ import {
 import React from "react";
 import { useWindowContext } from "../hooks/useWindowContext";
 import { MenuView } from "./SideMenu";
+import { useActionQueue } from "./ActionQueueContextDef";
 
 interface MobileMenuProps {
 	activeView: MenuView;
@@ -27,6 +29,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 	onOpenSettings,
 }) => {
 	const { minimizedWindows, handleMaximizeWindow } = useWindowContext();
+	const { actions } = useActionQueue();
 
 	const mainMenuItems = [
 		{
@@ -42,6 +45,20 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 	];
 
 	const overflowMenuItems = [
+		{
+			id: "orders",
+			label: "Orders",
+			icon: (
+				<div className="relative">
+					<ClipboardDocumentListIcon className="h-5 w-5" />
+					{actions.length > 0 && (
+						<span className="absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center rounded-full bg-blue-600 text-xs font-medium">
+							{actions.length}
+						</span>
+					)}
+				</div>
+			),
+		},
 		{
 			id: "finder",
 			label: "Finder",

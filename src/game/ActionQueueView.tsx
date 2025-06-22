@@ -1,19 +1,17 @@
-import React, { useState } from "react";
 import {
-	TrashIcon,
-	EyeIcon,
-	XMarkIcon,
 	Bars3Icon,
+	ChevronDownIcon,
+	ChevronUpIcon,
 	ListBulletIcon,
+	TrashIcon,
 } from "@heroicons/react/24/outline";
+import React, { useState } from "react";
 import { useActionQueue } from "./ActionQueueContextDef";
 import { QueuedAction } from "./types/actionQueue";
 
 const ActionQueueView: React.FC = () => {
 	const { actions, removeAction, clearActions } = useActionQueue();
-	const [detailViewAction, setDetailViewAction] = useState<QueuedAction | null>(
-		null,
-	);
+	const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
 	const [viewMode, setViewMode] = useState<"compact" | "detailed">("detailed");
 
 	const formatActionType = (type: string): string => {
@@ -314,9 +312,9 @@ const ActionQueueView: React.FC = () => {
 						{actions.map((action, index) => (
 							<div
 								key={action.id}
-								className="hover:bg-gray-750 rounded border border-gray-700 bg-gray-800 px-3 py-2 shadow-sm transition-colors"
+								className="rounded border border-gray-700 bg-gray-800 shadow-sm transition-colors hover:bg-gray-750"
 							>
-								<div className="flex items-center justify-between">
+								<div className="flex items-center justify-between px-3 py-2">
 									<div className="flex min-w-0 flex-1 items-center gap-3">
 										<span className="shrink-0 rounded bg-blue-600 px-2 py-0.5 text-xs font-medium text-white">
 											{index + 1}
@@ -335,11 +333,15 @@ const ActionQueueView: React.FC = () => {
 									</div>
 									<div className="ml-2 flex items-center gap-1">
 										<button
-											onClick={() => setDetailViewAction(action)}
+											onClick={() => setExpandedActionId(expandedActionId === action.id ? null : action.id)}
 											className="cursor-pointer rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-700 hover:text-blue-400"
-											title="View details"
+											title={expandedActionId === action.id ? "Hide details" : "View details"}
 										>
-											<EyeIcon className="h-3.5 w-3.5" />
+											{expandedActionId === action.id ? (
+												<ChevronUpIcon className="h-3.5 w-3.5" />
+											) : (
+												<ChevronDownIcon className="h-3.5 w-3.5" />
+											)}
 										</button>
 										<button
 											onClick={() => removeAction(action.id)}
@@ -350,6 +352,64 @@ const ActionQueueView: React.FC = () => {
 										</button>
 									</div>
 								</div>
+								
+								{/* Expandable Detail Section */}
+								{expandedActionId === action.id && (
+									<div className="border-t border-gray-700 bg-gray-850 p-4">
+										<div className="space-y-4">
+											{/* Action Description */}
+											<div>
+												<h4 className="mb-2 text-sm font-medium text-gray-100">
+													Description
+												</h4>
+												<div className="rounded-lg bg-gray-900 p-3">
+													<p className="whitespace-pre-line text-sm text-gray-200">
+														{getDetailedActionDescription(action)}
+													</p>
+												</div>
+											</div>
+
+											{/* Target Information */}
+											{action.target && (
+												<div>
+													<h4 className="mb-2 text-sm font-medium text-gray-100">
+														Target Information
+													</h4>
+													<div className="rounded-lg bg-gray-900 p-3">
+														<div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+															<div>
+																<span className="text-gray-400">Target Type:</span>
+																<span className="ml-2 text-gray-100">
+																	{action.target.type}
+																</span>
+															</div>
+															<div>
+																<span className="text-gray-400">Target ID:</span>
+																<span className="ml-2 font-mono text-gray-100">
+																	{action.target.id}
+																</span>
+															</div>
+														</div>
+													</div>
+												</div>
+											)}
+
+											{/* Additional Data */}
+											{action.data && Object.keys(action.data).length > 0 && (
+												<div>
+													<h4 className="mb-2 text-sm font-medium text-gray-100">
+														Action Data
+													</h4>
+													<div className="rounded-lg bg-gray-900 p-3">
+														<pre className="overflow-auto text-xs text-gray-300">
+															{JSON.stringify(action.data, null, 2)}
+														</pre>
+													</div>
+												</div>
+											)}
+										</div>
+									</div>
+								)}
 							</div>
 						))}
 					</div>
@@ -359,11 +419,11 @@ const ActionQueueView: React.FC = () => {
 						{actions.map((action, index) => (
 							<div
 								key={action.id}
-								className="hover:bg-gray-750 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm transition-colors"
+								className="rounded-lg border border-gray-700 bg-gray-800 transition-colors hover:bg-gray-750"
 							>
-								<div className="flex items-start justify-between">
+								<div className="flex items-start justify-between p-4">
 									<div className="flex-1">
-										<div className="mb-2 flex items-center gap-2">
+										<div className="mb-2 flex flex-wrap items-center gap-2">
 											<span className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white">
 												{index + 1}
 											</span>
@@ -437,11 +497,15 @@ const ActionQueueView: React.FC = () => {
 									</div>
 									<div className="ml-4 flex items-center gap-2">
 										<button
-											onClick={() => setDetailViewAction(action)}
+											onClick={() => setExpandedActionId(expandedActionId === action.id ? null : action.id)}
 											className="cursor-pointer rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-blue-400"
-											title="View details"
+											title={expandedActionId === action.id ? "Hide details" : "View details"}
 										>
-											<EyeIcon className="h-4 w-4" />
+											{expandedActionId === action.id ? (
+												<ChevronUpIcon className="h-4 w-4" />
+											) : (
+												<ChevronDownIcon className="h-4 w-4" />
+											)}
 										</button>
 										<button
 											onClick={() => removeAction(action.id)}
@@ -452,201 +516,157 @@ const ActionQueueView: React.FC = () => {
 										</button>
 									</div>
 								</div>
+
+								{/* Expandable Detail Section */}
+								{expandedActionId === action.id && (
+									<div className="border-t border-gray-700 bg-gray-850 p-4">
+										<div className="space-y-4">
+											{/* Basic Info */}
+											<div>
+												<h4 className="mb-2 text-sm font-medium text-gray-100">
+													Overview
+												</h4>
+												<div className="rounded-lg bg-gray-900 p-3">
+													<div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+														<div>
+															<span className="text-gray-400">Source Type:</span>
+															<span className="ml-2 text-gray-100">
+																{formatActionType(action.sources[0].type)}
+															</span>
+														</div>
+														<div>
+															<span className="text-gray-400">Source IDs:</span>
+															<span className="ml-2 font-mono text-gray-100">
+																{action.sources.map((s) => s.id).join(", ")}
+															</span>
+														</div>
+														<div>
+															<span className="text-gray-400">Queued At:</span>
+															<span className="ml-2 text-gray-100">
+																{formatFullTimestamp(action.timestamp)}
+															</span>
+														</div>
+														<div>
+															<span className="text-gray-400">Action ID:</span>
+															<span className="ml-2 font-mono text-xs text-gray-100">
+																{action.id}
+															</span>
+														</div>
+													</div>
+													
+													{/* Add fleet/ship context section for sources */}
+													{action.type === "mission" &&
+														action.data &&
+														(() => {
+															const data = action.data as
+																| { sourceFleetId?: string; sourceShipId?: string }
+																| undefined;
+															if (data?.sourceFleetId || data?.sourceShipId) {
+																return (
+																	<div className="mt-3 rounded bg-blue-600/10 p-3">
+																		<h5 className="mb-2 text-sm font-medium text-blue-300">
+																			Source Location
+																		</h5>
+																		<div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+																			{data.sourceFleetId && (
+																				<div>
+																					<span className="text-gray-400">Fleet:</span>
+																					<span className="ml-2 font-mono text-blue-300">
+																						{data.sourceFleetId}
+																					</span>
+																				</div>
+																			)}
+																			{data.sourceShipId && (
+																				<div>
+																					<span className="text-gray-400">Ship:</span>
+																					<span className="ml-2 font-mono text-blue-300">
+																						{data.sourceShipId}
+																					</span>
+																				</div>
+																			)}
+																		</div>
+																	</div>
+																);
+															}
+															return null;
+														})()}
+												</div>
+											</div>
+
+											{/* Action Description */}
+											<div>
+												<h4 className="mb-2 text-sm font-medium text-gray-100">
+													Description
+												</h4>
+												<div className="rounded-lg bg-gray-900 p-3">
+													<p className="whitespace-pre-line text-sm text-gray-200">
+														{getDetailedActionDescription(action)}
+													</p>
+												</div>
+											</div>
+
+											{/* Target Information */}
+											{action.target && (
+												<div>
+													<h4 className="mb-2 text-sm font-medium text-gray-100">
+														Target Information
+													</h4>
+													<div className="rounded-lg bg-gray-900 p-3">
+														<div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+															<div>
+																<span className="text-gray-400">Target Type:</span>
+																<span className="ml-2 text-gray-100">
+																	{action.target.type}
+																</span>
+															</div>
+															<div>
+																<span className="text-gray-400">Target ID:</span>
+																<span className="ml-2 font-mono text-gray-100">
+																	{action.target.id}
+																</span>
+															</div>
+														</div>
+														{"data" in action.target &&
+															action.target.data && (
+																<div className="mt-3">
+																	<span className="text-sm text-gray-400">
+																		Target Data:
+																	</span>
+																	<pre className="mt-2 overflow-auto rounded bg-gray-800 p-3 text-xs text-gray-300">
+																		{JSON.stringify(
+																			action.target.data,
+																			null,
+																			2,
+																		)}
+																	</pre>
+																</div>
+															)}
+													</div>
+												</div>
+											)}
+
+											{/* Additional Data */}
+											{action.data &&
+												Object.keys(action.data).length > 0 && (
+													<div>
+														<h4 className="mb-2 text-sm font-medium text-gray-100">
+															Action Data
+														</h4>
+														<div className="rounded-lg bg-gray-900 p-3">
+															<pre className="overflow-auto text-xs text-gray-300">
+																{JSON.stringify(action.data, null, 2)}
+															</pre>
+														</div>
+													</div>
+												)}
+										</div>
+									</div>
+								)}
 							</div>
 						))}
 					</div>
 				)}
 			</div>
-
-			{/* Detail View Modal */}
-			{detailViewAction && (
-				<div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
-					<div className="m-4 max-h-[80vh] w-full max-w-2xl overflow-auto rounded-lg bg-gray-800 shadow-xl">
-						{/* Modal Header */}
-						<div className="flex items-center justify-between border-b border-gray-700 p-6">
-							<h3 className="text-xl font-semibold text-gray-100">
-								Action Details
-							</h3>
-							<button
-								onClick={() => setDetailViewAction(null)}
-								className="cursor-pointer rounded p-2 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200"
-							>
-								<XMarkIcon className="h-5 w-5" />
-							</button>
-						</div>
-
-						{/* Modal Content */}
-						<div className="space-y-6 p-6">
-							{/* Basic Info */}
-							<div>
-								<h4 className="mb-3 text-lg font-medium text-gray-100">
-									Overview
-								</h4>
-								<div className="space-y-3 rounded-lg bg-gray-900 p-4">
-									<div className="flex items-center gap-3">
-										<span className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white">
-											Action #
-											{actions.findIndex((a) => a.id === detailViewAction.id) +
-												1}
-										</span>
-										<span className="text-lg font-medium text-gray-100">
-											{formatActionType(detailViewAction.type)}
-										</span>
-									</div>
-									<div className="grid grid-cols-2 gap-4 text-sm">
-										<div>
-											<span className="text-gray-400">Source Type:</span>
-											<span className="ml-2 text-gray-100">
-												{formatActionType(detailViewAction.sources[0].type)}
-											</span>
-										</div>
-										<div>
-											<span className="text-gray-400">Source IDs:</span>
-											<span className="ml-2 font-mono text-gray-100">
-												{detailViewAction.sources.map((s) => s.id).join(", ")}
-											</span>
-										</div>
-										<div>
-											<span className="text-gray-400">Queued At:</span>
-											<span className="ml-2 text-gray-100">
-												{formatFullTimestamp(detailViewAction.timestamp)}
-											</span>
-										</div>
-										<div>
-											<span className="text-gray-400">Action ID:</span>
-											<span className="ml-2 font-mono text-xs text-gray-100">
-												{detailViewAction.id}
-											</span>
-										</div>
-									</div>
-									{/* Add fleet/ship context section for sources */}
-									{detailViewAction.type === "mission" &&
-										detailViewAction.data &&
-										(() => {
-											const data = detailViewAction.data as
-												| { sourceFleetId?: string; sourceShipId?: string }
-												| undefined;
-											if (data?.sourceFleetId || data?.sourceShipId) {
-												return (
-													<div className="mt-3 rounded bg-blue-600/10 p-3">
-														<h5 className="mb-2 text-sm font-medium text-blue-300">
-															Source Location
-														</h5>
-														<div className="grid grid-cols-2 gap-4 text-sm">
-															{data.sourceFleetId && (
-																<div>
-																	<span className="text-gray-400">Fleet:</span>
-																	<span className="ml-2 font-mono text-blue-300">
-																		{data.sourceFleetId}
-																	</span>
-																</div>
-															)}
-															{data.sourceShipId && (
-																<div>
-																	<span className="text-gray-400">Ship:</span>
-																	<span className="ml-2 font-mono text-blue-300">
-																		{data.sourceShipId}
-																	</span>
-																</div>
-															)}
-														</div>
-													</div>
-												);
-											}
-											return null;
-										})()}
-								</div>
-							</div>
-
-							{/* Action Description */}
-							<div>
-								<h4 className="mb-3 text-lg font-medium text-gray-100">
-									Description
-								</h4>
-								<div className="rounded-lg bg-gray-900 p-4">
-									<p className="whitespace-pre-line text-gray-200">
-										{getDetailedActionDescription(detailViewAction)}
-									</p>
-								</div>
-							</div>
-
-							{/* Target Information */}
-							{detailViewAction.target && (
-								<div>
-									<h4 className="mb-3 text-lg font-medium text-gray-100">
-										Target Information
-									</h4>
-									<div className="space-y-3 rounded-lg bg-gray-900 p-4">
-										<div className="grid grid-cols-2 gap-4 text-sm">
-											<div>
-												<span className="text-gray-400">Target Type:</span>
-												<span className="ml-2 text-gray-100">
-													{detailViewAction.target.type}
-												</span>
-											</div>
-											<div>
-												<span className="text-gray-400">Target ID:</span>
-												<span className="ml-2 font-mono text-gray-100">
-													{detailViewAction.target.id}
-												</span>
-											</div>
-										</div>
-										{"data" in detailViewAction.target &&
-											detailViewAction.target.data && (
-												<div>
-													<span className="text-sm text-gray-400">
-														Target Data:
-													</span>
-													<pre className="mt-2 overflow-auto rounded bg-gray-800 p-3 text-xs text-gray-300">
-														{JSON.stringify(
-															detailViewAction.target.data,
-															null,
-															2,
-														)}
-													</pre>
-												</div>
-											)}
-									</div>
-								</div>
-							)}
-
-							{/* Additional Data */}
-							{detailViewAction.data &&
-								Object.keys(detailViewAction.data).length > 0 && (
-									<div>
-										<h4 className="mb-3 text-lg font-medium text-gray-100">
-											Action Data
-										</h4>
-										<div className="rounded-lg bg-gray-900 p-4">
-											<pre className="overflow-auto text-sm text-gray-300">
-												{JSON.stringify(detailViewAction.data, null, 2)}
-											</pre>
-										</div>
-									</div>
-								)}
-						</div>
-
-						{/* Modal Footer */}
-						<div className="flex items-center justify-between border-t border-gray-700 p-6">
-							<button
-								onClick={() => {
-									removeAction(detailViewAction.id);
-									setDetailViewAction(null);
-								}}
-								className="cursor-pointer rounded bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
-							>
-								Remove Action
-							</button>
-							<button
-								onClick={() => setDetailViewAction(null)}
-								className="cursor-pointer rounded bg-gray-600 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-700"
-							>
-								Close
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 };

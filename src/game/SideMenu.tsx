@@ -3,6 +3,7 @@ import {
 	Bars3Icon,
 	BellAlertIcon,
 	BookOpenIcon,
+	ClipboardDocumentListIcon,
 	Cog6ToothIcon,
 	GlobeAltIcon,
 	MagnifyingGlassIcon,
@@ -13,12 +14,14 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import React from "react";
 import { useWindowContext } from "../hooks/useWindowContext";
+import { useActionQueue } from "./ActionQueueContextDef";
 
 export type MenuView =
 	| "sectorOverview"
 	| "notifications"
 	| "encyclopaedia"
 	| "finder"
+	| "orders"
 	| "settings";
 
 interface SideMenuProps {
@@ -39,6 +42,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
 	onOpenSettings,
 }) => {
 	const { minimizedWindows, handleMaximizeWindow } = useWindowContext();
+	const { actions } = useActionQueue();
 
 	const renderMenuButton = (
 		icon: React.ComponentType<{ className?: string }>,
@@ -249,6 +253,23 @@ const SideMenu: React.FC<SideMenuProps> = ({
 						"finder",
 						undefined,
 						activeView === "finder",
+					)}
+
+					{renderMenuButton(
+						({ className }) => (
+							<div className="relative">
+								<ClipboardDocumentListIcon className={className} />
+								{actions.length > 0 && (
+									<span className="absolute -top-1 -right-1 flex h-4 w-4 min-w-4 items-center justify-center rounded-full bg-blue-600 text-xs font-medium">
+										{actions.length}
+									</span>
+								)}
+							</div>
+						),
+						"Orders",
+						"orders",
+						undefined,
+						activeView === "orders",
 					)}
 
 					{renderMenuButton(

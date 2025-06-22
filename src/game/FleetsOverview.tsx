@@ -18,6 +18,7 @@ import { ResourceList } from "./components/ResourceList";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { TwoColumnLayout } from "./components/TwoColumnLayout";
 import MiniCardView from "./MiniCardView";
+import UnitContextMenu from "./UnitContextMenu";
 
 type FleetResourceType = "capital_ship" | "squadron" | "troop" | "personnel";
 
@@ -220,7 +221,7 @@ export const FleetsOverview: React.FC<{
 
 				content = (
 					<div className="space-y-2">
-						<div className="mb-2 rounded bg-slate-800 p-2 text-sm text-gray-400">
+						<div className="mb-2 bg-slate-800 p-2 text-sm text-gray-400">
 							{headerText}
 						</div>
 						<ResourceList
@@ -271,7 +272,16 @@ export const FleetsOverview: React.FC<{
 		<div className="flex h-full flex-1 flex-col text-gray-300">
 			<TwoColumnLayout
 				leftPanel={
-					<div className="space-y-1 p-4">
+					<div
+						className="space-y-1 p-4"
+						onClick={(e) => {
+							// Only reset if the click was directly on this div (not on child elements)
+							if (e.target === e.currentTarget) {
+								setSelectedFleet(null);
+								setSelectedShip(null);
+							}
+						}}
+					>
 						{fleets.map((fleetItem) => (
 							<FleetComponent
 								key={fleetItem.id}
@@ -280,9 +290,8 @@ export const FleetsOverview: React.FC<{
 								selected={selectedFleet === fleetItem.id}
 								onSelect={() => {
 									if (fleetItem.id === selectedFleet) {
-										// Deselect if already selected
-										setSelectedFleet(null);
-										setSelectedShip(null); // Clear ship selection
+										// We're already selected, so we should show the menu
+										// The menu will be displayed by the FleetComponent
 									} else {
 										// Select the fleet and clear ship selection
 										setSelectedFleet(fleetItem.id);
@@ -291,7 +300,7 @@ export const FleetsOverview: React.FC<{
 								}}
 								onShipSelect={(shipId) => {
 									if (shipId === selectedShip) {
-										// Deselect if already selected
+										// Deselect the ship
 										setSelectedShip(null);
 									} else {
 										// Select the ship
@@ -316,7 +325,7 @@ const FleetComponent: React.FC<{
 	selectedShipId?: string | null;
 	onSelect: () => void;
 	onShipSelect: (shipId: string) => void;
-}> = ({ fleet, selected, selectedShipId, onSelect, onShipSelect }) => {
+}> = ({ fleet, planet, selected, selectedShipId, onSelect, onShipSelect }) => {
 	// Determine if the fleet is en-route
 	const isEnroute = fleet.status === "en-route";
 
@@ -330,67 +339,98 @@ const FleetComponent: React.FC<{
 	// Get the image layers for the fleet
 	const fleetImageLayers = getFleetImageLayers(faction, isEnroute, hasDamage);
 
+	// Create a selectable item for the UnitContextMenu
+	const fleetAsSelectableItem: SelectableItemWithLocation = {
+		...fleet,
+		location: {
+			planetId: planet.metadata.id,
+			fleetId: fleet.id,
+			shipId: undefined,
+		},
+	};
+
+	// Render fleet with context menu when selected, or as a regular clickable item when not selected
 	return (
 		<div key={fleet.id} className="space-y-1">
-			<div
-				className={`cursor-pointer p-3 transition-colors ${
-					selected ? "border-1 border-purple-500" : "hover:bg-slate-700"
-				}`}
-				onClick={(e) => {
-					e.stopPropagation(); // Prevent parent click event
-					onSelect();
-				}}
-			>
-				<div className="flex flex-col items-center">
-					<div className="relative h-16 w-16 flex-shrink-0">
-						{fleetImageLayers.map((imageUrl, index) => (
-							<img
-								key={index}
-								src={imageUrl}
-								alt={`Fleet ${index}`}
-								className="absolute inset-0 h-full w-full object-contain"
-								style={{ zIndex: index }}
-							/>
-						))}
-					</div>
-					<div className="flex-1">
-						<div className="font-sm text-gray-300">{fleet.name}</div>
-						<div className="text-xs text-gray-500">
-							{fleet.ships.length} ships
+			{selected ? (
+				<div className="">
+					<UnitContextMenu unit={fleetAsSelectableItem} showContextMenu={true}>
+						<div className="p-2">
+							<div className="flex flex-col items-center">
+								<div className="relative h-16 w-16 flex-shrink-0 border-1 ring-2 ring-purple-400">
+									{fleetImageLayers.map((imageUrl, index) => (
+										<img
+											key={index}
+											src={imageUrl}
+											alt={`Fleet ${index}`}
+											className="absolute inset-0 h-full w-full object-contain"
+											style={{ zIndex: index }}
+										/>
+									))}
+								</div>
+								<div className="flex-1 text-center text-purple-300">
+									<div className="font-sm">{fleet.name}</div>
+									<div className="text-xs">{fleet.ships.length} ships</div>
+								</div>
+							</div>
+						</div>
+					</UnitContextMenu>
+				</div>
+			) : (
+				<div
+					className="cursor-pointer p-3 transition-colors hover:bg-purple-700/10"
+					onClick={(e) => {
+						e.stopPropagation(); // Prevent parent click event
+						onSelect();
+					}}
+				>
+					<div className="flex flex-col items-center">
+						<div className="relative h-16 w-16 flex-shrink-0">
+							{fleetImageLayers.map((imageUrl, index) => (
+								<img
+									key={index}
+									src={imageUrl}
+									alt={`Fleet ${index}`}
+									className="absolute inset-0 h-full w-full object-contain"
+									style={{ zIndex: index }}
+								/>
+							))}
+						</div>
+						<div className="flex-1 text-center text-slate-400">
+							<div className="font-sm">{fleet.name}</div>
+							<div className="text-xs">{fleet.ships.length} ships</div>
 						</div>
 					</div>
 				</div>
-			</div>
+			)}
 
 			{/* Show ships when fleet is selected */}
 			{selected && fleet.ships.length > 0 && (
 				<div className="ml-2">
-					{fleet.ships.map((shipItem) => (
-						<div
-							key={shipItem.id}
-							className={`cursor-pointer p-1 text-sm transition-colors ${
-								selectedShipId === shipItem.id
-									? "border-1 border-purple-500 bg-purple-900/10"
-									: "hover:bg-purple-900/20"
-							}`}
-							onClick={(e) => {
-								e.stopPropagation(); // Prevent fleet selection
-								onShipSelect(shipItem.id);
-							}}
-						>
-							<MiniCardView
+					{fleet.ships.map((shipItem) => {
+						const shipSelected = selectedShipId === shipItem.id;
+						return (
+							<div
+								className={`mb-2 ${shipSelected ? "bg-purple-800" : ""}`}
 								key={shipItem.id}
-								imagePairs={[
-									{
-										foreground: getShipCardImage(shipItem.subtype),
-										background: "/path/to/ship_background.png",
-									},
-								]}
-								displayText={shipItem.name}
-								selectableItem={undefined}
-							/>
-						</div>
-					))}
+								onClick={(e) => {
+									e.stopPropagation(); // Prevent parent click event
+									onShipSelect(shipItem.id);
+								}}
+							>
+								<MiniCardView
+									imagePairs={[
+										{
+											foreground: getShipCardImage(shipItem.subtype),
+											background: "/path/to/ship_background.png",
+										},
+									]}
+									displayText={shipItem.name}
+									selectableItem={undefined}
+								/>
+							</div>
+						);
+					})}
 				</div>
 			)}
 		</div>
