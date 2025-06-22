@@ -403,6 +403,7 @@ function generateFleets(
 				: `Rebel Fleet ${i + 1}`,
 			type: "fleet",
 			subtype: "fleet",
+			faction: planetOwner as FactionMetadata,
 			status: "active",
 			ships: [],
 		};

@@ -240,6 +240,7 @@ export type ShipResource = ResourceBase & {
 export type FleetResource = ResourceBase & {
 	type: "fleet";
 	subtype: "fleet";
+	faction: FactionMetadata;
 	ships: ShipResource[]; // Fleet contains ships, each ship carries its own complement
 };
 
