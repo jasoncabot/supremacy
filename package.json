@@ -13,7 +13,7 @@
 		"cf-typegen": "wrangler types"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.2.4",
+		"@cloudflare/vite-plugin": "^1.6.0",
 		"@cloudflare/vitest-pool-workers": "^0.8.19",
 		"@types/node": "^22.15.21",
 		"@types/react": "^19.1.5",
