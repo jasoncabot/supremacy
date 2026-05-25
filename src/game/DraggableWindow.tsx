@@ -18,8 +18,8 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	className = "",
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
-	const [windowZIndex, setWindowZIndex] = useState(100);
 	const { getNextZIndex } = useZIndex();
+	const [windowZIndex, setWindowZIndex] = useState(() => getNextZIndex());
 	const { sectors } = useGame();
 	const { cancelActionConfirmation } = useSelectionContext();
 
@@ -253,11 +253,11 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		};
 	}, [dragging]);
 
-	// When component mounts, bring it to front initially
+	// When the component mounts, register it as the front-most window in the
+	// shared context. The z-index itself is initialised above via useState.
 	useEffect(() => {
-		bringWindowToFront();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+		bringToFront(windowInfo.id);
+	}, [bringToFront, windowInfo.id]);
 
 	return (
 		<div
@@ -351,7 +351,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 				className={`flex flex-1 ${
 					windowInfo.type === "fleets"
 						? "h-[500px] overscroll-contain"
-						: "scrollbar-none max-h-[500px] overflow-y-auto overscroll-contain"
+						: "max-h-[500px] scrollbar-none overflow-y-auto overscroll-contain"
 				}`}
 			>
 				{children}

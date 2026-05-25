@@ -141,21 +141,20 @@ async function refreshAccessToken(): Promise<boolean> {
  * Hook to authenticate a user with username and password
  */
 export function useAuth() {
-	const [authenticated, setAuthenticated] = useState<boolean>(false);
+	// Derive the initial authenticated state synchronously from storage so the
+	// first render is already correct (avoids a flash of unauthenticated UI).
+	const [authenticated, setAuthenticated] = useState<boolean>(() => {
+		const tokens = getTokens();
+		return !!(tokens && !isRefreshTokenExpired());
+	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<Error | null>(null);
 
-	// Check if user is already authenticated on mount
+	// On mount, silently refresh the access token if it's expired but still refreshable
 	useEffect(() => {
 		const tokens = getTokens();
-		if (tokens && !isRefreshTokenExpired()) {
-			// We have tokens and refresh token is valid
-			setAuthenticated(true);
-
-			// If access token is expired, refresh it silently
-			if (isAccessTokenExpired()) {
-				refreshAccessToken().catch(console.error);
-			}
+		if (tokens && !isRefreshTokenExpired() && isAccessTokenExpired()) {
+			refreshAccessToken().catch(console.error);
 		}
 	}, []);
 

@@ -1,0 +1,2 @@
+# Enable public registration locally / in tests ("true" to enable)
+SIGNUPS_ENABLED=true

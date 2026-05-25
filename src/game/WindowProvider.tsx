@@ -10,38 +10,42 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [minimizedWindows, setMinimizedWindows] = useState<
 		MinimizedWindowInfo[]
 	>([]);
+	const { playSound } = useSoundManager();
 
 	// Open a window - brings it to the front if already open, otherwise adds it
-	const handleOpenWindow = useCallback((info: WindowInfo) => {
-		setOpenWindows((currentWindows) => {
-			// Check if the window is already open
-			const existingWindowIndex = currentWindows.findIndex(
-				(window) => window.id === info.id,
+	const handleOpenWindow = useCallback(
+		(info: WindowInfo) => {
+			setOpenWindows((currentWindows) => {
+				// Check if the window is already open
+				const existingWindowIndex = currentWindows.findIndex(
+					(window) => window.id === info.id,
+				);
+
+				// If window exists, remove it from its current position
+				if (existingWindowIndex !== -1) {
+					const updatedWindows = [...currentWindows];
+					updatedWindows.splice(existingWindowIndex, 1);
+					// Add it to the end (highest z-index)
+					return [...updatedWindows, info];
+				}
+
+				if (info.type == "sector") {
+					playSound("sectorOpen");
+				} else {
+					playSound("itemOpen");
+				}
+
+				// If it doesn't exist, add it to the end
+				return [...currentWindows, info];
+			});
+
+			// Remove from minimized windows if it was there
+			setMinimizedWindows((current) =>
+				current.filter((window) => window.id !== info.id),
 			);
-
-			// If window exists, remove it from its current position
-			if (existingWindowIndex !== -1) {
-				const updatedWindows = [...currentWindows];
-				updatedWindows.splice(existingWindowIndex, 1);
-				// Add it to the end (highest z-index)
-				return [...updatedWindows, info];
-			}
-
-			if (info.type == "sector") {
-				playSound("sectorOpen");
-			} else {
-				playSound("itemOpen");
-			}
-
-			// If it doesn't exist, add it to the end
-			return [...currentWindows, info];
-		});
-
-		// Remove from minimized windows if it was there
-		setMinimizedWindows((current) =>
-			current.filter((window) => window.id !== info.id),
-		);
-	}, []);
+		},
+		[playSound],
+	);
 
 	// Minimize a window - remove from open windows and add to minimized
 	const handleMinimizeWindow = useCallback(
@@ -82,7 +86,6 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 		});
 	}, []);
 
-	const { playSound } = useSoundManager();
 	// Close a window - remove from both open and minimized windows
 	const handleCloseWindow = useCallback(
 		(info: WindowInfo) => {

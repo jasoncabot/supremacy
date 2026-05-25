@@ -21,36 +21,34 @@ exports[`api > returns appropriate content for version 1`] = `
 
 exports[`auth > can run through the whole sign up, login and refresh flow 1`] = `
 {
-  "accessToken": "swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:11111111111111111111111111111111",
+  "accessToken": "swa:81c12df9c210f34b1d145f20f4e3ce86d512d5d9c6abae6ec32ca159f6c2707b:11111111111111111111111111111111",
   "accessTokenExpiry": 1746403200000,
   "clientId": "test-client-id",
-  "refreshToken": "swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:22222222222222222222222222222222",
+  "refreshToken": "swr:81c12df9c210f34b1d145f20f4e3ce86d512d5d9c6abae6ec32ca159f6c2707b:22222222222222222222222222222222",
   "refreshTokenExpiry": 1748908800000,
 }
 `;
 
 exports[`auth > can run through the whole sign up, login and refresh flow 2`] = `
 {
-  "accessToken": "swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:33333333333333333333333333333333",
+  "accessToken": "swa:81c12df9c210f34b1d145f20f4e3ce86d512d5d9c6abae6ec32ca159f6c2707b:33333333333333333333333333333333",
   "accessTokenExpiry": 1746403200000,
   "clientId": "test-client-id",
-  "refreshToken": "swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:44444444444444444444444444444444",
+  "refreshToken": "swr:81c12df9c210f34b1d145f20f4e3ce86d512d5d9c6abae6ec32ca159f6c2707b:44444444444444444444444444444444",
   "refreshTokenExpiry": 1748908800000,
 }
 `;
 
 exports[`auth > can run through the whole sign up, login and refresh flow 3`] = `
 {
-  "accessToken": "swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:11111111111111111111111111111111",
-  "accessTokenExpiry": 1746403200000,
-  "clientId": "test-client-id",
-  "refreshToken": "swr:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:22222222222222222222222222222222",
-  "refreshTokenExpiry": 1748908800000,
+  "error": "Durable Object ID is not valid for this namespace.",
+  "status": 500,
 }
 `;
 
 exports[`auth > can run through the whole sign up, login and refresh flow 4`] = `
 {
-  "gameId": "game-4",
+  "error": "Durable Object ID is not valid for this namespace.",
+  "status": 500,
 }
 `;

@@ -29,9 +29,9 @@ const authRouter = Router<IRequest, [Env, ExecutionContext]>({
 		const body = (await request.json()) as SignupRequest;
 		const clientId = request.headers.get("x-client-id");
 
-		if (body.username !== "testuser") {
+		if (env.SIGNUPS_ENABLED !== "true") {
 			return error(403, {
-				error: "Signup is currently disabled for all users",
+				error: "Signup is currently disabled",
 			});
 		}
 

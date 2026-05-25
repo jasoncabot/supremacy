@@ -10,70 +10,14 @@
 		"not_found_handling": "single-page-application",
 		"binding": "ASSETS",
 	},
-	"env": {
-		"dev": {
-			"name": "supremacy-dev",
-			"assets": {
-				"not_found_handling": "single-page-application",
-				"binding": "ASSETS",
-			},
-			"observability": {
-				"enabled": true,
-			},
-			"durable_objects": {
-				"bindings": [
-					{
-						"name": "GAMES",
-						"class_name": "GamesDurableObject",
-					},
-					{
-						"name": "MATCHMAKER",
-						"class_name": "MatchmakerDurableObject",
-					},
-					{
-						"name": "USERS",
-						"class_name": "UsersDurableObject",
-					},
-					{
-						"name": "TOKENS",
-						"class_name": "TokensDurableObject",
-					},
-				],
-			},
-		},
-		"production": {
-			"name": "supremacy",
-			"routes": [
-				{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true },
-			],
-			"assets": {
-				"not_found_handling": "single-page-application",
-				"binding": "ASSETS",
-			},
-			"observability": {
-				"enabled": true,
-			},
-			"durable_objects": {
-				"bindings": [
-					{
-						"name": "GAMES",
-						"class_name": "GamesDurableObject",
-					},
-					{
-						"name": "MATCHMAKER",
-						"class_name": "MatchmakerDurableObject",
-					},
-					{
-						"name": "USERS",
-						"class_name": "UsersDurableObject",
-					},
-					{
-						"name": "TOKENS",
-						"class_name": "TokensDurableObject",
-					},
-				],
-			},
-		},
+	"routes": [{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true }],
+	"observability": {
+		"enabled": true,
+	},
+	// Feature flags. Override locally via .dev.vars; set in the CF dashboard for
+	// production. "true" enables public registration; anything else disables it.
+	"vars": {
+		"SIGNUPS_ENABLED": "",
 	},
 	"durable_objects": {
 		"bindings": [
