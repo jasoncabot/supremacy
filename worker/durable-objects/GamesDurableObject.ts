@@ -605,6 +605,81 @@ function generateMissions(
 	return { missions };
 }
 
+// Project the ground-truth state of a single planet into the partial view a
+// faction is allowed to see. This is the only boundary between secret state and
+// data sent to a client, so it is written default-deny: a freshly built literal
+// that names exactly the fields a faction may observe. Adding a field to
+// PlanetState leaves it hidden until it is explicitly listed here.
+function projectPlanetView(
+	faction: FactionMetadata,
+	planetState: PlanetState,
+): PlanetView {
+	const isOwner = planetState.owner === faction;
+	const isDiscovered = planetState.isDiscovered || isOwner;
+
+	// Undiscovered planets reveal nothing beyond their static metadata.
+	if (!isDiscovered) {
+		return {
+			metadata: planetState.metadata,
+			discovered: false,
+		};
+	}
+
+	// Visible to anyone who has discovered the planet.
+	const state: NonNullable<PlanetView["state"]> = {
+		owner: planetState.owner,
+		energySpots: planetState.energySpots,
+		naturalResources: planetState.naturalResources,
+		isDestroyed: planetState.isDestroyed,
+	};
+
+	// Owner-only secrets: internal politics, military and production.
+	if (isOwner) {
+		state.loyalty = planetState.loyalty;
+		state.garrisonRequirement = planetState.garrisonRequirement;
+		state.inUprising = planetState.inUprising;
+		state.general = planetState.general;
+		state.commander = planetState.commander;
+		state.defenses = planetState.defenses;
+		state.manufacturing = planetState.manufacturing;
+		state.fleets = planetState.fleets;
+		state.missions = planetState.missions;
+	}
+
+	return {
+		metadata: planetState.metadata,
+		state,
+		discovered: true,
+	};
+}
+
+// Project the full GameState into the GameView a single faction sees. Turn
+// resolution mutates the GameState (the truth) in place; this is the one
+// function that crosses the truth -> view boundary, so the truth never leaves
+// the Durable Object.
+function projectView(faction: FactionMetadata, gameState: GameState): GameView {
+	const planets: Record<string, PlanetView> = {};
+	for (const [planetId, planetState] of Object.entries(gameState.planets)) {
+		planets[planetId] = projectPlanetView(faction, planetState);
+	}
+
+	const factionState = gameState.factions[faction];
+	const factionView: FactionView = {
+		resources: factionState.resources,
+		objectives: factionState.objectives,
+	};
+
+	return {
+		id: gameState.id,
+		turn: gameState.turn,
+		planets,
+		sectors: gameState.sectors,
+		faction: factionView,
+		side: faction,
+		notifications: gameState.notifications,
+	};
+}
+
 export class GamesDurableObject extends DurableObject<Env> {
 	state: DurableObjectState;
 	env: Env;
@@ -736,114 +811,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 			notifications: [],
 		};
 
-		// Create faction-specific views
-		const views: Record<FactionMetadata, GameView> = {
-			Empire: (() => {
-				const faction = "Empire" as FactionMetadata;
-				const planetViews: Record<string, PlanetView> = {};
-
-				for (const [planetId, planetState] of Object.entries(planets)) {
-					const isOwner = planetState.owner === faction;
-					const isDiscovered = planetState.isDiscovered || isOwner;
-
-					const planetView: PlanetView = {
-						metadata: planetState.metadata,
-						discovered: isDiscovered,
-					};
-
-					if (isDiscovered) {
-						planetView.state = {
-							loyalty: isOwner ? planetState.loyalty : undefined,
-							owner: planetState.owner,
-							energySpots: planetState.energySpots,
-							naturalResources: planetState.naturalResources,
-							garrisonRequirement: isOwner
-								? planetState.garrisonRequirement
-								: undefined,
-							inUprising: isOwner ? planetState.inUprising : undefined,
-							isDestroyed: planetState.isDestroyed,
-							general: isOwner ? planetState.general : undefined,
-							commander: isOwner ? planetState.commander : undefined,
-							defenses: isOwner ? planetState.defenses : undefined,
-							manufacturing: isOwner ? planetState.manufacturing : undefined,
-							fleets: isOwner ? planetState.fleets : undefined,
-							missions: isOwner ? planetState.missions : undefined,
-						};
-					}
-
-					planetViews[planetId] = planetView;
-				}
-
-				const factionView: FactionView = {
-					resources: factions[faction].resources,
-					objectives: factions[faction].objectives,
-				};
-
-				return {
-					id: gameId,
-					turn: 1,
-					planets: planetViews,
-					sectors,
-					faction: factionView,
-					side: faction,
-					notifications: [],
-				};
-			})(),
-			Rebellion: (() => {
-				const faction = "Rebellion" as FactionMetadata;
-				const planetViews: Record<string, PlanetView> = {};
-
-				for (const [planetId, planetState] of Object.entries(planets)) {
-					const isOwner = planetState.owner === faction;
-					const isDiscovered = planetState.isDiscovered || isOwner;
-
-					const planetView: PlanetView = {
-						metadata: planetState.metadata,
-						discovered: isDiscovered,
-					};
-
-					if (isDiscovered) {
-						planetView.state = {
-							loyalty: isOwner ? planetState.loyalty : undefined,
-							owner: planetState.owner,
-							energySpots: planetState.energySpots,
-							naturalResources: planetState.naturalResources,
-							garrisonRequirement: isOwner
-								? planetState.garrisonRequirement
-								: undefined,
-							inUprising: isOwner ? planetState.inUprising : undefined,
-							isDestroyed: planetState.isDestroyed,
-							general: isOwner ? planetState.general : undefined,
-							commander: isOwner ? planetState.commander : undefined,
-							defenses: isOwner ? planetState.defenses : undefined,
-							manufacturing: isOwner ? planetState.manufacturing : undefined,
-							fleets: isOwner ? planetState.fleets : undefined,
-							missions: isOwner ? planetState.missions : undefined,
-						};
-					}
-
-					planetViews[planetId] = planetView;
-				}
-
-				const factionView: FactionView = {
-					resources: factions[faction].resources,
-					objectives: factions[faction].objectives,
-				};
-
-				return {
-					id: gameId,
-					turn: 1,
-					planets: planetViews,
-					sectors,
-					faction: factionView,
-					side: faction,
-					notifications: [],
-				};
-			})(),
-		};
-
 		await this.state.storage.put("gameState", gameState);
-		await this.state.storage.put("views", views);
 		await this.state.storage.put<FactionMetadata>(
 			`user:${request.creatorId}`,
 			request.faction,
@@ -870,13 +838,10 @@ export class GamesDurableObject extends DurableObject<Env> {
 			);
 		}
 
-		const views =
-			await this.state.storage.get<Record<FactionMetadata, GameView>>("views");
-		if (!views) throw new ApiError(404, "not_found", "No views found");
-		const view = views[faction];
-		if (!view) {
-			throw new ApiError(404, "not_found", "View not found for " + faction);
+		const gameState = await this.state.storage.get<GameState>("gameState");
+		if (!gameState) {
+			throw new ApiError(404, "not_found", "No game state found");
 		}
-		return view;
+		return projectView(faction, gameState);
 	}
 }

@@ -476,7 +476,3 @@ export interface GameView {
 	side: FactionMetadata;
 	notifications: Notification[];
 }
-
-export interface GetGameResponse extends GameView {
-	gameState: GameState;
-}
