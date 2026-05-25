@@ -6,38 +6,9 @@
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"workers_dev": false,
 	"preview_urls": false,
-	"assets": {
-		"not_found_handling": "single-page-application",
-		"binding": "ASSETS",
-	},
-	"routes": [{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true }],
+	// Inherited by every environment.
 	"observability": {
 		"enabled": true,
-	},
-	// Feature flags. Override locally via .dev.vars; set in the CF dashboard for
-	// production. "true" enables public registration; anything else disables it.
-	"vars": {
-		"SIGNUPS_ENABLED": "",
-	},
-	"durable_objects": {
-		"bindings": [
-			{
-				"name": "GAMES",
-				"class_name": "GamesDurableObject",
-			},
-			{
-				"name": "MATCHMAKER",
-				"class_name": "MatchmakerDurableObject",
-			},
-			{
-				"name": "USERS",
-				"class_name": "UsersDurableObject",
-			},
-			{
-				"name": "TOKENS",
-				"class_name": "TokensDurableObject",
-			},
-		],
 	},
 	"migrations": [
 		{
@@ -50,4 +21,87 @@
 			],
 		},
 	],
+	// Base (default) config. `assets`, `vars` and `durable_objects` are NOT
+	// inherited by named environments, so each env below repeats them.
+	"assets": {
+		"not_found_handling": "single-page-application",
+		"binding": "ASSETS",
+	},
+	"durable_objects": {
+		"bindings": [
+			{ "name": "GAMES", "class_name": "GamesDurableObject" },
+			{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
+			{ "name": "USERS", "class_name": "UsersDurableObject" },
+			{ "name": "TOKENS", "class_name": "TokensDurableObject" },
+		],
+	},
+	"vars": {
+		"SIGNUPS_ENABLED": "true",
+	},
+	"env": {
+		// Local `vite dev` target and the deployed dev worker.
+		"dev": {
+			"name": "supremacy-dev",
+			"workers_dev": true,
+			"assets": {
+				"not_found_handling": "single-page-application",
+				"binding": "ASSETS",
+			},
+			"durable_objects": {
+				"bindings": [
+					{ "name": "GAMES", "class_name": "GamesDurableObject" },
+					{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
+					{ "name": "USERS", "class_name": "UsersDurableObject" },
+					{ "name": "TOKENS", "class_name": "TokensDurableObject" },
+				],
+			},
+			"vars": {
+				"SIGNUPS_ENABLED": "true",
+			},
+		},
+		// Staging / test deployment target.
+		"test": {
+			"name": "supremacy-test",
+			"workers_dev": true,
+			"assets": {
+				"not_found_handling": "single-page-application",
+				"binding": "ASSETS",
+			},
+			"durable_objects": {
+				"bindings": [
+					{ "name": "GAMES", "class_name": "GamesDurableObject" },
+					{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
+					{ "name": "USERS", "class_name": "UsersDurableObject" },
+					{ "name": "TOKENS", "class_name": "TokensDurableObject" },
+				],
+			},
+			"vars": {
+				"SIGNUPS_ENABLED": "true",
+			},
+		},
+		// Production: custom domain for live traffic, preview URLs per version
+		// (e.g. uploaded by CI for merge requests). Signups disabled.
+		"production": {
+			"name": "supremacy",
+			"routes": [
+				{ "pattern": "supremacy.jasoncabot.me", "custom_domain": true },
+			],
+			"preview_urls": true,
+			"assets": {
+				"not_found_handling": "single-page-application",
+				"binding": "ASSETS",
+			},
+			"durable_objects": {
+				"bindings": [
+					{ "name": "GAMES", "class_name": "GamesDurableObject" },
+					{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
+					{ "name": "USERS", "class_name": "UsersDurableObject" },
+					{ "name": "TOKENS", "class_name": "TokensDurableObject" },
+				],
+			},
+			"vars": {
+				"SIGNUPS_ENABLED": "",
+			},
+		},
+	},
 }

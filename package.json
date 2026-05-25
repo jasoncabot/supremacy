@@ -4,14 +4,16 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"deploy": "npm run build && wrangler deploy",
-		"dev": "vite dev --host 0.0.0.0",
+		"dev": "CLOUDFLARE_ENV=dev vite dev --host 0.0.0.0",
 		"build": "vite build",
 		"typecheck": "tsc -b",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"lint": "eslint .",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"deploy:dev": "CLOUDFLARE_ENV=dev vite build && wrangler deploy",
+		"deploy:test": "CLOUDFLARE_ENV=test vite build && wrangler deploy",
+		"deploy": "CLOUDFLARE_ENV=production vite build && wrangler deploy"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.38.0",

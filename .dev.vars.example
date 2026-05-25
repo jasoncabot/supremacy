@@ -1,2 +1,2 @@
-# Enable public registration locally / in tests ("true" to enable)
-SIGNUPS_ENABLED=true
+# Local-only secrets/overrides for `wrangler dev` / `vite dev`.
+# SIGNUPS_ENABLED is set per-environment in wrangler.jsonc; override here if needed.
