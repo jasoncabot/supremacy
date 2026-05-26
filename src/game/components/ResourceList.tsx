@@ -1,4 +1,4 @@
-import { SelectableItemWithLocation } from "../../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../../hooks/useSelection";
 import MiniCardView from "../MiniCardView";
 
 interface BaseResource {

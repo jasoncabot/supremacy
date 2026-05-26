@@ -1,9 +1,8 @@
 import { ViewfinderCircleIcon } from "@heroicons/react/24/outline";
 import React from "react";
-import {
-	SelectableItemWithLocation,
-	useSelectionContext,
-} from "../hooks/useSelectionContext";
+import { useItemClick } from "../hooks/useItemClick";
+import { SelectableItemWithLocation, useSelection } from "../hooks/useSelection";
+import { useCommand } from "./CommandContextDef";
 import UnitContextMenu from "./UnitContextMenu";
 
 interface ImagePair {
@@ -22,38 +21,20 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({
 	displayText,
 	selectableItem,
 }) => {
-	const {
-		selectionMode,
-		selectionState,
-		selectItem,
-		deselectItem,
-		isSelected,
-	} = useSelectionContext();
+	const { selectionMode, isSelected } = useSelection();
+	const { phase } = useCommand();
+	const onItemClick = useItemClick();
 
 	const handleClick = () => {
-		if (!selectableItem || selectionMode === "none") return;
-
-		// In target selection mode, don't allow deselecting
-		if (selectionState === "awaiting-target") {
-			selectItem(selectableItem);
-			return;
-		}
-
-		const selected = isSelected(selectableItem.id);
-		if (selected) {
-			deselectItem(selectableItem.id);
-		} else {
-			selectItem(selectableItem);
-		}
+		if (selectableItem) onItemClick(selectableItem);
 	};
 
 	const isCardSelected = selectableItem ? isSelected(selectableItem.id) : false;
-	const isTargetMode = selectionState === "awaiting-target";
+	const isTargetMode = phase === "awaiting-target";
 
 	// Show context menu when not in selection or target mode
 	const showContextMenu =
-		(selectableItem && selectionMode === "none" && selectionState === "idle") ||
-		false;
+		(selectableItem && selectionMode === "none" && phase === "idle") || false;
 
 	const cardContent = (
 		<div

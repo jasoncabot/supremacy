@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useGame } from "../hooks/useGame";
 import { Loading } from "../Loading";
+import { ActionConfirmationController } from "./ActionConfirmationController";
 import { ActionQueueProvider } from "./ActionQueueContext";
+import { useActionQueue } from "./ActionQueueContextDef";
+import { CommandProvider } from "./CommandContext";
+import { serializeQueuedAction } from "./serializeAction";
 import { SoundProvider } from "./SoundProvider";
 import Filters, { FilterType } from "./Filters";
 import FloatingWindows from "./FloatingWindows";
@@ -24,6 +28,7 @@ const GameScreenContent: React.FC = () => {
 	const [menuExpanded, setMenuExpanded] = useState(false);
 	const [activeView, setActiveView] = useState<MenuView>("sectorOverview");
 	const { game, loading, submitActions } = useGame();
+	const { actions, clearActions } = useActionQueue();
 	const { gameId } = useParams<{ gameId: string }>();
 	const navigate = useNavigate();
 
@@ -43,8 +48,10 @@ const GameScreenContent: React.FC = () => {
 		navigate(`/game/${gameId}/settings`);
 	};
 
-	const handleEndTurn = () => {
-		submitActions([]); // TODO: Implement actual end turn logic
+	const handleEndTurn = async () => {
+		// Serialize believed snapshots down to claims; the server resolves them.
+		await submitActions(actions.map(serializeQueuedAction));
+		clearActions();
 	};
 
 	if (loading || !game) {
@@ -143,7 +150,10 @@ const GameScreen: React.FC = () => {
 							}}
 						/>
 						<SelectionProvider>
-							<GameScreenContent />
+							<CommandProvider>
+								<ActionConfirmationController />
+								<GameScreenContent />
+							</CommandProvider>
 						</SelectionProvider>
 					</WindowProvider>
 				</ActionQueueProvider>

@@ -6,31 +6,12 @@ import {
 } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
 import { MissionType } from "../../worker/api";
-import {
-	SelectableItemWithLocation,
-	useSelectionContext,
-} from "../hooks/useSelectionContext";
-import { ActionDefinition } from "./types/actions";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
+import { useCommand } from "./CommandContextDef";
 
-interface ActionDetailWindowProps {
-	actionDetails: {
-		actionId: string;
-		actionDef: ActionDefinition;
-		sources: SelectableItemWithLocation[];
-		target?: SelectableItemWithLocation;
-		missionData?: {
-			agents?: string[];
-			decoys?: string[];
-			missionType?: string;
-		};
-	};
-}
-
-const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
-	actionDetails,
-}) => {
-	const { confirmAction, cancelActionConfirmation } = useSelectionContext();
-	const { actionDef, sources, target, missionData } = actionDetails;
+const ActionDetailWindow: React.FC = () => {
+	const { command, confirm, cancel } = useCommand();
+	const missionData = command?.missionData;
 
 	// Local state for action-specific options - initialize with existing data
 	const [selectedAgents, setSelectedAgents] = useState<string[]>(
@@ -40,21 +21,23 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 		missionData?.decoys || [],
 	);
 	const [selectedMissionType, setSelectedMissionType] =
-		useState<MissionType | null>(
-			(missionData?.missionType as MissionType) || null,
-		);
+		useState<MissionType | null>(missionData?.missionType || null);
+
+	// Rendered only while a command is confirming; bail out defensively otherwise.
+	if (!command) return null;
+	const { actionDef, sources, target } = command;
 
 	const handleConfirm = () => {
-		// For mission actions, pass the mission data directly to confirmAction
+		// For mission actions, pass the mission data directly when confirming.
 		if (actionDef.type === "mission" && selectedMissionType) {
-			confirmAction({
+			confirm({
 				agents: selectedAgents,
 				decoys: selectedDecoys,
 				missionType: selectedMissionType,
 			});
 		} else {
 			// For non-mission actions, confirm without mission data
-			confirmAction();
+			confirm();
 		}
 	};
 
@@ -398,7 +381,7 @@ const ActionDetailWindow: React.FC<ActionDetailWindowProps> = ({
 					Confirm {actionDef.label}
 				</button>
 				<button
-					onClick={cancelActionConfirmation}
+					onClick={cancel}
 					onTouchEnd={(e) => {
 						// Prevent any potential event bubbling issues on mobile
 						e.stopPropagation();

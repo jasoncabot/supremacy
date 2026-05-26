@@ -8,7 +8,7 @@ import type {
 	PlanetView,
 	ShipResource,
 } from "../../../worker/api";
-import { SelectableItemWithLocation } from "../../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../../hooks/useSelection";
 
 // Base target types
 export interface PlanetTarget {

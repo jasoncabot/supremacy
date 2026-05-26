@@ -15,7 +15,7 @@ import {
 } from "../../worker/api";
 import { getManufacturingCardImage } from "../cards";
 import { rawMaterialImage } from "../cards/cards";
-import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
 import MiniCardView from "./MiniCardView";
 
 // Helper function to get background image based on resource state

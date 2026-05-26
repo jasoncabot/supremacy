@@ -10,7 +10,7 @@ import { DefenceCategory, DefenseResource, PlanetView } from "../../worker/api";
 import { getCardImage } from "../cards";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { ResourceList } from "./components/ResourceList";
-import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
 
 // Helper function to get background image based on resource state
 const getBackgroundImage = (resource: DefenseResource): string => {

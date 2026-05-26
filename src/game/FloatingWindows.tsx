@@ -1,6 +1,5 @@
 import React from "react";
 import { useGame } from "../hooks/useGame";
-import { useSelectionContext } from "../hooks/useSelectionContext";
 import { useWindowContext } from "../hooks/useWindowContext";
 import ActionDetailWindow from "./ActionDetailWindow";
 import { DefenceOverview } from "./DefenceOverview";
@@ -15,7 +14,6 @@ import SectorDetailWindow from "./SectorDetailWindow";
 const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 	const { planetsBySector } = useGame();
 	const { openWindows } = useWindowContext();
-	const { pendingActionDetails } = useSelectionContext();
 
 	if (openWindows.length === 0) {
 		return null;
@@ -73,11 +71,7 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 									case "missions":
 										return <MissionsOverview planet={planet} />;
 									case "action-detail":
-										return pendingActionDetails ? (
-											<ActionDetailWindow
-												actionDetails={pendingActionDetails}
-											/>
-										) : null;
+										return <ActionDetailWindow />;
 									default:
 										return "Unknown view type";
 								}

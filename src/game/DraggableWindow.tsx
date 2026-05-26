@@ -1,7 +1,7 @@
 import { GlobeAltIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useGame } from "../hooks/useGame";
-import { useSelectionContext } from "../hooks/useSelectionContext";
+import { useCommand } from "./CommandContextDef";
 import { useWindowContext } from "../hooks/useWindowContext";
 import { useZIndex } from "../hooks/useZIndexContext";
 import { WindowInfo } from "./WindowInfo";
@@ -21,7 +21,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	const { getNextZIndex } = useZIndex();
 	const [windowZIndex, setWindowZIndex] = useState(() => getNextZIndex());
 	const { sectors } = useGame();
-	const { cancelActionConfirmation } = useSelectionContext();
+	const { cancel } = useCommand();
 
 	const {
 		handleMinimizeWindow,
@@ -333,11 +333,13 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 					</button>
 					<button
 						onClick={() => {
-							// If this is an action-detail window, call cancelActionConfirmation first
+							// If this is an action-detail window, abandon the command first
+							// (the controller will close the window when the phase resets).
 							if (windowInfo.type === "action-detail") {
-								cancelActionConfirmation();
+								cancel();
+							} else {
+								handleCloseWindow(windowInfo);
 							}
-							handleCloseWindow(windowInfo);
 						}}
 						className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg bg-gray-800 text-white hover:bg-gray-700"
 						aria-label="Close"

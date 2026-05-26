@@ -7,10 +7,8 @@ import {
 	XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React from "react";
-import {
-	SelectionMode,
-	useSelectionContext,
-} from "../hooks/useSelectionContext";
+import { SelectionMode, useSelection } from "../hooks/useSelection";
+import { useCommand } from "./CommandContextDef";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
 
 interface SelectionOptionsProps {
@@ -23,13 +21,15 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	const {
 		selectionMode,
 		selectedItems,
-		selectionState,
-		currentAction,
 		toggleSelectionMode: toggleSelectionKind,
+	} = useSelection();
+	const {
+		phase,
+		command,
 		startTargetSelection,
 		cancelTargetSelection,
 		showActionConfirmation,
-	} = useSelectionContext();
+	} = useCommand();
 
 	const getButtonClasses = (mode: SelectionMode) => {
 		const baseClasses =
@@ -59,9 +59,9 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 	return (
 		<div className={`flex items-center gap-2 ${className}`}>
 			{/* Target selection mode indicator */}
-			{selectionState === "awaiting-target" && (
+			{phase === "awaiting-target" && (
 				<div className="flex items-center gap-2 rounded bg-orange-600/20 px-3 py-1 text-sm text-orange-300">
-					<span>Select target for: {currentAction}</span>
+					<span>Select target for: {command?.actionId}</span>
 					<button
 						onClick={cancelTargetSelection}
 						className="text-orange-400 hover:text-orange-200"
@@ -73,7 +73,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 			)}
 
 			{/* Selection mode buttons - hidden during target selection */}
-			{selectionState === "idle" && (
+			{phase === "idle" && (
 				<>
 					<button
 						className={getButtonClasses("single")}
@@ -97,9 +97,9 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 			)}
 
 			{/* Target selection button */}
-			{selectionState === "awaiting-target" && (
+			{phase === "awaiting-target" && (
 				<button
-					className={getButtonClasses("target")}
+					className="flex cursor-pointer items-center gap-1 rounded bg-indigo-600 px-2 py-1 text-sm text-white transition-colors"
 					title="Target Selection Mode (Active)"
 				>
 					<div className="relative">
@@ -110,7 +110,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 			)}
 
 			{/* Selection count indicator - only show during idle state */}
-			{selectionState === "idle" && selectedItems.length > 0 && (
+			{phase === "idle" && selectedItems.length > 0 && (
 				<div className="flex items-center gap-2 rounded bg-blue-600/20 px-2 py-1 text-sm text-blue-300">
 					<span className="hidden sm:inline">
 						{selectedItems.length} selected
@@ -120,7 +120,7 @@ const SelectionOptions: React.FC<SelectionOptionsProps> = ({
 			)}
 
 			{/* Contextual actions menu - only show during idle state */}
-			{selectionState === "idle" && contextualActions.length > 0 && (
+			{phase === "idle" && contextualActions.length > 0 && (
 				<Menu as="div" className="relative">
 					<MenuButton className="flex cursor-pointer items-center gap-1 rounded bg-green-600 px-2 py-1 text-sm text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-900 focus:outline-none">
 						<EllipsisHorizontalIcon className="size-4" />

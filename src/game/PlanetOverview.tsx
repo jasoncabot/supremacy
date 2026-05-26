@@ -1,9 +1,11 @@
 import React from "react";
 import { PlanetView } from "../../worker/api";
 import { type Faction } from "../adornments";
+import { useItemClick } from "../hooks/useItemClick";
 import { usePlanetWindowHandlers } from "../hooks/usePlanetWindowHandlers";
-import { SelectableItemWithLocation, useSelectionContext } from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
 import { getPlanetById } from "../planets";
+import { useCommand } from "./CommandContextDef";
 import { FilterType } from "./Filters";
 import LoyaltyBar from "./LoyaltyBar";
 import PlanetCore from "./PlanetCore";
@@ -16,7 +18,8 @@ interface PlanetOverviewProps {
 }
 
 const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
-	const { selectionState, selectItem } = useSelectionContext();
+	const { phase } = useCommand();
+	const onItemClick = useItemClick();
 
 	const {
 		handleViewFleets,
@@ -27,7 +30,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 
 	const handlePlanetSelected = () => {
 		// If we're in target selection mode, select this planet as the target
-		if (selectionState === "awaiting-target") {
+		if (phase === "awaiting-target") {
 			const planetAsSelectableItem = {
 				...planet,
 				type: "planet" as const,
@@ -36,7 +39,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 					planetId: planet.metadata.id,
 				},
 			} as SelectableItemWithLocation;
-			selectItem(planetAsSelectableItem);
+			onItemClick(planetAsSelectableItem);
 		}
 		// If no selection is in progress, the mobile menu will handle the interaction
 		// (for desktop, the adornment buttons are always visible)
@@ -48,7 +51,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 		// On desktop, individual buttons handle their own clicks
 		const isMobile = window.innerWidth < 768; // md breakpoint
 		if (isMobile) {
-			if (selectionState === "awaiting-target") {
+			if (phase === "awaiting-target") {
 				e.stopPropagation();
 				handlePlanetSelected();
 			}
@@ -114,7 +117,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 			{/* Planet with adornments positioned around it - same layout for mobile and desktop */}
 			<div className="relative mb-2">
 				{/* Mobile: Wrap entire planet area with menu when not in target selection mode */}
-				{selectionState !== "awaiting-target" && planet.discovered ? (
+				{phase !== "awaiting-target" && planet.discovered ? (
 					<div className="md:hidden">
 						<PlanetMobileMenu
 							planet={planet}
@@ -160,7 +163,7 @@ const PlanetOverview: React.FC<PlanetOverviewProps> = ({ planet, filter }) => {
 							mission: handleViewMissions,
 						}}
 						onPlanetClick={
-							selectionState === "awaiting-target"
+							phase === "awaiting-target"
 								? (e) => {
 										e.stopPropagation();
 										handlePlanetSelected();

@@ -56,11 +56,11 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({
 
 	const submitActions = useCallback(
 		async (actions: GameAction[]): Promise<void> => {
-			// TODO: POST actions, then refresh the view from the server:
+			// TODO: POST actions once the endpoint exists:
 			//   await fetchData(`/api/games/${gameId}/actions`, { method: "POST", body: { actions } });
-			//   await refetch();
 			console.log("Actions submitted:", actions);
-			void refetch;
+			// Re-derive every faction's view from the (server-resolved) truth.
+			await refetch();
 		},
 		[refetch],
 	);

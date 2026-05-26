@@ -5,7 +5,7 @@ import { FilterType } from "./Filters";
 import PlanetAdornments from "./PlanetAdornments";
 import StarLegend from "./StarLegend";
 import { ViewfinderCircleIcon } from "@heroicons/react/24/outline";
-import { useSelectionContext } from "../hooks/useSelectionContext";
+import { useCommand } from "./CommandContextDef";
 
 interface PlanetCoreProps {
 	planet: PlanetView;
@@ -31,8 +31,8 @@ const PlanetCore: React.FC<PlanetCoreProps> = ({
 	onPlanetClick,
 	interactive = false,
 }) => {
-	const { selectionState } = useSelectionContext();
-	const isTargetMode = selectionState === "awaiting-target";
+	const { phase } = useCommand();
+	const isTargetMode = phase === "awaiting-target";
 
 	return (
 		<div

@@ -6,7 +6,7 @@ import { ResourceList } from "./components/ResourceList";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { TwoColumnLayout } from "./components/TwoColumnLayout";
 import MiniCardView from "./MiniCardView";
-import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
 
 export const MissionsOverview: React.FC<{
 	planet: PlanetView;

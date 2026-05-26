@@ -13,7 +13,7 @@ import {
 } from "../../worker/api";
 import { getCardImage, getShipCardImage } from "../cards";
 import { getFleetImageLayers } from "../fleets";
-import { SelectableItemWithLocation } from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
 import { ResourceList } from "./components/ResourceList";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { TwoColumnLayout } from "./components/TwoColumnLayout";

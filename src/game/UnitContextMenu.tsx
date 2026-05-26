@@ -1,10 +1,8 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import React, { useMemo } from "react";
-import {
-	SelectableItemWithLocation,
-	useSelectionContext,
-} from "../hooks/useSelectionContext";
+import { SelectableItemWithLocation } from "../hooks/useSelection";
+import { useCommand } from "./CommandContextDef";
 import { getAvailableActions, type ActionDefinition } from "./types/actions";
 
 interface UnitContextMenuProps {
@@ -18,8 +16,7 @@ const UnitContextMenu: React.FC<UnitContextMenuProps> = ({
 	children,
 	showContextMenu,
 }) => {
-	const { startTargetSelection, showActionConfirmation } =
-		useSelectionContext();
+	const { startTargetSelection, showActionConfirmation } = useCommand();
 
 	// Get available actions for this specific unit
 	const availableActions = useMemo<ActionDefinition[]>(
