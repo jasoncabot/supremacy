@@ -3,6 +3,7 @@ import React from "react";
 import { useItemClick } from "../hooks/useItemClick";
 import { SelectableItemWithLocation, useSelection } from "../hooks/useSelection";
 import { useCommand } from "./CommandContextDef";
+import { getItemTargetType } from "./types/actions";
 import UnitContextMenu from "./UnitContextMenu";
 
 interface ImagePair {
@@ -22,7 +23,7 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({
 	selectableItem,
 }) => {
 	const { selectionMode, isSelected } = useSelection();
-	const { phase } = useCommand();
+	const { phase, command } = useCommand();
 	const onItemClick = useItemClick();
 
 	const handleClick = () => {
@@ -31,6 +32,10 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({
 
 	const isCardSelected = selectableItem ? isSelected(selectableItem.id) : false;
 	const isTargetMode = phase === "awaiting-target";
+	const isValidTarget =
+		isTargetMode &&
+		!!selectableItem &&
+		!!command?.actionDef.validTargets.includes(getItemTargetType(selectableItem));
 
 	// Show context menu when not in selection or target mode
 	const showContextMenu =
@@ -61,7 +66,7 @@ const MiniCardView: React.FC<MiniCardViewProps> = ({
 							alt={`Foreground ${index + 1}`}
 							className="absolute inset-0 h-full w-full object-contain"
 						/>
-						{isTargetMode && (
+						{isValidTarget && (
 							<div className="absolute inset-0 z-10 flex items-center justify-center rounded">
 								<ViewfinderCircleIcon className="h-10 w-10 text-red-500 drop-shadow-lg" />
 							</div>

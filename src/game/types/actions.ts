@@ -34,7 +34,7 @@ export interface FleetTarget {
 export interface StructureTarget {
 	type: "structure";
 	id: string;
-	data: ManufacturingResource;
+	data: ManufacturingResource | DefenseResource;
 	planetId: string; // not really required but it doesn't hurt
 }
 
@@ -207,7 +207,7 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 			id: "move-troop",
 			label: "Move",
 			type: "move",
-			validTargets: ["planet", "ship"],
+			validTargets: ["planet", "ship", "fleet"],
 			requiresTarget: true,
 		},
 		{
@@ -318,18 +318,18 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 
 	battery: [
 		{
-			id: "stop-battery",
-			label: "Stop",
-			type: "stop",
+			id: "scrap-battery",
+			label: "Scrap",
+			type: "scrap",
 			validTargets: [],
 			requiresTarget: false,
 		},
 	],
 	shield: [
 		{
-			id: "stop-shield",
-			label: "Stop",
-			type: "stop",
+			id: "scrap-shield",
+			label: "Scrap",
+			type: "scrap",
 			validTargets: [],
 			requiresTarget: false,
 		},
@@ -337,6 +337,76 @@ const actionDefinitions: Record<ActionableResource, ActionDefinition[]> = {
 	// Planet actions - planets can be targeted but don't have actions themselves
 	planet: [],
 };
+
+// Converts a selectable item to a typed ActionTarget, or null if the item has
+// no planet location (required for all non-planet targets).
+export function createActionTarget(
+	item: SelectableItemWithLocation,
+): ActionTarget | null {
+	if (item.type === "planet") {
+		return { type: "planet", id: item.id, data: item };
+	}
+	const planetId = item.location.planetId;
+	if (!planetId) {
+		console.warn(`Target ${item.id} has no planet location`);
+		return null;
+	}
+	switch (item.type) {
+		case "mission":
+			return { type: "mission", id: item.id, data: item, planetId };
+		case "capital_ship":
+			return { type: "ship", id: item.id, data: item, planetId };
+		case "fleet":
+			return { type: "fleet", id: item.id, data: item, planetId };
+		case "shipyard":
+		case "training_facility":
+		case "construction_yard":
+		case "refinery":
+		case "mine":
+		case "shield":
+		case "battery":
+			return { type: "structure", id: item.id, data: item, planetId };
+		case "personnel":
+		case "troop":
+		case "squadron":
+			return {
+				type: "unit",
+				id: item.id,
+				data: item,
+				planetId,
+				shipId: item.location.shipId,
+			};
+	}
+}
+
+// Maps a selectable item's resource type to its ActionTarget discriminant.
+export function getItemTargetType(
+	item: SelectableItemWithLocation,
+): ActionTarget["type"] {
+	switch (item.type) {
+		case "planet":
+			return "planet";
+		case "capital_ship":
+			return "ship";
+		case "fleet":
+			return "fleet";
+		case "mission":
+			return "mission";
+		case "shipyard":
+		case "training_facility":
+		case "construction_yard":
+		case "refinery":
+		case "mine":
+			return "structure";
+		case "personnel":
+		case "troop":
+		case "squadron":
+			return "unit";
+		case "shield":
+		case "battery":
+			return "structure";
+	}
+}
 
 // Helper function to get available actions for selected items
 export function getAvailableActions(

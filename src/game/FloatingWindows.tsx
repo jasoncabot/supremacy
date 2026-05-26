@@ -22,7 +22,7 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 	return (
 		<div className="pointer-events-none fixed inset-0 z-40">
 			{/* Render regular windows */}
-			{openWindows.map((info) => {
+			{openWindows.map((info, index) => {
 				// Define width classes for different window types
 				const getWindowClassName = (type: string) => {
 					switch (type) {
@@ -48,6 +48,7 @@ const FloatingWindows: React.FC<{ filter: FilterType }> = ({ filter }) => {
 						<DraggableWindow
 							windowInfo={info}
 							className={getWindowClassName(info.type)}
+							zIndex={1000 + index * 10}
 						>
 							{(() => {
 								const planets = info.sectorId

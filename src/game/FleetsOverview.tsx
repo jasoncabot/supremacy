@@ -409,12 +409,20 @@ const FleetComponent: React.FC<{
 				<div className="ml-2">
 					{fleet.ships.map((shipItem) => {
 						const shipSelected = selectedShipId === shipItem.id;
+						const shipAsSelectableItem: SelectableItemWithLocation = {
+							...shipItem,
+							location: {
+								planetId: planet.metadata.id,
+								fleetId: fleet.id,
+								shipId: undefined,
+							},
+						};
 						return (
 							<div
 								className={`mb-2 ${shipSelected ? "bg-purple-800" : ""}`}
 								key={shipItem.id}
 								onClick={(e) => {
-									e.stopPropagation(); // Prevent parent click event
+									e.stopPropagation();
 									onShipSelect(shipItem.id);
 								}}
 							>
@@ -426,7 +434,7 @@ const FleetComponent: React.FC<{
 										},
 									]}
 									displayText={shipItem.name}
-									selectableItem={undefined}
+									selectableItem={shipAsSelectableItem}
 								/>
 							</div>
 						);

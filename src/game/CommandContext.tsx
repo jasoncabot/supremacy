@@ -1,5 +1,5 @@
 import React, { ReactNode, useCallback, useMemo, useState } from "react";
-import { SelectableItemWithLocation, useSelection } from "../hooks/useSelection";
+import { useSelection } from "../hooks/useSelection";
 import { useActionQueue } from "./ActionQueueContextDef";
 import {
 	Command,
@@ -9,66 +9,14 @@ import {
 } from "./CommandContextDef";
 import {
 	ActionTarget,
+	createActionTarget,
 	FleetTarget,
 	getAvailableActions,
-	MissionTarget,
 	ShipTarget,
 	StructureTarget,
 	UnitTarget,
 } from "./types/actions";
 
-// Build a typed ActionTarget from a selected item. Switching on the discriminant
-// narrows the item, so each branch is type-checked against the matching target
-// shape with no casts. The believed item rides along as `data` — at resolution
-// the server treats it as a claim, not truth.
-const createActionTarget = (
-	item: SelectableItemWithLocation,
-): ActionTarget | null => {
-	// Planets are the only target that isn't located at another planet.
-	if (item.type === "planet") {
-		return { type: "planet", id: item.id, data: item };
-	}
-
-	// Every other target lives at a planet; without one it isn't actionable.
-	const planetId = item.location.planetId;
-	if (!planetId) {
-		console.warn(`Target ${item.id} has no planet location`);
-		return null;
-	}
-
-	switch (item.type) {
-		case "mission":
-			return { type: "mission", id: item.id, data: item, planetId };
-		case "capital_ship":
-			return { type: "ship", id: item.id, data: item, planetId };
-		case "fleet":
-			return { type: "fleet", id: item.id, data: item, planetId };
-		case "shipyard":
-		case "training_facility":
-		case "construction_yard":
-		case "refinery":
-		case "mine":
-			return { type: "structure", id: item.id, data: item, planetId };
-		case "personnel":
-		case "troop":
-		case "squadron":
-		case "shield":
-		case "battery":
-			return {
-				type: "unit",
-				id: item.id,
-				data: item,
-				planetId,
-				shipId: item.location.shipId,
-			};
-		default: {
-			// Exhaustive: every remaining item type is handled above.
-			const exhaustiveCheck: never = item;
-			console.warn(`Unknown item type for action target: ${exhaustiveCheck}`);
-			return null;
-		}
-	}
-};
 
 export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 	children,
@@ -110,12 +58,9 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 				}
 				case "move": {
 					if (target) {
-						const actionTarget = createActionTarget(target);
-						if (actionTarget) {
-							sources.forEach((source) => {
-								moveUnit(createActionTarget(source) as UnitTarget, actionTarget);
-							});
-						}
+						sources.forEach((source) => {
+							moveUnit(createActionTarget(source) as UnitTarget, target);
+						});
 					}
 					break;
 				}
@@ -132,13 +77,12 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 				}
 				case "mission": {
 					if (target) {
-						const actionTarget = createActionTarget(target);
 						const sourceUnits = sources
 							.map((source) => createActionTarget(source))
 							.filter((x) => x !== null) as UnitTarget[];
 						const missionType = c.missionData?.missionType;
-						if (actionTarget && missionType) {
-							executeMission(sourceUnits, actionTarget, missionType, {
+						if (missionType) {
+							executeMission(sourceUnits, target, missionType, {
 								agents: c.missionData?.agents,
 								decoys: c.missionData?.decoys,
 							});
@@ -155,13 +99,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 				}
 				case "bombard": {
 					if (sources.length === 1 && sources[0].type === "fleet" && target) {
-						const actionTarget = createActionTarget(target);
-						if (actionTarget) {
-							bombardTarget(
-								createActionTarget(sources[0]) as FleetTarget,
-								actionTarget,
-							);
-						}
+						bombardTarget(createActionTarget(sources[0]) as FleetTarget, target);
 					} else {
 						console.warn("Bombard action requires exactly one fleet source.");
 					}
@@ -169,13 +107,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 				}
 				case "assault": {
 					if (sources.length === 1 && sources[0].type === "fleet" && target) {
-						const actionTarget = createActionTarget(target);
-						if (actionTarget) {
-							assaultTarget(
-								createActionTarget(sources[0]) as FleetTarget,
-								actionTarget,
-							);
-						}
+						assaultTarget(createActionTarget(sources[0]) as FleetTarget, target);
 					} else {
 						console.warn("Assault action requires exactly one fleet source.");
 					}
@@ -218,10 +150,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 				}
 				case "abort": {
 					if (target && target.type === "mission") {
-						const actionTarget = createActionTarget(target);
-						if (actionTarget) {
-							abortMission(actionTarget as MissionTarget);
-						}
+						abortMission(target);
 					} else {
 						console.warn("Abort action requires a valid mission target.");
 					}
@@ -260,7 +189,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({
 				setCommand({ actionId, actionDef: resolvedActionDef, sources });
 				setPhase("awaiting-target");
 			},
-			provideTarget: (target) => {
+			provideTarget: (target: ActionTarget) => {
 				setCommand((c) => (c ? { ...c, target } : c));
 				setPhase("confirming");
 			},

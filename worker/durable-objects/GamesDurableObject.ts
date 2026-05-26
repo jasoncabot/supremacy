@@ -25,11 +25,13 @@ import {
 	TrainingFacilitySubtype,
 	ConstructionYardSubtype,
 	MissionType,
+	MissionTarget,
 	CapitalShipSubtype,
 	FleetResource,
 	DefenseResource,
 	MissionResource,
 	PersonnelResource,
+	ManufacturingResource,
 	Result,
 } from "../api";
 import { ok, err } from "../errors";
@@ -507,6 +509,151 @@ function generateFleets(
 	return { fleets };
 }
 
+const empireCharacters: CharacterIdentifier[] = [
+	"darth_vader", "emperor_palpatine", "thrawn", "pellaeon", "piett", "ozzel",
+	"jerjerrod", "veers", "daala", "brandei", "dorja", "grammel", "bin_essada",
+	"covell", "labansat", "griff", "klev", "needa", "screed", "pter_thanas",
+	"villar", "menndo", "garindan", "bane_nothos", "afyon",
+];
+
+const rebellionCharacters: CharacterIdentifier[] = [
+	"luke_skywalker", "leia_organa", "han_solo", "mon_mothma", "ackbar",
+	"lando_calrissian", "chewbacca", "jan_dodonna", "crix_madine", "garm_bel_iblis",
+	"borsk_feylya", "wedge_antilles", "bren_derlin", "carlist_rieekan", "drayson",
+	"adar_tallon", "mazer_rackus", "orrimaarko", "mawshiye", "narra", "page",
+	"syub_snunb", "roget_jiriss", "tura_raftican", "sarin_virgilio", "noval_garaint",
+	"huoba_neva", "vanden_willard", "shenir_rix", "kaiya_andrimetrum",
+	"niles_ferrier", "talon_karrde", "zuggs", "orlok",
+];
+
+const empireShips: CapitalShipSubtype[] = [
+	"imperial_star_destroyer", "imperial_ii_star_destroyer", "super_star_destroyer",
+	"victory_destroyer", "victory_ii_star_destroyer", "interdictor_cruiser",
+	"lancer_frigate", "carrack_light_cruiser", "imperial_dreadnaught",
+	"imperial_escort_carrier", "strike_cruiser", "dauntless_cruiser", "star_galleon",
+];
+
+const rebellionShips: CapitalShipSubtype[] = [
+	"mon_calamari_cruiser", "assault_frigate", "nebulon_b_frigate",
+	"corellian_corvette", "corellian_gunship", "bulk_cruiser",
+	"alliance_dreadnaught", "alliance_escort_carrier", "bulk_transport",
+	"medium_transport", "assault_transport", "cc_7700_frigate", "cc_9600_frigate",
+	"liberator_cruiser", "bulwark_battlecruiser",
+];
+
+function pick<T>(arr: T[]): T {
+	return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomPlanetTarget(planets: PlanetMetadata[]): MissionTarget {
+	const p = pick(planets);
+	return { type: "planet", id: p.id, name: p.name, status: "active", picture: p.picture };
+}
+
+function randomCharacterTarget(
+	characters: CharacterIdentifier[],
+	{ injured = false, imprisoned = false } = {},
+): MissionTarget {
+	const id = pick(characters);
+	return {
+		type: "personnel",
+		subtype: "character",
+		id: `personnel:character:${id}`,
+		name: characterNames[id],
+		status: "active",
+		injured,
+		imprisoned,
+	};
+}
+
+function randomShipTarget(ships: CapitalShipSubtype[]): MissionTarget {
+	const subtype = pick(ships);
+	return {
+		type: "capital_ship",
+		subtype,
+		id: `capital_ship:${subtype}:${crypto.randomUUID()}`,
+		name: subtype.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+		status: "active",
+	};
+}
+
+function randomManufacturingTarget(
+	subtypes: Array<{ type: ManufacturingResource["type"]; subtype: string; name: string }>,
+): MissionTarget {
+	const entry = pick(subtypes);
+	return {
+		type: entry.type,
+		subtype: entry.subtype,
+		id: `${entry.type}:${entry.subtype}:${crypto.randomUUID()}`,
+		name: entry.name,
+		status: "active",
+	} as MissionTarget;
+}
+
+type MissionTargetCategory = "planet" | "enemy_character" | "friendly_character" | "enemy_ship" | "friendly_shipyard" | "friendly_training" | "friendly_construction" | "enemy_facility" | "enemy_ship_or_unit";
+
+const missionTargetCategories: Record<MissionType, MissionTargetCategory[]> = {
+	abduction:                ["enemy_character"],
+	assassination:            ["enemy_character"],
+	death_star_sabotage:      ["enemy_ship"],
+	diplomacy:                ["planet"],
+	espionage:                ["planet"],
+	facility_design_research: ["friendly_construction"],
+	incite_uprising:          ["planet"],
+	jedi_training:            ["friendly_character"],
+	reconnaissance:           ["planet"],
+	recruitment:              ["planet"],
+	rescue:                   ["friendly_character"],
+	sabotage:                 ["enemy_facility", "enemy_ship_or_unit"],
+	ship_design_research:     ["friendly_shipyard"],
+	subdue_uprising:          ["planet"],
+	troop_training_research:  ["friendly_training"],
+};
+
+function generateMissionTarget(
+	category: MissionTargetCategory,
+	owner: FactionMetadata,
+	planetMetadataList: PlanetMetadata[],
+): MissionTarget {
+	const enemyChars = owner === "Empire" ? rebellionCharacters : empireCharacters;
+	const friendlyChars = owner === "Empire" ? empireCharacters : rebellionCharacters;
+	const enemyShips = owner === "Empire" ? rebellionShips : empireShips;
+
+	const shipyardOptions = [
+		{ type: "shipyard" as const, subtype: "orbital_shipyard", name: shipyardNames["orbital_shipyard"] },
+		{ type: "shipyard" as const, subtype: "advanced_shipyard", name: shipyardNames["advanced_shipyard"] },
+	];
+	const trainingOptions = [
+		{ type: "training_facility" as const, subtype: "training_facility", name: trainingFacilityNames["training_facility"] },
+		{ type: "training_facility" as const, subtype: "advanced_training_facility", name: trainingFacilityNames["advanced_training_facility"] },
+	];
+	const constructionOptions = [
+		{ type: "construction_yard" as const, subtype: "construction_yard", name: constructionYardNames["construction_yard"] },
+		{ type: "construction_yard" as const, subtype: "advanced_construction_yard", name: constructionYardNames["advanced_construction_yard"] },
+	];
+
+	switch (category) {
+		case "planet":
+			return randomPlanetTarget(planetMetadataList);
+		case "enemy_character":
+			return randomCharacterTarget(enemyChars);
+		case "friendly_character":
+			return randomCharacterTarget(friendlyChars);
+		case "enemy_ship":
+			return randomShipTarget(enemyShips);
+		case "friendly_shipyard":
+			return randomManufacturingTarget(shipyardOptions);
+		case "friendly_training":
+			return randomManufacturingTarget(trainingOptions);
+		case "friendly_construction":
+			return randomManufacturingTarget(constructionOptions);
+		case "enemy_facility":
+			return randomManufacturingTarget([...shipyardOptions, ...trainingOptions, ...constructionOptions]);
+		case "enemy_ship_or_unit":
+			return randomShipTarget(enemyShips);
+	}
+}
+
 // Helper function to generate random mission data for a planet
 function generateMissions(
 	planetOwner: FactionMetadata | "Neutral",
@@ -514,57 +661,32 @@ function generateMissions(
 ): PlanetMissions {
 	const missions: MissionResource[] = [];
 
-	// Only generate missions for owned planets
 	if (planetOwner === "Neutral") {
 		return { missions };
 	}
 
-	// Generate 0-3 active missions per planet
 	const missionCount = Math.floor(Math.random() * 4);
 
 	const missionTypes: MissionType[] = planetOwner === "Empire"
-		? [
-			"espionage",
-			"assassination", 
-			"subdue_uprising",
-			"facility_design_research",
-			"ship_design_research",
-			"abduction"
-		]
-		: [
-			"reconnaissance",
-			"sabotage",
-			"rescue",
-			"incite_uprising", 
-			"recruitment",
-			"diplomacy",
-			"jedi_training"
-		];
+		? ["espionage", "assassination", "subdue_uprising", "facility_design_research", "ship_design_research", "abduction"]
+		: ["reconnaissance", "sabotage", "rescue", "incite_uprising", "recruitment", "diplomacy", "jedi_training"];
+
+	const agentTypes: PersonnelSubtype[] = planetOwner === "Empire"
+		? ["imperial_commando", "imperial_espionage_droid", "noghri_death_commando"]
+		: ["bothan_spy", "guerilla", "infiltrator", "longprobe_y_wing_recon_team"];
 
 	for (let i = 0; i < missionCount; i++) {
-		const missionType = missionTypes[Math.floor(Math.random() * missionTypes.length)];
-		const missionId = crypto.randomUUID();
+		const missionType = pick(missionTypes);
+		const categories = missionTargetCategories[missionType];
+		const target = generateMissionTarget(pick(categories), planetOwner, planetMetadataList);
 
-		// Generate target (random planet from available planets)
-		const targetPlanet = planetMetadataList[Math.floor(Math.random() * planetMetadataList.length)];
-		const target = {
-			id: targetPlanet.id,
-			name: targetPlanet.name,
-			status: "active" as const,
-		};
-
-		// Generate agents
 		const agents: PersonnelResource[] = [];
 		const agentCount = Math.floor(Math.random() * 3) + 1;
-		const agentTypes: PersonnelSubtype[] = planetOwner === "Empire"
-			? ["imperial_commando", "imperial_espionage_droid", "noghri_death_commando"]
-			: ["bothan_spy", "guerilla", "infiltrator", "longprobe_y_wing_recon_team"];
-
 		for (let j = 0; j < agentCount; j++) {
-			const agentType = agentTypes[Math.floor(Math.random() * agentTypes.length)];
+			const agentType = pick(agentTypes);
 			agents.push({
 				id: `agent:${agentType}:${crypto.randomUUID()}`,
-				name: `${agentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Agent ${j + 1}`,
+				name: `${agentType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())} Agent ${j + 1}`,
 				type: "personnel",
 				subtype: agentType,
 				injured: false,
@@ -573,14 +695,13 @@ function generateMissions(
 			});
 		}
 
-		// Generate decoys
 		const decoys: PersonnelResource[] = [];
 		const decoyCount = Math.floor(Math.random() * 2);
 		for (let j = 0; j < decoyCount; j++) {
-			const decoyType = agentTypes[Math.floor(Math.random() * agentTypes.length)];
+			const decoyType = pick(agentTypes);
 			decoys.push({
 				id: `decoy:${decoyType}:${crypto.randomUUID()}`,
-				name: `${decoyType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Decoy ${j + 1}`,
+				name: `${decoyType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())} Decoy ${j + 1}`,
 				type: "personnel",
 				subtype: decoyType,
 				injured: false,
@@ -589,18 +710,16 @@ function generateMissions(
 			});
 		}
 
-		const mission: MissionResource = {
-			id: `mission:${missionType}:${missionId}`,
-			name: `${missionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Mission`,
+		missions.push({
+			id: `mission:${missionType}:${crypto.randomUUID()}`,
+			name: `${missionType.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())} Mission`,
 			type: "mission",
 			subtype: missionType,
 			status: "active",
 			target,
 			agents,
 			decoys,
-		};
-
-		missions.push(mission);
+		});
 	}
 
 	return { missions };

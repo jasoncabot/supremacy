@@ -342,10 +342,18 @@ export type PersonnelResource = ResourceBase & {
 	imprisoned: boolean;
 };
 
+export type MissionTarget =
+	| (ResourceBase & { type: "planet"; picture: number })
+	| (ResourceBase & { type: "personnel"; subtype: PersonnelSubtype; injured: boolean; imprisoned: boolean })
+	| (ResourceBase & { type: "capital_ship"; subtype: CapitalShipSubtype })
+	| (ResourceBase & { type: "troop"; subtype: TroopSubtype })
+	| (ResourceBase & { type: "squadron"; subtype: SquadronSubtype })
+	| ManufacturingResource;
+
 export type MissionResource = ResourceBase & {
 	type: "mission";
 	subtype: MissionType;
-	target: ResourceBase;
+	target: MissionTarget;
 	agents: PersonnelResource[];
 	decoys: PersonnelResource[];
 };

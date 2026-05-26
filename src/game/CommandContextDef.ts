@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { MissionType } from "../../worker/api";
 import { SelectableItemWithLocation } from "../hooks/useSelection";
-import type { ActionDefinition } from "./types/actions";
+import type { ActionDefinition, ActionTarget } from "./types/actions";
 
 export interface MissionData {
 	agents?: string[];
@@ -15,7 +15,7 @@ export interface Command {
 	actionId: string;
 	actionDef: ActionDefinition;
 	sources: SelectableItemWithLocation[];
-	target?: SelectableItemWithLocation;
+	target?: ActionTarget;
 	missionData?: MissionData;
 }
 
@@ -33,13 +33,13 @@ export interface CommandContextType {
 		sourceUnits?: SelectableItemWithLocation[],
 	) => void;
 	// Supply the target for an awaiting-target command; enters confirming.
-	provideTarget: (target: SelectableItemWithLocation) => void;
+	provideTarget: (target: ActionTarget) => void;
 	// Begin (and confirm) an action that needs no target; enters confirming.
 	showActionConfirmation: (
 		actionId: string,
 		actionDef: ActionDefinition,
 		sources: SelectableItemWithLocation[],
-		target?: SelectableItemWithLocation,
+		target?: ActionTarget,
 	) => void;
 	updateMissionData: (missionData: MissionData) => void;
 	// Dispatch the command into the action queue, then reset and clear selection.

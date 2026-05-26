@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import { MissionType } from "../../worker/api";
 import { SelectableItemWithLocation } from "../hooks/useSelection";
 import { useCommand } from "./CommandContextDef";
+import type { ActionTarget } from "./types/actions";
 
 const ActionDetailWindow: React.FC = () => {
 	const { command, confirm, cancel } = useCommand();
@@ -41,7 +42,7 @@ const ActionDetailWindow: React.FC = () => {
 		}
 	};
 
-	// Helper function to get display name for items
+	// Helper function to get display name for source items
 	const getDisplayName = (item: SelectableItemWithLocation): string => {
 		if (item.type === "planet") {
 			return item.metadata?.name || `Planet ${item.id}`;
@@ -49,7 +50,7 @@ const ActionDetailWindow: React.FC = () => {
 		return item.name || `${item.type} ${item.id}`;
 	};
 
-	// Helper function to get context information for missions
+	// Helper function to get context information for source items
 	const getContextInfo = (item: SelectableItemWithLocation): string => {
 		const parts: string[] = [];
 		if (item.location?.planetId) {
@@ -62,6 +63,18 @@ const ActionDetailWindow: React.FC = () => {
 			parts.push(`Ship: ${item.location.shipId}`);
 		}
 		return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+	};
+
+	const getTargetDisplayName = (t: ActionTarget): string => {
+		if (t.type === "planet") return t.data.metadata?.name || `Planet ${t.id}`;
+		return (t.data as { name?: string }).name || `${t.type} ${t.id}`;
+	};
+
+	const getTargetContextInfo = (t: ActionTarget): string => {
+		if (t.type === "planet") return "";
+		const parts = [`Planet: ${t.planetId}`];
+		if (t.type === "unit" && t.shipId) parts.push(`Ship: ${t.shipId}`);
+		return ` (${parts.join(", ")})`;
 	};
 
 	const renderActionSpecificUI = () => {
@@ -77,7 +90,7 @@ const ActionDetailWindow: React.FC = () => {
 						<div className="text-sm text-slate-400">
 							Moving {sources.length} unit(s) to{" "}
 							<span className="text-white">
-								{target ? getDisplayName(target) : "selected target"}
+								{target ? getTargetDisplayName(target) : "selected target"}
 							</span>
 						</div>
 					</div>
@@ -201,8 +214,8 @@ const ActionDetailWindow: React.FC = () => {
 						<div className="text-sm text-slate-400">
 							Mission target:{" "}
 							<span className="text-white">
-								{target ? getDisplayName(target) : "selected target"}
-								{target ? getContextInfo(target) : ""}
+								{target ? getTargetDisplayName(target) : "selected target"}
+								{target ? getTargetContextInfo(target) : ""}
 							</span>
 						</div>
 					</div>
@@ -234,7 +247,7 @@ const ActionDetailWindow: React.FC = () => {
 						<div className="text-sm text-slate-400">
 							Bombarding{" "}
 							<span className="text-white">
-								{target ? getDisplayName(target) : "selected target"}
+								{target ? getTargetDisplayName(target) : "selected target"}
 							</span>{" "}
 							with {sources.length} fleet(s).
 						</div>
@@ -252,7 +265,7 @@ const ActionDetailWindow: React.FC = () => {
 						<div className="text-sm text-slate-400">
 							Assaulting{" "}
 							<span className="text-white">
-								{target ? getDisplayName(target) : "selected target"}
+								{target ? getTargetDisplayName(target) : "selected target"}
 							</span>{" "}
 							with {sources.length} fleet(s). This may result in heavy
 							casualties.
@@ -299,7 +312,7 @@ const ActionDetailWindow: React.FC = () => {
 						<span className="rounded bg-slate-700 px-2 py-1 text-xs text-slate-300">
 							{target.type}
 						</span>
-						<span className="text-white">{getDisplayName(target)}</span>
+						<span className="text-white">{getTargetDisplayName(target)}</span>
 					</div>
 				</div>
 			)}

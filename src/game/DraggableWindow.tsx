@@ -3,23 +3,22 @@ import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { useGame } from "../hooks/useGame";
 import { useCommand } from "./CommandContextDef";
 import { useWindowContext } from "../hooks/useWindowContext";
-import { useZIndex } from "../hooks/useZIndexContext";
 import { WindowInfo } from "./WindowInfo";
 
 export interface DraggableWindowProps {
 	windowInfo: WindowInfo;
 	children: ReactNode;
 	className?: string;
+	zIndex?: number;
 }
 
 const DraggableWindow: React.FC<DraggableWindowProps> = ({
 	windowInfo,
 	children,
 	className = "",
+	zIndex = 1000,
 }) => {
 	const nodeRef = useRef<HTMLDivElement>(null);
-	const { getNextZIndex } = useZIndex();
-	const [windowZIndex, setWindowZIndex] = useState(() => getNextZIndex());
 	const { sectors } = useGame();
 	const { cancel } = useCommand();
 
@@ -30,12 +29,9 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 		bringToFront,
 	} = useWindowContext();
 
-	// Function to bring window to front - now uses the context method
+	// Bring window to front by updating its position in the shared openWindows array.
+	// z-index is derived from array position in FloatingWindows, so this is sufficient.
 	const bringWindowToFront = () => {
-		// Get the next highest z-index from our context
-		const nextZIndex = getNextZIndex();
-		setWindowZIndex(nextZIndex);
-		// Update the context to move this window to front of array
 		bringToFront(windowInfo.id);
 	};
 
@@ -264,7 +260,7 @@ const DraggableWindow: React.FC<DraggableWindowProps> = ({
 			ref={nodeRef}
 			style={{
 				transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
-				zIndex: windowZIndex,
+				zIndex: zIndex,
 				willChange: dragging ? "transform" : "auto",
 				position: "fixed", // Fixed position relative to viewport
 				left: 0,

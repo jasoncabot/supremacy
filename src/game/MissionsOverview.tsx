@@ -1,12 +1,39 @@
 import { UserGroupIcon, UsersIcon } from "@heroicons/react/24/outline";
 import React, { useState } from "react";
-import { PersonnelResource, PlanetView } from "../../worker/api";
-import { getCardImage } from "../cards";
+import { MissionTarget, PersonnelResource, PlanetView } from "../../worker/api";
+import { getCardImage, getCharacterImage, getManufacturingCardImage, getShipCardImage } from "../cards";
+import { CharacterIdentifier } from "../../worker/api";
+import { getPlanetById } from "../planets";
 import { ResourceList } from "./components/ResourceList";
 import { TabGroupComponent } from "./components/TabGroupComponent";
 import { TwoColumnLayout } from "./components/TwoColumnLayout";
 import MiniCardView from "./MiniCardView";
 import { SelectableItemWithLocation } from "../hooks/useSelection";
+
+function getMissionTargetForeground(target: MissionTarget): string {
+	switch (target.type) {
+		case "planet":
+			return getPlanetById(target.picture);
+		case "personnel": {
+			if (target.subtype === "character") {
+				const charId = target.id.split(":")[2] as CharacterIdentifier;
+				return getCharacterImage(charId) ?? getPlanetById(1);
+			}
+			return getCardImage(target);
+		}
+		case "troop":
+		case "squadron":
+			return getCardImage(target);
+		case "capital_ship":
+			return getShipCardImage(target.subtype);
+		case "shipyard":
+		case "training_facility":
+		case "construction_yard":
+		case "refinery":
+		case "mine":
+			return getManufacturingCardImage(target);
+	}
+}
 
 export const MissionsOverview: React.FC<{
 	planet: PlanetView;
@@ -147,8 +174,8 @@ export const MissionsOverview: React.FC<{
 					<MiniCardView
 						imagePairs={[
 							{
-								foreground: "/path/to/default_card.png",
-								background: "/path/to/default_bg.png",
+								foreground: getMissionTargetForeground(mission.target),
+								background: "",
 							},
 						]}
 						displayText={mission.target.name}
