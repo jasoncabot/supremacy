@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { useSoundManager } from "../hooks/useSoundManager";
+import { useSound } from "../hooks/useSound";
 import { MinimizedWindowInfo, WindowContext } from "../hooks/useWindowContext";
 import { WindowInfo } from "./WindowInfo";
 
@@ -10,7 +10,7 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 	const [minimizedWindows, setMinimizedWindows] = useState<
 		MinimizedWindowInfo[]
 	>([]);
-	const { playSound } = useSoundManager();
+	const { playSound } = useSound();
 
 	// Open a window - brings it to the front if already open, otherwise adds it
 	const handleOpenWindow = useCallback(

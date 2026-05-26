@@ -1,36 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
 import { SavedGameResponse } from "../../worker/api";
-import { useApi } from "../hooks/useApi";
+import { useApi, useFetch } from "../hooks/useApi";
 import { Loading } from "../Loading";
 
 const RestoreGame: React.FC = () => {
 	const navigate = useNavigate();
-	const [savedGames, setSavedGames] = useState<SavedGameResponse[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<Error | null>(null);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
 		null,
 	);
 	const [deleting, setDeleting] = useState<string | null>(null);
 
-	const { fetchData } = useApi<{ games: SavedGameResponse[] }>();
+	const { data, loading, error, refetch } = useFetch<{
+		games: SavedGameResponse[];
+	}>("/api/games");
+	const savedGames = data?.games ?? [];
 
-	useEffect(() => {
-		fetchData("/api/games")
-			.then((response) => {
-				setSavedGames(response.games);
-				setLoading(false);
-			})
-			.catch((err) => {
-				if (err.name === "AbortError") {
-					return;
-				}
-				console.error("Error fetching saved games:", err);
-				setError(err);
-				setLoading(false);
-			});
-	}, [fetchData]);
+	const { fetchData: deleteRequest } = useApi();
 
 	const handleRestore = (gameId: string) => {
 		navigate(`/game/${gameId}`);
@@ -39,13 +25,11 @@ const RestoreGame: React.FC = () => {
 	const handleDeleteGame = async (gameId: string) => {
 		setDeleting(gameId);
 		try {
-			await fetchData(`/api/games/${gameId}`, { method: "DELETE" });
-			// Remove the game from local state
-			setSavedGames((prev) => prev.filter((game) => game.id !== gameId));
+			await deleteRequest(`/api/games/${gameId}`, { method: "DELETE" });
+			await refetch();
 			setShowDeleteConfirm(null);
 		} catch (err) {
 			console.error("Error deleting game:", err);
-			setError(err as Error);
 		} finally {
 			setDeleting(null);
 		}

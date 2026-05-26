@@ -58,6 +58,38 @@ Views need no maintenance — they recompute from truth. An order may target som
 no longer exists or never did; resolve that against the truth (destroyed / already moved /
 decoy), don't trust the order's embedded snapshot.
 
+## Error handling across boundaries
+
+There is **one error type** (`ApiError` in `worker/api.ts`: `status`, `code`, `message`)
+and **one place** errors become HTTP responses: `errorResponse` in `worker/errors.ts`,
+wired as the `catch` and `missing` handler on the routers in `worker/index.ts`. Every
+error funnels through it: `ApiError`s pass through as `{ error: { code, message } }` with
+their status; anything else is logged server-side and returned as an opaque 500 (or 503 if
+the failure carries Cloudflare's `.overloaded` flag) so internal detail never leaks.
+
+The hard rule that makes this work:
+
+1. **Durable Object RPC methods never throw — they return `Result<T>`.** Build it with
+   `ok(value)` / `err(status, code, message)` from `worker/errors.ts`. This is not style:
+   RPC serialization reconstructs a thrown `Error` as a bare `Error`, **dropping `status`,
+   `code`, and the prototype** (only `message` and the prototype `name` survive). A plain
+   `Result` object survives structured clone intact, so error metadata crosses the boundary.
+   Returning `{ error: new ApiError(...) }` does **not** work — an `Error` *instance* loses
+   its own properties the same way. There is no throw to leak, by construction.
+2. **Convert `Result` → throw only on the worker side, with `unwrap`.** Routers and
+   middleware call `unwrap(await stub.method(...))`; it re-throws the `ApiError` *in the
+   worker isolate*, where properties are intact and `errorResponse` can format it. A DO
+   that calls another DO propagates a failure as a value (`if (!r.ok) return r;`), never by
+   unwrapping mid-chain.
+3. **Throwing `ApiError` directly is fine in worker-side code** (request handlers,
+   middleware, helpers) — it never crosses RPC there, so it reaches `errorResponse` intact.
+4. **`message` is shown to the user; keep it client-safe.** No stack traces, storage keys,
+   or upstream errors — log those instead. Auth failures stay deliberately opaque (a missing
+   user and a wrong password both return the same 401, so usernames don't leak).
+
+WebSockets aren't used yet; when added, apply the same rule at that boundary (a single
+error shape, converted at the edge, never leaking internals).
+
 ## Conventions
 
 - **Indentation: tabs** (see `.editorconfig` / `.prettierrc`). LF, final newline, no trailing whitespace.

@@ -1,14 +1,54 @@
+/**
+ * The single error type crossing every boundary (fetch and — eventually —
+ * WebSocket). Durable Objects and request handlers `throw` it; the worker's
+ * central `errorResponse` formatter turns it into an {@link ErrorBody}.
+ *
+ * `status` is the HTTP status to surface, `code` is a stable machine-readable
+ * identifier, and `message` is safe to show the user. Never put internal detail
+ * (stack traces, storage keys, upstream errors) in `message` — log that instead.
+ *
+ * An `ApiError` is never produced *inside* a Durable Object. RPC serialization
+ * would reconstruct it as a bare `Error`, dropping `status`/`code`. DO methods
+ * instead return a {@link Result} carrying {@link ApiErrorData} (plain fields,
+ * which survive structured clone intact); the worker-side caller turns a failed
+ * `Result` back into a thrown `ApiError` in-isolate via `unwrap`.
+ */
 export class ApiError extends Error {
 	status: number;
-	statusText: string;
+	code: string;
 
-	constructor(status: number, statusText: string, message?: string) {
-		super(message || `API error: ${status} ${statusText}`);
+	constructor(status: number, code: string, message?: string) {
+		super(message || `${code} (${status})`);
 		this.status = status;
-		this.statusText = statusText;
+		this.code = code;
 		this.name = "ApiError";
 	}
 }
+
+/** The wire shape of every error response. Shared by worker and frontend. */
+export interface ErrorBody {
+	error: {
+		code: string;
+		message: string;
+	};
+}
+
+/** The serializable error payload carried by a failed {@link Result}. */
+export interface ApiErrorData {
+	status: number;
+	code: string;
+	message: string;
+}
+
+/**
+ * The return type of every Durable Object RPC method that can fail. A plain
+ * discriminated union whose fields survive structured clone across the RPC
+ * boundary, unlike an `Error`'s own properties. DO methods build it with
+ * `ok`/`err` and never throw; callers consume it with `unwrap`.
+ */
+export type Result<T> =
+	| { ok: true; value: T }
+	| { ok: false; error: ApiErrorData };
 
 export interface VersionResponse {
 	version: string;

@@ -1,10 +1,11 @@
 import { DurableObject } from "cloudflare:workers";
 import {
-	ApiError,
+	Result,
 	SavedGameResponse,
 	FactionMetadata,
 	SignupRequest,
 } from "../api";
+import { ok, err } from "../errors";
 import { AuthScope } from "../middleware";
 
 export interface UserGame {
@@ -27,11 +28,11 @@ export class UsersDurableObject extends DurableObject<Env> {
 		super(ctx, env);
 	}
 
-	async signup(req: SignupRequest): Promise<{ error?: ApiError }> {
+	async signup(req: SignupRequest): Promise<Result<void>> {
 		// Check if the user already exists
 		const existingUser = await this.getUser();
 		if (existingUser) {
-			return { error: new ApiError(409, "conflict", "user already exists") };
+			return err(409, "conflict", "A user with that name already exists");
 		}
 
 		await this.ctx.storage.put<User>("user", {
@@ -40,7 +41,7 @@ export class UsersDurableObject extends DurableObject<Env> {
 			username: req.username,
 			email: req.email || "",
 		} as User);
-		return {};
+		return ok();
 	}
 
 	async getUser(): Promise<User | undefined> {
@@ -58,12 +59,6 @@ export class UsersDurableObject extends DurableObject<Env> {
 	}
 
 	async getUserGames(): Promise<{ games: SavedGameResponse[] }> {
-		// Get the current user
-		const user = await this.getUser();
-		if (!user) {
-			throw new ApiError(404, "Not Found", "User not found");
-		}
-
 		// Get games associated with this user
 		const userGames = (await this.ctx.storage.get<UserGame[]>("games")) || [];
 

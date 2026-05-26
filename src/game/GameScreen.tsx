@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { useGame } from "../hooks/useGame";
 import { Loading } from "../Loading";
 import { ActionQueueProvider } from "./ActionQueueContext";
-import { BackgroundMusicProvider } from "./BackgroundMusicProvider";
+import { SoundProvider } from "./SoundProvider";
 import Filters, { FilterType } from "./Filters";
 import FloatingWindows from "./FloatingWindows";
 import GameActions from "./GameActions";
@@ -128,7 +128,7 @@ const GameScreenContent: React.FC = () => {
 // Wrapper component that provides the GameContext and WindowContext
 const GameScreen: React.FC = () => {
 	return (
-		<BackgroundMusicProvider>
+		<SoundProvider>
 			<GameProvider>
 				<ActionQueueProvider>
 					<WindowProvider>
@@ -148,7 +148,7 @@ const GameScreen: React.FC = () => {
 					</WindowProvider>
 				</ActionQueueProvider>
 			</GameProvider>
-		</BackgroundMusicProvider>
+		</SoundProvider>
 	);
 };
 

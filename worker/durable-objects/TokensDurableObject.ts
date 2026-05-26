@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { UsersDurableObject } from ".";
-import { ApiError, SignupRequest, TokenPair } from "../api";
+import { Result, SignupRequest, TokenPair } from "../api";
+import { ok, err } from "../errors";
 import { AuthScope } from "../middleware";
 
 const idFromUsername = (
@@ -16,6 +17,23 @@ const tokenIdForUserId = (
 	return ns.idFromName(`tokens:${id}`);
 };
 
+/**
+ * Plays two roles, distinguished by how the instance is addressed:
+ *
+ * - **Coordinator**, addressed by `idFromName("user:<username>")` — the entry
+ *   points `signup`/`login` route to the right per-user instances; the
+ *   coordinator stores nothing itself.
+ * - **Per-user token store**, addressed by `idFromName("tokens:<userId>")` —
+ *   holds the password hash and issued tokens for one user. `storePassword`,
+ *   `checkPassword`, `refresh`, and `verifyAccessToken` operate on this state.
+ *
+ * Because the two roles live on different instances, the coordinator reaches a
+ * store instance over RPC (`this.env.TOKENS.get(...)`). Methods called that way
+ * are part of the RPC surface and must be **public** — only `generateTokens` is
+ * truly internal (always invoked via `this`) and stays `private`. Note that
+ * `storePassword` therefore sets a user's credentials with no authentication;
+ * it is reachable only by trusted server-side bindings, never by HTTP clients.
+ */
 export class TokensDurableObject extends DurableObject<Env> {
 	constructor(ctx: DurableObjectState, env: Env) {
 		super(ctx, env);
@@ -24,61 +42,60 @@ export class TokensDurableObject extends DurableObject<Env> {
 	async signup(
 		req: SignupRequest,
 		clientId: string,
-	): Promise<{ tokens?: TokenPair; error?: ApiError }> {
+	): Promise<Result<TokenPair>> {
 		// this instance of the DO is for the users username and acts as a co-ordinator rather than storing the user data itself
 		const uid = idFromUsername(this.env.USERS, req.username);
-		const obj = (await this.env.USERS.get(
-			uid,
-		)) as unknown as UsersDurableObject;
+		const obj = this.env.USERS.get(uid);
 
-		// Store the user details specifically in the USERS object
-		const result = await obj.signup(req);
-		if (result.error) {
-			return { error: result.error };
-		}
+		// Store the user details in the USERS object; propagate a failure (e.g.
+		// 409 conflict) verbatim rather than continuing.
+		const created = await obj.signup(req);
+		if (!created.ok) return created;
 
 		// if signup worked, then create a durable object for that user
 		const tid = tokenIdForUserId(this.env.TOKENS, uid.toString());
-		const tobj = (await this.env.TOKENS.get(
-			tid,
-		)) as unknown as TokensDurableObject;
+		const tobj = this.env.TOKENS.get(tid);
 
 		// Create refresh and access tokens for this user and client
-		return tobj.storePassword(uid.toString(), req.password, clientId);
+		return ok(await tobj.storePassword(uid.toString(), req.password, clientId));
 	}
 
 	/**
-	 * Authenticate a user with username and password
-	 * @returns TokenPair if successful, undefined if not
+	 * Authenticate a user with username and password.
+	 * @returns a `Result` carrying the issued token pair, or a 401 on failure.
 	 */
 	async login(
 		username: string,
 		password: string,
 		clientId: string,
-	): Promise<{ tokens?: TokenPair; error?: ApiError }> {
+	): Promise<Result<TokenPair>> {
 		// this instance of the DO is for the users username and acts as a co-ordinator rather than storing the user data itself
 		const id = idFromUsername(this.env.USERS, username);
-		const obj = (await this.env.USERS.get(id)) as unknown as UsersDurableObject;
+		const obj = this.env.USERS.get(id);
 		const user = await obj.getUser();
 		if (!user) {
-			return { error: new ApiError(404, "not_found", "User not found") };
+			// Authentication failures are deliberately indistinguishable: a missing
+			// user and a wrong password both surface as 401, so we don't leak which
+			// usernames exist.
+			return err(401, "unauthorized", "Invalid username or password");
 		}
 
 		// we still haven't authenticated the user, just know the id that we need to use
 		const tokensId = tokenIdForUserId(this.env.TOKENS, id.toString());
-		const tokensObj = (await this.env.TOKENS.get(
-			tokensId,
-		)) as unknown as TokensDurableObject;
+		const tokensObj = this.env.TOKENS.get(tokensId);
 
-		// Create refresh and access tokens for this user and client
+		// Create refresh and access tokens for this user and client; checkPassword
+		// already returns a Result, so propagate it directly.
 		return tokensObj.checkPassword(password, clientId);
 	}
 
-	private async storePassword(
+	// Public because it is invoked over RPC by the coordinator instance (see the
+	// class doc); it is not an HTTP endpoint.
+	async storePassword(
 		usersId: string,
 		password: string,
 		clientId: string,
-	): Promise<{ tokens?: TokenPair; error?: ApiError }> {
+	): Promise<TokenPair> {
 		// This now invalidates any previous tokens for this user
 		await this.ctx.storage.deleteAll();
 
@@ -97,15 +114,18 @@ export class TokensDurableObject extends DurableObject<Env> {
 		return this.generateTokens(clientId);
 	}
 
-	private async checkPassword(
+	// Public because it is invoked over RPC by the coordinator instance (see the
+	// class doc); it is not an HTTP endpoint.
+	async checkPassword(
 		password: string,
 		clientId: string,
-	): Promise<{ tokens?: TokenPair; error?: ApiError }> {
+	): Promise<Result<TokenPair>> {
 		const storedSalt = await this.ctx.storage.get<Uint8Array>("salt");
 		const storedPassword = await this.ctx.storage.get<ArrayBuffer>("password");
 
 		if (!storedSalt || !storedPassword) {
-			return { error: new ApiError(404, "not_found", "User not found") };
+			// Same opaque 401 as a wrong password — see `login`.
+			return err(401, "unauthorized", "Invalid username or password");
 		}
 
 		const hashedInputPassword = await crypto.subtle.digest(
@@ -114,15 +134,13 @@ export class TokensDurableObject extends DurableObject<Env> {
 		);
 
 		if (!crypto.subtle.timingSafeEqual(hashedInputPassword, storedPassword)) {
-			return { error: new ApiError(401, "unauthorized", "Invalid password") };
+			return err(401, "unauthorized", "Invalid username or password");
 		}
 
-		return this.generateTokens(clientId);
+		return ok(await this.generateTokens(clientId));
 	}
 
-	private async generateTokens(
-		clientId: string,
-	): Promise<{ tokens: TokenPair }> {
+	private async generateTokens(clientId: string): Promise<TokenPair> {
 		const accessToken = `swa:${this.ctx.id}:${crypto.randomUUID().replace(/-/g, "")}`;
 		const refreshToken = `swr:${this.ctx.id}:${crypto.randomUUID().replace(/-/g, "")}`;
 
@@ -142,20 +160,18 @@ export class TokensDurableObject extends DurableObject<Env> {
 		});
 
 		return {
-			tokens: {
-				accessToken,
-				refreshToken,
-				accessTokenExpiry,
-				refreshTokenExpiry,
-				clientId,
-			},
+			accessToken,
+			refreshToken,
+			accessTokenExpiry,
+			refreshTokenExpiry,
+			clientId,
 		};
 	}
 
 	async refresh(
 		refreshToken: string,
 		clientId: string,
-	): Promise<{ tokens?: TokenPair; error?: ApiError }> {
+	): Promise<Result<TokenPair>> {
 		// Retrieve the refresh token data
 		const tokenData = await this.ctx.storage.get<{
 			clientId: string;
@@ -168,24 +184,22 @@ export class TokensDurableObject extends DurableObject<Env> {
 			tokenData.refreshToken !== refreshToken ||
 			Date.now() > tokenData.expiry
 		) {
-			return {
-				error: new ApiError(
-					401,
-					"unauthorized",
-					"Invalid or expired refresh token",
-				),
-			};
+			return err(401, "unauthorized", "Invalid or expired refresh token");
 		}
 
 		// Generate new tokens
-		return this.generateTokens(clientId);
+		return ok(await this.generateTokens(clientId));
 	}
 
+	/**
+	 * Verify an access token has the given scope.
+	 * @returns the authenticated user id; throws {@link ApiError} on failure.
+	 */
 	async verifyAccessToken(
 		tokenId: string,
 		clientId: string,
 		scope: AuthScope,
-	): Promise<{ user?: string; error?: ApiError }> {
+	): Promise<Result<string>> {
 		// check the access:<token>
 		const tokenData = await this.ctx.storage.get<{
 			clientId: string;
@@ -197,35 +211,23 @@ export class TokensDurableObject extends DurableObject<Env> {
 			tokenData.accessToken !== tokenId ||
 			Date.now() > tokenData.expiry
 		) {
-			return {
-				error: new ApiError(
-					401,
-					"unauthorized",
-					"Invalid or expired access token",
-				),
-			};
+			return err(401, "unauthorized", "Invalid or expired access token");
 		}
 		// At this point, we have a valid access token for the client
 		// Now we need to retrieve the user associated with this token
 
 		const userId = await this.ctx.storage.get<string>("userId");
 		if (!userId) {
-			return { error: new ApiError(404, "not_found", "User not found") };
+			return err(401, "unauthorized", "Invalid or expired access token");
 		}
 
 		const id = this.env.USERS.idFromString(userId);
-		const user = this.env.USERS.get(id) as unknown as UsersDurableObject;
+		const user = this.env.USERS.get(id);
 		const hasScope = await user.hasScope(scope);
 		if (!hasScope) {
-			return {
-				error: new ApiError(
-					403,
-					"forbidden",
-					`Access denied for scope: ${scope}`,
-				),
-			};
+			return err(403, "forbidden", `Access denied for scope: ${scope}`);
 		}
 
-		return { user: userId };
+		return ok(userId);
 	}
 }

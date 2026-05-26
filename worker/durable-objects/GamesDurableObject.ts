@@ -1,6 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
 import {
-	ApiError,
 	CreateGameRequest,
 	CreateGameResponse,
 	FactionMetadata,
@@ -31,7 +30,9 @@ import {
 	DefenseResource,
 	MissionResource,
 	PersonnelResource,
+	Result,
 } from "../api";
+import { ok, err } from "../errors";
 import {
 	characterNames,
 	personnelNames,
@@ -823,25 +824,21 @@ export class GamesDurableObject extends DurableObject<Env> {
 		};
 	}
 
-	async view(userId: string): Promise<GameView> {
+	async view(userId: string): Promise<Result<GameView>> {
 		const faction = await this.state.storage.get<FactionMetadata>(
 			`user:${userId}`,
 		);
 		if (!faction) {
-			throw new ApiError(401, "unauthorized", "User not found or not in game");
+			return err(401, "unauthorized", "User not found or not in game");
 		}
 		if (!["Empire", "Rebellion"].includes(faction)) {
-			throw new ApiError(
-				400,
-				"invalid_faction",
-				"Faction must be Empire or Rebellion",
-			);
+			return err(400, "invalid_faction", "Faction must be Empire or Rebellion");
 		}
 
 		const gameState = await this.state.storage.get<GameState>("gameState");
 		if (!gameState) {
-			throw new ApiError(404, "not_found", "No game state found");
+			return err(404, "not_found", "No game state found");
 		}
-		return projectView(faction, gameState);
+		return ok(projectView(faction, gameState));
 	}
 }

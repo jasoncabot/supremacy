@@ -8,8 +8,10 @@ exports[`api > returns appropriate content for health 1`] = `
 
 exports[`api > returns appropriate content for something-that-is-random 1`] = `
 {
-  "error": "Not Found",
-  "status": 404,
+  "error": {
+    "code": "not_found",
+    "message": "Not found",
+  },
 }
 `;
 
@@ -41,14 +43,18 @@ exports[`auth > can run through the whole sign up, login and refresh flow 2`] = 
 
 exports[`auth > can run through the whole sign up, login and refresh flow 3`] = `
 {
-  "error": "Durable Object ID is not valid for this namespace.",
-  "status": 500,
+  "error": {
+    "code": "unauthorized",
+    "message": "Invalid token",
+  },
 }
 `;
 
 exports[`auth > can run through the whole sign up, login and refresh flow 4`] = `
 {
-  "error": "Durable Object ID is not valid for this namespace.",
-  "status": 500,
+  "error": {
+    "code": "unauthorized",
+    "message": "Invalid token",
+  },
 }
 `;

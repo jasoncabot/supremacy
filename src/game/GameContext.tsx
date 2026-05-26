@@ -1,12 +1,12 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useCallback, useMemo, useState } from "react";
 import {
 	GameAction,
-	GameView,
 	Notification,
 	PlanetView,
 	SectorMetadata,
 } from "../../worker/api";
-import { useApi } from "../hooks/useApi";
+import { useFetch } from "../hooks/useApi";
+import { GameView } from "../../worker/api";
 import { GameContext, GameContextType } from "./GameContextDef";
 
 type SectorPlanetMap = Record<string, PlanetView[]>;
@@ -14,80 +14,79 @@ type SectorPlanetMap = Record<string, PlanetView[]>;
 export const GameProvider: React.FC<{ children: ReactNode }> = ({
 	children,
 }) => {
-	const [game, setGame] = useState<GameView | null>(null);
-	const [sectors, setSectors] = useState<SectorMetadata[]>([]);
-	const [notifications, setNotifications] = useState<Notification[]>([]);
-	const [planetsBySector, setPlanetsBySector] = useState<SectorPlanetMap>({});
-	const { fetchData, loading, error } = useApi<GameView>();
-
-	// Fetch game state on mount
-	useEffect(() => {
-		const gameId = window.location.pathname.split("/").pop();
-		if (!gameId) return;
-
-		fetchData(`/api/games/${gameId}`)
-			.then((data: GameView) => {
-				setGame(data);
-
-				// Transform sectors data
-				const sectorList = Object.values(data.sectors) as SectorMetadata[];
-				setSectors(sectorList);
-
-				// Group planets by sector
-				const planetMap: Record<string, PlanetView[]> = {};
-				for (const sector of sectorList) {
-					planetMap[sector.id] = sector.planetIds
-						.map((id: string) => data.planets[id])
-						.filter(Boolean);
-				}
-				setPlanetsBySector(planetMap);
-
-				setNotifications(data.notifications || []);
-			})
-			.catch((error: Error) => {
-				if (error.name === "AbortError") {
-					return;
-				}
-				console.error("Failed to load game:", error);
-			});
-	}, [fetchData]);
-
-	const markNotificationAsRead = (id: string) => {
-		setNotifications((prev) =>
-			prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-		);
-
-		// In a real implementation, you would likely also send this to the API
-		// TODO: Implement API call to mark notification as read
-	};
-
-	const submitActions = async (actions: GameAction[]): Promise<void> => {
-		if (!game) return;
-
-		try {
-			// TODO: Implement the actual API call to submit actions
-			// await fetchData(`/api/games/${game.id}/actions`, {
-			//   method: 'POST',
-			//   body: { actions }
-			// });
-
-			console.log("Actions submitted:", actions);
-		} catch (error) {
-			console.error("Failed to submit actions:", error);
-			throw error;
-		}
-	};
-
-	const value: GameContextType = {
-		game,
-		sectors,
-		planetsBySector,
-		notifications,
+	const gameId = window.location.pathname.split("/").pop() || null;
+	const {
+		data: game,
 		loading,
 		error,
-		markNotificationAsRead,
-		submitActions,
-	};
+		refetch,
+	} = useFetch<GameView>(gameId ? `/api/games/${gameId}` : null);
+
+	const sectors = useMemo<SectorMetadata[]>(
+		() => (game ? (Object.values(game.sectors) as SectorMetadata[]) : []),
+		[game],
+	);
+
+	const planetsBySector = useMemo<SectorPlanetMap>(() => {
+		if (!game) return {};
+		const map: SectorPlanetMap = {};
+		for (const sector of sectors) {
+			map[sector.id] = sector.planetIds
+				.map((id) => game.planets[id])
+				.filter(Boolean);
+		}
+		return map;
+	}, [game, sectors]);
+
+	// Notifications come from the server view; we overlay locally-read ids rather
+	// than copying the array, so a refetch can't resurrect a dismissed one.
+	const [readIds, setReadIds] = useState<Set<string>>(new Set());
+	const notifications = useMemo<Notification[]>(
+		() =>
+			(game?.notifications ?? []).map((n) =>
+				readIds.has(n.id) ? { ...n, read: true } : n,
+			),
+		[game, readIds],
+	);
+
+	const markNotificationAsRead = useCallback((id: string) => {
+		setReadIds((prev) => new Set(prev).add(id));
+		// TODO: persist read state to the API
+	}, []);
+
+	const submitActions = useCallback(
+		async (actions: GameAction[]): Promise<void> => {
+			// TODO: POST actions, then refresh the view from the server:
+			//   await fetchData(`/api/games/${gameId}/actions`, { method: "POST", body: { actions } });
+			//   await refetch();
+			console.log("Actions submitted:", actions);
+			void refetch;
+		},
+		[refetch],
+	);
+
+	const value = useMemo<GameContextType>(
+		() => ({
+			game,
+			sectors,
+			planetsBySector,
+			notifications,
+			loading,
+			error,
+			markNotificationAsRead,
+			submitActions,
+		}),
+		[
+			game,
+			sectors,
+			planetsBySector,
+			notifications,
+			loading,
+			error,
+			markNotificationAsRead,
+			submitActions,
+		],
+	);
 
 	return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };

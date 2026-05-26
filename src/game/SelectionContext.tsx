@@ -1,13 +1,5 @@
 import React, { ReactNode, useState } from "react";
-import {
-	DefenseResource,
-	FleetResource,
-	ManufacturingResource,
-	MissionResource,
-	MissionType,
-	PlanetView,
-	ShipResource,
-} from "../../worker/api";
+import { MissionType } from "../../worker/api";
 import {
 	SelectableItemWithLocation,
 	SelectionContext,
@@ -21,7 +13,6 @@ import {
 	FleetTarget,
 	getAvailableActions,
 	MissionTarget,
-	PlanetTarget,
 	ShipTarget,
 	StructureTarget,
 	UnitTarget,
@@ -184,39 +175,32 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 		}
 	};
 
-	// Helper function to create proper ActionTarget from SelectableItemWithContext
+	// Build a typed ActionTarget from a selected item. Switching on the
+	// discriminant narrows `targetItem`, so each branch is type-checked against
+	// the matching target shape with no casts. The believed item is carried as
+	// `data` — at command resolution the server treats it as a claim, not truth.
 	const createActionTarget = (
 		targetItem: SelectableItemWithLocation,
 	): ActionTarget | null => {
-		const itemType = targetItem.type;
-		switch (itemType) {
-			case "planet":
-				return {
-					type: "planet",
-					id: targetItem.id,
-					data: targetItem as unknown as PlanetView,
-				} as PlanetTarget;
+		// Planets are the only target that isn't located at another planet.
+		if (targetItem.type === "planet") {
+			return { type: "planet", id: targetItem.id, data: targetItem };
+		}
+
+		// Every other target lives at a planet; without one it isn't actionable.
+		const planetId = targetItem.location.planetId;
+		if (!planetId) {
+			console.warn(`Target ${targetItem.id} has no planet location`);
+			return null;
+		}
+
+		switch (targetItem.type) {
 			case "mission":
-				return {
-					type: "mission",
-					id: targetItem.id,
-					data: targetItem as unknown as MissionResource,
-					planetId: targetItem.location.planetId,
-				} as MissionTarget;
+				return { type: "mission", id: targetItem.id, data: targetItem, planetId };
 			case "capital_ship":
-				return {
-					type: "ship",
-					id: targetItem.id,
-					data: targetItem as unknown as ShipResource,
-					planetId: targetItem.location.planetId,
-				} as ShipTarget;
+				return { type: "ship", id: targetItem.id, data: targetItem, planetId };
 			case "fleet":
-				return {
-					type: "fleet",
-					id: targetItem.id,
-					data: targetItem as unknown as FleetResource,
-					planetId: targetItem.location.planetId,
-				} as FleetTarget;
+				return { type: "fleet", id: targetItem.id, data: targetItem, planetId };
 			case "shipyard":
 			case "training_facility":
 			case "construction_yard":
@@ -225,9 +209,9 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				return {
 					type: "structure",
 					id: targetItem.id,
-					data: targetItem as unknown as ManufacturingResource,
-					planetId: targetItem.location.planetId,
-				} as StructureTarget;
+					data: targetItem,
+					planetId,
+				};
 			case "personnel":
 			case "troop":
 			case "squadron":
@@ -236,13 +220,13 @@ export const SelectionProvider: React.FC<{ children: ReactNode }> = ({
 				return {
 					type: "unit",
 					id: targetItem.id,
-					data: targetItem as unknown as DefenseResource,
-					planetId: targetItem.location.planetId,
+					data: targetItem,
+					planetId,
 					shipId: targetItem.location.shipId,
-				} as UnitTarget;
+				};
 			default: {
-				// This should never happen if all cases are covered
-				const exhaustiveCheck: never = itemType;
+				// Exhaustive: every remaining item type is handled above.
+				const exhaustiveCheck: never = targetItem;
 				console.warn(`Unknown item type for action target: ${exhaustiveCheck}`);
 				return null;
 			}

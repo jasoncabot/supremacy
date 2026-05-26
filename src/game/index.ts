@@ -10,5 +10,5 @@ export { default as SelectionOptions } from "./SelectionOptions";
 export { SelectionProvider } from "./SelectionContext";
 export { default as SideMenu } from "./SideMenu";
 export { default as StatusBar } from "./StatusBar";
-export { BackgroundMusicProvider } from "./BackgroundMusicProvider";
+export { SoundProvider } from "./SoundProvider";
 export { GlobalKeyboardHandler } from "./GlobalKeyboardHandler";

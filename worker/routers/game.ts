@@ -5,13 +5,9 @@ import {
 	DeleteGameResponse,
 	SavedGameResponse,
 } from "../api";
-import {
-	GamesDurableObject,
-	MatchmakerDurableObject,
-	UsersDurableObject,
-} from "../durable-objects";
 import { AuthenticatedRequest, withAuthUser } from "../middleware/authUser";
 import { UserGame } from "../durable-objects/UsersDurableObject";
+import { unwrap } from "../errors";
 
 const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 	base: "/api/games",
@@ -26,16 +22,14 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 
 			// Call the Matchmaker durable object to create a new game
 			const matchmakerId = env.MATCHMAKER.idFromName("singleton");
-			const matchmakerStub = env.MATCHMAKER.get(
-				matchmakerId,
-			) as unknown as MatchmakerDurableObject;
+			const matchmakerStub = env.MATCHMAKER.get(matchmakerId);
 			const { gameId } = await matchmakerStub.createGame({
 				...body,
 				creatorId,
 			});
 
 			// Get the user's durable object to set their saved games
-			const userStub = env.USERS.get(req.user) as unknown as UsersDurableObject;
+			const userStub = env.USERS.get(req.user);
 
 			// Get the list of saved games
 			await userStub.trackGame({
@@ -57,12 +51,10 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 			const user = req.user;
 			// Call the Games durable object to get the view for this game
 			const gameObjId = env.GAMES.idFromName(gameId);
-			const gameStub = env.GAMES.get(
-				gameObjId,
-			) as unknown as GamesDurableObject;
+			const gameStub = env.GAMES.get(gameObjId);
 
 			// For demonstration, include user info in the response
-			const view = await gameStub.view(user.toString());
+			const view = unwrap(await gameStub.view(user.toString()));
 			return { ...view, user };
 		},
 	)
@@ -73,7 +65,7 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 			const userId = req.user;
 
 			// Get the user's durable object to retrieve their saved games
-			const userStub = env.USERS.get(userId) as unknown as UsersDurableObject;
+			const userStub = env.USERS.get(userId);
 
 			// Get the list of saved games
 			const { games } = await userStub.getUserGames();
@@ -89,7 +81,7 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 			const userId = req.user;
 
 			// Get the user's durable object to delete the game
-			const userStub = env.USERS.get(userId) as unknown as UsersDurableObject;
+			const userStub = env.USERS.get(userId);
 
 			// Delete the game from the user's saved games
 			await userStub.deleteGame(gameId);

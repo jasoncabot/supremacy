@@ -1,7 +1,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import React, { Fragment } from "react";
-import { useSoundManager } from "../hooks/useSoundManager";
+import { useSound } from "../hooks/useSound";
 
 // Define FilterType as a union of all possible filter values
 export type FilterType =
@@ -101,7 +101,7 @@ const allFilterOptions = [
 ];
 
 const Filters: React.FC<FiltersProps> = ({ filter, onChange }) => {
-	const { playSound } = useSoundManager();
+	const { playSound } = useSound();
 
 	// Find the label for the currently selected filter
 	const selectedFilterLabel = filter

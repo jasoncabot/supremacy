@@ -1,10 +1,33 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import {
 	ApiError,
+	ErrorBody,
 	LoginRequest,
 	RefreshTokenRequest,
 	TokenPair,
 } from "../../worker/api";
+
+/**
+ * Turn a non-OK response into an {@link ApiError}, preferring the server's
+ * structured `{ error: { code, message } }` body so the user sees the real,
+ * client-safe message rather than a generic HTTP status. Falls back to the
+ * status text if the body is missing or not in that shape.
+ */
+async function parseApiError(response: Response): Promise<ApiError> {
+	try {
+		const body = (await response.clone().json()) as Partial<ErrorBody>;
+		if (body?.error?.message) {
+			return new ApiError(
+				response.status,
+				body.error.code ?? "error",
+				body.error.message,
+			);
+		}
+	} catch {
+		// Body was empty or not JSON; fall through to the status-based error.
+	}
+	return new ApiError(response.status, response.statusText || "error");
+}
 
 interface ApiOptions<TBody = unknown> {
 	method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -178,7 +201,7 @@ export function useAuth() {
 				const [response] = await Promise.all([loginPromise, delayPromise]);
 
 				if (!response.ok) {
-					throw new ApiError(401, "unauthorized", "Invalid credentials");
+					throw await parseApiError(response);
 				}
 
 				const tokens = await response.json();
@@ -298,7 +321,7 @@ export function useApi<TResponse = unknown>(): ApiHook<TResponse> {
 						clearTokens();
 					}
 
-					throw new ApiError(response.status, response.statusText);
+					throw await parseApiError(response);
 				}
 
 				// Parse and store the result
@@ -340,4 +363,44 @@ export function useApi<TResponse = unknown>(): ApiHook<TResponse> {
 	}, []);
 
 	return { data, loading, error, fetchData };
+}
+
+interface FetchHook<TResponse> {
+	data: TResponse | null;
+	loading: boolean;
+	error: ApiError | Error | null;
+	refetch: () => Promise<void>;
+}
+
+/**
+ * Fetch a resource on mount (and whenever `url` changes), built on `useApi`.
+ * Centralises the "GET on mount, swallow AbortError" pattern. `loading`
+ * reflects the initial load only — `refetch()` updates `data` in the background
+ * without flipping `loading`, which suits post-action refreshes (e.g. end turn).
+ * Pass `null` as the url to skip fetching.
+ */
+export function useFetch<TResponse = unknown>(
+	url: string | null,
+): FetchHook<TResponse> {
+	const { data, loading, error, fetchData } = useApi<TResponse>();
+
+	const refetch = useCallback(async (): Promise<void> => {
+		if (!url) return;
+		try {
+			await fetchData(url);
+		} catch (err) {
+			// A superseded request was aborted; ignore it.
+			if (err instanceof DOMException && err.name === "AbortError") return;
+			// Any real error is already captured in `error` by useApi.
+			console.error("Failed to load:", url, err);
+		}
+	}, [url, fetchData]);
+
+	useEffect(() => {
+		void refetch();
+	}, [refetch]);
+
+	// `loading` is true only until the first response lands (data still null);
+	// a later refetch updates `data` in the background without blanking the UI.
+	return { data, loading: loading && data === null, error, refetch };
 }
