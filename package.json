@@ -16,8 +16,8 @@
 		"deploy": "CLOUDFLARE_ENV=production vite build && wrangler deploy"
 	},
 	"devDependencies": {
-		"@cloudflare/vite-plugin": "^1.38.0",
-		"@cloudflare/vitest-pool-workers": "^0.16.9",
+		"@cloudflare/vite-plugin": "^1.42.1",
+		"@cloudflare/vitest-pool-workers": "^0.16.18",
 		"@types/node": "^25.9.1",
 		"@types/react": "^19.2.15",
 		"@types/react-dom": "^19.2.3",
@@ -32,7 +32,7 @@
 		"typescript-eslint": "^8.59.4",
 		"vite": "^8.0.16",
 		"vitest": "^4.1.7",
-		"wrangler": "^4.94.0"
+		"wrangler": "^4.103.0"
 	},
 	"dependencies": {
 		"@eslint/js": "^10.0.1",
