@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`game view > shows the Empire exactly what it did before 1`] = `
+{
+  "discovered": 79,
+  "faction": {
+    "objectives": [
+      "Capture Rebellion HQ",
+      "Control 75% of planets",
+    ],
+    "resources": {
+      "mines": 100,
+      "refined": 100,
+      "refineries": 100,
+    },
+  },
+  "hash": "d729fc74f85fa47f5651dcf6964005baea9d7d421c0cb8a1c43ec6133c3d04a8",
+  "notifications": [],
+  "planets": 200,
+  "sectors": 20,
+  "side": "Empire",
+  "turn": 1,
+  "withState": 28,
+}
+`;
+
+exports[`game view > shows the Rebellion exactly what it did before 1`] = `
+{
+  "discovered": 116,
+  "faction": {
+    "objectives": [
+      "Defeat Imperial forces",
+      "Liberate 75% of planets",
+    ],
+    "resources": {
+      "mines": 80,
+      "refined": 80,
+      "refineries": 80,
+    },
+  },
+  "hash": "cc6f9647dd63e04e7b51cd17136b4afe289a7be004c905768d57c6d3ed249886",
+  "notifications": [],
+  "planets": 200,
+  "sectors": 20,
+  "side": "Rebellion",
+  "turn": 1,
+  "withState": 80,
+}
+`;

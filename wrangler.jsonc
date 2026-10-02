@@ -20,6 +20,8 @@
 				"TokensDurableObject",
 			],
 		},
+		// Matchmaker was a global singleton that only forwarded to GAMES
+		{ "tag": "v2", "deleted_classes": ["MatchmakerDurableObject"] },
 	],
 	// Base (default) config. `assets`, `vars` and `durable_objects` are NOT
 	// inherited by named environments, so each env below repeats them.
@@ -30,7 +32,6 @@
 	"durable_objects": {
 		"bindings": [
 			{ "name": "GAMES", "class_name": "GamesDurableObject" },
-			{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
 			{ "name": "USERS", "class_name": "UsersDurableObject" },
 			{ "name": "TOKENS", "class_name": "TokensDurableObject" },
 		],
@@ -50,7 +51,6 @@
 			"durable_objects": {
 				"bindings": [
 					{ "name": "GAMES", "class_name": "GamesDurableObject" },
-					{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
 					{ "name": "USERS", "class_name": "UsersDurableObject" },
 					{ "name": "TOKENS", "class_name": "TokensDurableObject" },
 				],
@@ -70,7 +70,6 @@
 			"durable_objects": {
 				"bindings": [
 					{ "name": "GAMES", "class_name": "GamesDurableObject" },
-					{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
 					{ "name": "USERS", "class_name": "UsersDurableObject" },
 					{ "name": "TOKENS", "class_name": "TokensDurableObject" },
 				],
@@ -95,7 +94,6 @@
 			"durable_objects": {
 				"bindings": [
 					{ "name": "GAMES", "class_name": "GamesDurableObject" },
-					{ "name": "MATCHMAKER", "class_name": "MatchmakerDurableObject" },
 					{ "name": "USERS", "class_name": "UsersDurableObject" },
 					{ "name": "TOKENS", "class_name": "TokensDurableObject" },
 				],

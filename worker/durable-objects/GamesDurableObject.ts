@@ -3,6 +3,8 @@ import {
 	CreateGameRequest,
 	CreateGameResponse,
 	FactionMetadata,
+	GalaxySizeMetadata,
+	Notification,
 	FactionState,
 	FactionView,
 	GameState,
@@ -777,7 +779,11 @@ function projectPlanetView(
 // resolution mutates the GameState (the truth) in place; this is the one
 // function that crosses the truth -> view boundary, so the truth never leaves
 // the Durable Object.
-function projectView(faction: FactionMetadata, gameState: GameState): GameView {
+function projectView(
+	faction: FactionMetadata,
+	gameState: GameState,
+	notifications: Notification[],
+): GameView {
 	const planets: Record<string, PlanetView> = {};
 	for (const [planetId, planetState] of Object.entries(gameState.planets)) {
 		planets[planetId] = projectPlanetView(faction, planetState);
@@ -796,160 +802,430 @@ function projectView(faction: FactionMetadata, gameState: GameState): GameView {
 		sectors: gameState.sectors,
 		faction: factionView,
 		side: faction,
-		notifications: gameState.notifications,
+		notifications,
 	};
 }
 
+function sectorMetadataFor(galaxySize: GalaxySizeMetadata): SectorMetadata[] {
+	switch (galaxySize) {
+		case "Small":
+			return smallSectors;
+		case "Medium":
+			return mediumSectors;
+		default:
+			return largeSectors;
+	}
+}
+
+function generateGameState(
+	gameId: string,
+	galaxySize: CreateGameRequest["galaxySize"],
+): GameState {
+	const sectorMetadata = sectorMetadataFor(galaxySize);
+
+	// Create sectors with metadata
+	const sectors: Record<string, SectorMetadata> = {};
+	const planets: Record<string, PlanetState> = {};
+
+	// Generate sectors and planets using metadata
+	const usedCharacters = new Set<CharacterIdentifier>();
+
+	// Create a lookup map for planet metadata
+	const planetMetadataMap = new Map(allPlanets.map((p) => [p.id, p]));
+	
+	// Collect all planet metadata for mission targets
+	const planetMetadataList: PlanetMetadata[] = [];
+
+	for (const sector of sectorMetadata) {
+		// Add sector to sectors record
+		sectors[sector.id] = sector;
+
+		// Create planets for this sector
+		for (const planetId of sector.planetIds) {
+			const planetMeta = planetMetadataMap.get(planetId);
+			if (!planetMeta) {
+				console.warn(`Planet metadata not found for ${planetId}`);
+				continue;
+			}
+
+			// Create planet metadata
+			const planetMetadata: PlanetMetadata = {
+				id: planetId,
+				name: planetMeta.name,
+				sectorId: sector.id,
+				picture: planetMeta.picture,
+				position: planetMeta.location,
+			};
+
+			// Add to list for mission generation
+			planetMetadataList.push(planetMetadata);
+
+			// Create planet state
+			const owner: FactionMetadata | "Neutral" =
+				Math.random() < 0.2
+					? "Empire"
+					: Math.random() < 0.5
+						? "Rebellion"
+						: "Neutral";
+
+			const planetState: PlanetState = {
+				metadata: planetMetadata,
+				loyalty: Math.floor(Math.random() * 100),
+				owner,
+				energySpots: Math.floor(Math.random() * 10),
+				naturalResources: Math.floor(Math.random() * 10),
+				garrisonRequirement: Math.floor(Math.random() * 5) + 1,
+				inUprising: Math.random() < 0.1, // 10% chance of uprising
+				isDestroyed: false,
+				general: null,
+				commander: null,
+				isDiscovered: sector.isInnerRim, // Inner rim planets start discovered
+				defenses: generateDefenses(owner, usedCharacters),
+				manufacturing: generateManufacturing(owner),
+				fleets: generateFleets(owner),
+				missions: generateMissions(owner, planetMetadataList),
+			};
+
+			planets[planetId] = planetState;
+		}
+	}
+
+	// Create faction states
+	const factions: Record<FactionMetadata, FactionState> = {
+		Empire: {
+			resources: {
+				mines: 100,
+				refineries: 100,
+				refined: 100,
+			},
+			objectives: ["Capture Rebellion HQ", "Control 75% of planets"],
+			controlledPlanetIds: Object.keys(planets).filter(
+				(id) => planets[id].owner === "Empire",
+			),
+		},
+		Rebellion: {
+			resources: {
+				mines: 80,
+				refineries: 80,
+				refined: 80,
+			},
+			objectives: ["Defeat Imperial forces", "Liberate 75% of planets"],
+			controlledPlanetIds: Object.keys(planets).filter(
+				(id) => planets[id].owner === "Rebellion",
+			),
+		},
+	};
+
+	// Create the game state (source of truth)
+	const gameState: GameState = {
+		id: gameId,
+		turn: 1,
+		planets,
+		sectors,
+		factions,
+	};
+
+	return gameState;
+}
+
+type LinkState = "pending" | "synced" | "unlink_pending";
+
+interface GameRow {
+	[column: string]: SqlStorageValue;
+	id: string;
+	name: string;
+	status: "active" | "deleting";
+	galaxy_size: GalaxySizeMetadata;
+	turn: number;
+	updated_at: string;
+}
+
+interface PlayerRow {
+	[column: string]: SqlStorageValue;
+	user_id: string;
+	faction: FactionMetadata;
+	link_state: LinkState;
+}
+
+const GAME_NAME = "New Game";
+
+// A view carries this many of a faction's latest notifications, however many
+// have built up over the course of the game
+const VIEW_NOTIFICATIONS = 100;
+
+// Planets keep everything about themselves (defences, fleets, missions and so
+// on) in one row. Games run for hundreds of turns, so what accumulates is
+// notifications, which get their own rows.
+const SCHEMA = `
+	CREATE TABLE IF NOT EXISTS game (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		status TEXT NOT NULL,
+		galaxy_size TEXT NOT NULL,
+		turn INTEGER NOT NULL,
+		updated_at TEXT NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS planets (
+		id TEXT PRIMARY KEY,
+		data TEXT NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS factions (
+		name TEXT PRIMARY KEY,
+		data TEXT NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS notifications (
+		seq INTEGER PRIMARY KEY AUTOINCREMENT,
+		id TEXT NOT NULL UNIQUE,
+		faction TEXT NOT NULL,
+		turn INTEGER NOT NULL,
+		read INTEGER NOT NULL DEFAULT 0,
+		message TEXT NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS notifications_by_faction ON notifications (faction, seq);
+	CREATE TABLE IF NOT EXISTS players (
+		user_id TEXT PRIMARY KEY,
+		faction TEXT NOT NULL,
+		link_state TEXT NOT NULL
+	);
+`;
+
+type StoredFaction = Omit<FactionState, "controlledPlanetIds">;
+
+function insertGameState(sql: SqlStorage, gameState: GameState) {
+	for (const [id, planet] of Object.entries(gameState.planets)) {
+		sql.exec("INSERT INTO planets (id, data) VALUES (?, ?)", id, JSON.stringify(planet));
+	}
+	for (const [name, faction] of Object.entries(gameState.factions)) {
+		// Which planets a faction controls is already recorded by each planet's owner
+		const { resources, objectives } = faction;
+		sql.exec(
+			"INSERT INTO factions (name, data) VALUES (?, ?)",
+			name,
+			JSON.stringify({ resources, objectives } satisfies StoredFaction),
+		);
+	}
+}
+
+function loadGameState(sql: SqlStorage, game: GameRow): GameState {
+	const planets: Record<string, PlanetState> = {};
+	for (const row of sql
+		.exec<{ id: string; data: string }>("SELECT id, data FROM planets ORDER BY rowid")
+		.toArray()) {
+		planets[row.id] = JSON.parse(row.data) as PlanetState;
+	}
+
+	const factions = {} as Record<FactionMetadata, FactionState>;
+	for (const row of sql
+		.exec<{ name: FactionMetadata; data: string }>("SELECT name, data FROM factions")
+		.toArray()) {
+		factions[row.name] = {
+			...(JSON.parse(row.data) as StoredFaction),
+			controlledPlanetIds: Object.keys(planets).filter((id) => planets[id].owner === row.name),
+		};
+	}
+
+	// Sectors are the same in every game of a size, so they aren't stored
+	const sectors: Record<string, SectorMetadata> = {};
+	for (const sector of sectorMetadataFor(game.galaxy_size)) sectors[sector.id] = sector;
+
+	return { id: game.id, turn: game.turn, planets, sectors, factions };
+}
+
+/** A faction's latest notifications, oldest first. Other factions' are never read. */
+function loadNotifications(sql: SqlStorage, faction: FactionMetadata): Notification[] {
+	return sql
+		.exec<{ id: string; message: string; read: number }>(
+			`SELECT id, message, read FROM (
+				SELECT seq, id, message, read FROM notifications
+				WHERE faction = ? ORDER BY seq DESC LIMIT ?
+			) ORDER BY seq`,
+			faction,
+			VIEW_NOTIFICATIONS,
+		)
+		.toArray()
+		.map((row) => ({ id: row.id, message: row.message, read: row.read === 1 }));
+}
+
+// Link work that hasn't been confirmed is retried by the alarm after this long,
+// and again at the slower rate if the retry itself fails
+const LINK_RETRY_MS = 10_000;
+const LINK_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
+
+/**
+ * One instance per game, and the single source of truth for it: the state, who
+ * plays and which faction. Each player's Users object only keeps a cached link
+ * so their games can be listed quickly; this object keeps those links in sync.
+ *
+ * Link changes are written to `players.link_state` in the same transaction as
+ * the change that needs them (an outbox). They are then pushed inline and, if
+ * that fails, retried by `alarm()`. Pushes are idempotent, so repeats are safe.
+ */
 export class GamesDurableObject extends DurableObject<Env> {
+	// `deleteAll()` drops the tables, and the instance can outlive that, so this
+	// runs on every call rather than once in the constructor.
+	private ensureSchema() {
+		this.ctx.storage.sql.exec(SCHEMA);
+	}
+
+	private getGame(): GameRow | undefined {
+		return this.ctx.storage.sql.exec<GameRow>("SELECT * FROM game").toArray()[0];
+	}
+
+	private getPlayer(userId: string): PlayerRow | undefined {
+		return this.ctx.storage.sql
+			.exec<PlayerRow>("SELECT * FROM players WHERE user_id = ?", userId)
+			.toArray()[0];
+	}
 
 	async create(
 		gameId: string,
 		request: CreateGameRequest & { creatorId: string },
-	): Promise<CreateGameResponse> {
-		// Select the appropriate sector metadata based on galaxy size
-		let sectorMetadata: SectorMetadata[];
-		switch (request.galaxySize) {
-			case "Small":
-				sectorMetadata = smallSectors;
-				break;
-			case "Medium":
-				sectorMetadata = mediumSectors;
-				break;
-			default:
-				sectorMetadata = largeSectors;
-				break;
+	): Promise<Result<CreateGameResponse>> {
+		this.ensureSchema();
+		if (this.getGame()) {
+			return err(409, "conflict", "That game already exists");
 		}
 
-		// Create sectors with metadata
-		const sectors: Record<string, SectorMetadata> = {};
-		const planets: Record<string, PlanetState> = {};
+		const gameState = generateGameState(gameId, request.galaxySize);
+		const sql = this.ctx.storage.sql;
+		// Alarm first: if we die before the transaction it finds nothing to do,
+		// whereas the other way round the link work could be left with no retry
+		await this.ctx.storage.setAlarm(Date.now() + LINK_RETRY_MS);
+		this.ctx.storage.transactionSync(() => {
+			sql.exec(
+				"INSERT INTO game (id, name, status, galaxy_size, turn, updated_at) VALUES (?, ?, 'active', ?, ?, ?)",
+				gameId,
+				GAME_NAME,
+				request.galaxySize,
+				gameState.turn,
+				new Date().toISOString(),
+			);
+			insertGameState(sql, gameState);
+			sql.exec(
+				"INSERT INTO players (user_id, faction, link_state) VALUES (?, ?, 'pending')",
+				request.creatorId,
+				request.faction,
+			);
+		});
 
-		// Generate sectors and planets using metadata
-		const usedCharacters = new Set<CharacterIdentifier>();
-
-		// Create a lookup map for planet metadata
-		const planetMetadataMap = new Map(allPlanets.map((p) => [p.id, p]));
-		
-		// Collect all planet metadata for mission targets
-		const planetMetadataList: PlanetMetadata[] = [];
-
-		for (const sector of sectorMetadata) {
-			// Add sector to sectors record
-			sectors[sector.id] = sector;
-
-			// Create planets for this sector
-			for (const planetId of sector.planetIds) {
-				const planetMeta = planetMetadataMap.get(planetId);
-				if (!planetMeta) {
-					console.warn(`Planet metadata not found for ${planetId}`);
-					continue;
-				}
-
-				// Create planet metadata
-				const planetMetadata: PlanetMetadata = {
-					id: planetId,
-					name: planetMeta.name,
-					sectorId: sector.id,
-					picture: planetMeta.picture,
-					position: planetMeta.location,
-				};
-
-				// Add to list for mission generation
-				planetMetadataList.push(planetMetadata);
-
-				// Create planet state
-				const owner: FactionMetadata | "Neutral" =
-					Math.random() < 0.2
-						? "Empire"
-						: Math.random() < 0.5
-							? "Rebellion"
-							: "Neutral";
-
-				const planetState: PlanetState = {
-					metadata: planetMetadata,
-					loyalty: Math.floor(Math.random() * 100),
-					owner,
-					energySpots: Math.floor(Math.random() * 10),
-					naturalResources: Math.floor(Math.random() * 10),
-					garrisonRequirement: Math.floor(Math.random() * 5) + 1,
-					inUprising: Math.random() < 0.1, // 10% chance of uprising
-					isDestroyed: false,
-					general: null,
-					commander: null,
-					isDiscovered: sector.isInnerRim, // Inner rim planets start discovered
-					defenses: generateDefenses(owner, usedCharacters),
-					manufacturing: generateManufacturing(owner),
-					fleets: generateFleets(owner),
-					missions: generateMissions(owner, planetMetadataList),
-				};
-
-				planets[planetId] = planetState;
-			}
-		}
-
-		// Create faction states
-		const factions: Record<FactionMetadata, FactionState> = {
-			Empire: {
-				resources: {
-					mines: 100,
-					refineries: 100,
-					refined: 100,
-				},
-				objectives: ["Capture Rebellion HQ", "Control 75% of planets"],
-				controlledPlanetIds: Object.keys(planets).filter(
-					(id) => planets[id].owner === "Empire",
-				),
-			},
-			Rebellion: {
-				resources: {
-					mines: 80,
-					refineries: 80,
-					refined: 80,
-				},
-				objectives: ["Defeat Imperial forces", "Liberate 75% of planets"],
-				controlledPlanetIds: Object.keys(planets).filter(
-					(id) => planets[id].owner === "Rebellion",
-				),
-			},
-		};
-
-		// Create the game state (source of truth)
-		const gameState: GameState = {
-			id: gameId,
-			turn: 1,
-			planets,
-			sectors,
-			factions,
-			notifications: [],
-		};
-
-		await this.ctx.storage.put("gameState", gameState);
-		await this.ctx.storage.put<FactionMetadata>(
-			`user:${request.creatorId}`,
-			request.faction,
-		);
-
-		return {
-			gameId,
-			...request,
-		};
+		await this.syncLinksSafely();
+		return ok({ gameId });
 	}
 
 	async view(userId: string): Promise<Result<GameView>> {
-		const faction = await this.ctx.storage.get<FactionMetadata>(
-			`user:${userId}`,
-		);
-		if (!faction) {
-			return err(401, "unauthorized", "User not found or not in game");
+		this.ensureSchema();
+		const player = this.getPlayer(userId);
+		if (!player || this.getGame()?.status !== "active") {
+			return err(404, "not_found", "Game not found");
 		}
-		if (!["Empire", "Rebellion"].includes(faction)) {
-			return err(400, "invalid_faction", "Faction must be Empire or Rebellion");
+		if (player.link_state !== "synced") {
+			// They've found a game their list is missing, so repair it now
+			await this.syncLinksSafely();
 		}
 
-		const gameState = await this.ctx.storage.get<GameState>("gameState");
-		if (!gameState) {
-			return err(404, "not_found", "No game state found");
+		// Re-read: the game may have been deleted while the link sync was waiting
+		const game = this.getGame();
+		if (!game || game.status !== "active") {
+			return err(404, "not_found", "Game not found");
 		}
-		return ok(projectView(faction, gameState));
+		const sql = this.ctx.storage.sql;
+		return ok(
+			projectView(player.faction, loadGameState(sql, game), loadNotifications(sql, player.faction)),
+		);
+	}
+
+	/**
+	 * Deletes the game. The state goes in one transaction; the players' links
+	 * follow, and once they are all gone everything else is wiped.
+	 */
+	async delete(userId: string): Promise<Result<void>> {
+		this.ensureSchema();
+		const game = this.getGame();
+		if (!game || !this.getPlayer(userId)) {
+			return err(404, "not_found", "Game not found");
+		}
+
+		if (game.status === "active") {
+			await this.ctx.storage.setAlarm(Date.now() + LINK_RETRY_MS);
+			const sql = this.ctx.storage.sql;
+			this.ctx.storage.transactionSync(() => {
+				sql.exec("UPDATE game SET status = 'deleting'");
+				sql.exec("DELETE FROM planets");
+				sql.exec("DELETE FROM factions");
+				sql.exec("DELETE FROM notifications");
+				sql.exec("UPDATE players SET link_state = 'unlink_pending'");
+			});
+		}
+
+		await this.syncLinksSafely();
+		return ok();
+	}
+
+	async alarm(): Promise<void> {
+		this.ensureSchema();
+		if (!(await this.syncLinksSafely())) {
+			// The runtime stops retrying a failing alarm after a few attempts, which
+			// would strand the links, so schedule our own retry instead of throwing
+			await this.ctx.storage.setAlarm(Date.now() + LINK_RETRY_AFTER_FAILURE_MS);
+		}
+	}
+
+	/** Never throws: a failure leaves the work pending for the alarm. Returns whether it all synced. */
+	private async syncLinksSafely(): Promise<boolean> {
+		try {
+			const synced = await this.syncLinks();
+			if (synced.ok) return true;
+			console.error(JSON.stringify({ message: "link sync deferred", code: synced.error.code }));
+		} catch (e) {
+			console.error(JSON.stringify({ message: "link sync failed", error: String(e) }));
+		}
+		return false;
+	}
+
+	/** Pushes every unconfirmed link to its user, then tidies up once none remain. */
+	private async syncLinks(): Promise<Result<void>> {
+		const sql = this.ctx.storage.sql;
+		const game = this.getGame();
+		if (!game) return ok();
+
+		const outstanding = sql
+			.exec<PlayerRow>("SELECT * FROM players WHERE link_state != 'synced'")
+			.toArray();
+		for (const player of outstanding) {
+			const users = this.env.USERS.get(this.env.USERS.idFromString(player.user_id));
+			if (player.link_state === "unlink_pending") {
+				const unlinked = await users.unlinkGame(game.id, true);
+				if (!unlinked.ok) return unlinked;
+				sql.exec(
+					"DELETE FROM players WHERE user_id = ? AND link_state = 'unlink_pending'",
+					player.user_id,
+				);
+			} else {
+				const linked = await users.linkGame({
+					gameId: game.id,
+					name: game.name,
+					faction: player.faction,
+					lastPlayed: game.updated_at,
+					completed: false,
+				});
+				if (!linked.ok) return linked;
+				sql.exec(
+					"UPDATE players SET link_state = 'synced' WHERE user_id = ? AND link_state = 'pending'",
+					player.user_id,
+				);
+			}
+		}
+
+		const remaining = sql
+			.exec<{ n: number }>("SELECT COUNT(*) AS n FROM players WHERE link_state != 'synced'")
+			.one().n;
+		if (remaining > 0) return ok();
+
+		await this.ctx.storage.deleteAlarm();
+		if (this.getGame()?.status === "deleting") {
+			// Compatibility date predates deleteAll() clearing alarms itself
+			await this.ctx.storage.deleteAll();
+		}
+		return ok();
 	}
 }

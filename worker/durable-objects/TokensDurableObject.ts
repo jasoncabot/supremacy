@@ -55,10 +55,6 @@ async function hashPassword(password: string, salt: Uint8Array): Promise<ArrayBu
  *   Use `tokenIdForUserStore` to derive the address consistently.
  */
 export class TokensDurableObject extends DurableObject<Env> {
-	constructor(ctx: DurableObjectState, env: Env) {
-		super(ctx, env);
-	}
-
 	async signup(
 		req: SignupRequest,
 		clientId: string,
@@ -72,7 +68,7 @@ export class TokensDurableObject extends DurableObject<Env> {
 		const tid = tokenIdForUserStore(this.env.TOKENS, uid.toString());
 		const tobj = this.env.TOKENS.get(tid);
 
-		return ok(await tobj.storePassword(uid.toString(), req.password, clientId));
+		return tobj.storePassword(uid.toString(), req.password, clientId);
 	}
 
 	async login(
@@ -83,7 +79,7 @@ export class TokensDurableObject extends DurableObject<Env> {
 		const id = idFromUsername(this.env.USERS, username);
 		const obj = this.env.USERS.get(id);
 		const user = await obj.getUser();
-		if (!user) {
+		if (!user.ok) {
 			// Deliberately indistinguishable: missing user and wrong password both
 			// return 401 so usernames don't leak.
 			return err(401, "unauthorized", "Invalid username or password");
@@ -97,17 +93,15 @@ export class TokensDurableObject extends DurableObject<Env> {
 		usersId: string,
 		password: string,
 		clientId: string,
-	): Promise<TokenPair> {
+	): Promise<Result<TokenPair>> {
 		await this.ctx.storage.deleteAll();
 
 		const salt = crypto.getRandomValues(new Uint8Array(16));
 		const hash = await hashPassword(password, salt);
 
-		await this.ctx.storage.put("userId", usersId);
-		await this.ctx.storage.put("salt", salt);
-		await this.ctx.storage.put("password", hash);
+		await this.ctx.storage.put({ userId: usersId, salt, password: hash });
 
-		return this.generateTokens(clientId);
+		return ok(await this.generateTokens(clientId));
 	}
 
 	async checkPassword(
@@ -137,15 +131,9 @@ export class TokensDurableObject extends DurableObject<Env> {
 		const accessTokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
 		const refreshTokenExpiry = Date.now() + 30 * 24 * 60 * 60 * 1000;
 
-		await this.ctx.storage.put(`access:${clientId}`, {
-			clientId,
-			accessToken,
-			expiry: accessTokenExpiry,
-		});
-		await this.ctx.storage.put(`refresh:${clientId}`, {
-			clientId,
-			refreshToken,
-			expiry: refreshTokenExpiry,
+		await this.ctx.storage.put({
+			[`access:${clientId}`]: { clientId, accessToken, expiry: accessTokenExpiry },
+			[`refresh:${clientId}`]: { clientId, refreshToken, expiry: refreshTokenExpiry },
 		});
 
 		return {
@@ -157,13 +145,13 @@ export class TokensDurableObject extends DurableObject<Env> {
 		};
 	}
 
-	async createResetToken(): Promise<string> {
+	async createResetToken(): Promise<Result<string>> {
 		const resetToken = `swpr:${this.ctx.id}:${crypto.randomUUID().replace(/-/g, "")}`;
 		await this.ctx.storage.put("reset_token", {
 			token: resetToken,
 			expiry: Date.now() + 60 * 60 * 1000,
 		});
-		return resetToken;
+		return ok(resetToken);
 	}
 
 	async resetPassword(token: string, newPassword: string): Promise<Result<void>> {
@@ -180,13 +168,14 @@ export class TokensDurableObject extends DurableObject<Env> {
 
 		const salt = crypto.getRandomValues(new Uint8Array(16));
 		const hash = await hashPassword(newPassword, salt);
-		await this.ctx.storage.put("salt", salt);
-		await this.ctx.storage.put("password", hash);
 
-		// Sign out every existing session
+		// Sign out every existing session, atomically with the new password
 		const sessions = await this.ctx.storage.list({ prefix: "access:" });
 		const refreshes = await this.ctx.storage.list({ prefix: "refresh:" });
-		await this.ctx.storage.delete([...sessions.keys(), ...refreshes.keys()]);
+		await this.ctx.storage.transaction(async (txn) => {
+			await txn.put({ salt, password: hash });
+			await txn.delete([...sessions.keys(), ...refreshes.keys()]);
+		});
 		return ok();
 	}
 
@@ -235,10 +224,8 @@ export class TokensDurableObject extends DurableObject<Env> {
 		}
 
 		const id = this.env.USERS.idFromString(userId);
-		const hasScope = await this.env.USERS.get(id).hasScope(scope);
-		if (!hasScope) {
-			return err(403, "forbidden", `Access denied for scope: ${scope}`);
-		}
+		const allowed = await this.env.USERS.get(id).checkScope(scope);
+		if (!allowed.ok) return allowed;
 
 		return ok(userId);
 	}

@@ -13,7 +13,7 @@ turn and resolved in a deterministic order.
 - **Cloudflare Worker** backend (`worker/`), routed with `itty-router` (`worker/index.ts`).
 - **Durable Objects** (`worker/durable-objects/`) hold all persistent state:
   - `GamesDurableObject` — one per game; owns the game state and view projection.
-  - `MatchmakerDurableObject`, `UsersDurableObject`, `TokensDurableObject` — matchmaking, user/saved games, auth tokens.
+  - `UsersDurableObject`, `TokensDurableObject` — user/saved games, auth tokens.
 - **React 19 + Vite** frontend (`src/`), Tailwind v4, React Router. Game UI lives in `src/game/`.
 - Shared API types live in **`worker/api.ts`** and are imported by both worker and frontend. This is the contract — change it deliberately.
 - Tests: `test/index.spec.ts` (Vitest + `@cloudflare/vitest-plugin`), uses snapshots and a seeded-determinism helper (`test/determinism.ts`).
@@ -86,6 +86,30 @@ The hard rule that makes this work:
 4. **`message` is shown to the user; keep it client-safe.** No stack traces, storage keys,
    or upstream errors — log those instead. Auth failures stay deliberately opaque (a missing
    user and a wrong password both return the same 401, so usernames don't leak).
+
+## Game storage
+
+A game's truth is stored as rows in its `GamesDurableObject` (SQLite): `game`, one `planets`
+row per planet (everything planet-based stays inside it as JSON), `factions`, and
+`notifications` (one row each, tagged with the faction it is for). Planets and factions are
+loaded whole each turn; notifications are the part that grows over a long game, so a view only
+reads its own faction's latest `VIEW_NOTIFICATIONS`. Sectors are static metadata and aren't
+stored, and a faction's controlled planets are derived from planet owners, not stored.
+`loadGameState` assembles a `GameState` for `projectView`; the hidden-information rules above
+are unchanged. Changing a table needs a migration plan: existing games keep their old shape.
+
+## Games and links
+
+`GamesDurableObject` is the single source of truth for a game (state, players, factions).
+`UsersDurableObject.games` is only a cached link per game so listing is one indexed query;
+it can always be rebuilt. Two objects can't share a transaction, so link changes go through
+an outbox: the Games DO records `players.link_state` in the same SQL transaction as the
+change, pushes it inline, and retries from `alarm()` if that fails. Link operations must stay
+idempotent and order-independent (deleted games leave a tombstone, and an older link never
+overwrites a newer one). `alarm()` must not throw: the runtime gives up on a failing alarm
+after a few retries, so it reschedules itself instead. Deleting a game hard-deletes it (`deleteAll`) only after every link is removed.
+Anything that changes a game's listed fields (name, last played, completed) should mark the
+players `pending` and reuse `syncLinks`, not call the Users DO directly.
 
 WebSockets aren't used yet; when added, apply the same rule at that boundary (a single
 error shape, converted at the edge, never leaking internals).

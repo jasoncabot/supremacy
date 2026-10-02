@@ -41,13 +41,13 @@ async function sendResetEmail(env: Env, to: string, resetUrl: string): Promise<v
 export const normaliseEmail = (email: string) => email.trim().toLowerCase();
 
 async function sendResetLink(env: Env, email: string, origin: string): Promise<void> {
-	const emailId = env.USERS.idFromName(`email:${email}`);
-	const username = await env.USERS.get(emailId).getUsernameForEmail();
-	if (!username) return;
+	const found = await env.USERS.getByName(`email:${email}`).getUsernameForEmail();
+	if (!found.ok) return;
+	const username = found.value;
 
 	const usersHexId = env.USERS.idFromName(`user:${username}`).toString();
 	const tokensId = tokenIdForUserStore(env.TOKENS, usersHexId);
-	const resetToken = await env.TOKENS.get(tokensId).createResetToken();
+	const resetToken = unwrap(await env.TOKENS.get(tokensId).createResetToken());
 	await sendResetEmail(env, email, `${origin}/reset-password?token=${encodeURIComponent(resetToken)}`);
 }
 

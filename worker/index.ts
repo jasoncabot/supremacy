@@ -40,7 +40,6 @@ export default {
 
 export {
 	GamesDurableObject,
-	MatchmakerDurableObject,
 	TokensDurableObject,
 	UsersDurableObject,
 } from "./durable-objects";

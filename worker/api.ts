@@ -94,6 +94,28 @@ export interface SavedGameResponse {
 	faction: FactionMetadata;
 }
 
+/** The page size bounds for listing a user's saved games. */
+export const DEFAULT_GAME_PAGE_SIZE = 50;
+export const MAX_GAME_PAGE_SIZE = 100;
+
+export interface SavedGameListResponse {
+	games: SavedGameResponse[];
+	/** Pass back as `cursor` to fetch the next page; absent on the last page. */
+	nextCursor?: string;
+}
+
+/**
+ * A user's cached link to a game. The Games Durable Object is the source of
+ * truth; this copy only exists so listing doesn't have to ask every game.
+ */
+export interface GameLink {
+	gameId: string;
+	name: string;
+	faction: FactionMetadata;
+	lastPlayed: string;
+	completed: boolean;
+}
+
 export interface DeleteGameResponse {
 	success: boolean;
 }
@@ -520,7 +542,6 @@ export interface GameState {
 	planets: Record<string, PlanetState>;
 	sectors: Record<string, SectorMetadata>;
 	factions: Record<FactionMetadata, FactionState>;
-	notifications: Notification[];
 }
 
 // GameView is what a faction sees
