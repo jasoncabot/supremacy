@@ -1,12 +1,14 @@
 import React, { useState, FormEvent } from "react";
 import { Link } from "react-router";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { useApi } from "../hooks/useApi";
 
 const ForgotPasswordPage: React.FC = () => {
 	const [email, setEmail] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
 	const [success, setSuccess] = useState(false);
+	const { fetchData } = useApi();
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
@@ -18,15 +20,11 @@ const ForgotPasswordPage: React.FC = () => {
 		}
 
 		setLoading(true);
-
 		try {
-			// Here you would call your password reset API
-			// await resetPassword(email);
-
-			// Simulate API call for now
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-
-			// On success
+			await fetchData("/api/auth/forgot", {
+				method: "POST",
+				body: { email },
+			});
 			setSuccess(true);
 		} catch (err) {
 			setError(err as Error);
@@ -56,7 +54,7 @@ const ForgotPasswordPage: React.FC = () => {
 				<div className="space-y-6">
 					<div className="rounded-lg border border-green-700 bg-green-900/50 p-4 text-green-300 backdrop-blur-sm">
 						<p className="text-sm font-medium">
-							Password reset instructions have been sent to your email.
+							If an account exists for that email, reset instructions have been sent.
 						</p>
 					</div>
 					<div className="mt-4 text-center">
@@ -71,7 +69,7 @@ const ForgotPasswordPage: React.FC = () => {
 			) : (
 				<>
 					<p className="mb-6 text-center text-indigo-300">
-						Enter your email address and we'll send you instructions to reset your password.
+						Enter your email address and we'll send you a link to reset your password.
 					</p>
 
 					<form onSubmit={handleSubmit} className="space-y-6">
@@ -107,7 +105,7 @@ const ForgotPasswordPage: React.FC = () => {
 									Sending...
 								</span>
 							) : (
-								"Reset Password"
+								"Send Reset Link"
 							)}
 						</button>
 					</form>

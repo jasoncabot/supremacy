@@ -23,10 +23,10 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 			// Call the Matchmaker durable object to create a new game
 			const matchmakerId = env.MATCHMAKER.idFromName("singleton");
 			const matchmakerStub = env.MATCHMAKER.get(matchmakerId);
-			const { gameId } = await matchmakerStub.createGame({
+			const { gameId } = unwrap(await matchmakerStub.createGame({
 				...body,
 				creatorId,
-			});
+			}));
 
 			// Get the user's durable object to set their saved games
 			const userStub = env.USERS.get(req.user);

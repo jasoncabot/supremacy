@@ -1,23 +1,34 @@
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router";
-import {
-	ForgotPasswordPage,
-	LoginPage,
-	ProtectedRoute,
-	RegisterPage,
-} from "./auth";
-import GameRoutes from "./game/GameRoutes";
+import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { Loading } from "./Loading";
 import { NotFound } from "./NotFound";
-import { EntryPoint, Matchmaking, NewGameConfig, RestoreGame } from "./setup";
 import { WebLayout } from "./WebLayout";
 
+const LoginPage = lazy(() => import("./auth/LoginPage"));
+const RegisterPage = lazy(() => import("./auth/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./auth/ResetPasswordPage"));
+const EntryPoint = lazy(() => import("./setup/EntryPoint"));
+const NewGameConfig = lazy(() => import("./setup/NewGameConfig"));
+const RestoreGame = lazy(() => import("./setup/RestoreGame"));
+const Matchmaking = lazy(() => import("./setup/Matchmaking"));
+const GameRoutes = lazy(() => import("./game/GameRoutes"));
+
 const App = () => {
+	const withPageLoader = (element: React.ReactNode) => (
+		<Suspense fallback={<Loading text="Loading page..." />}>
+			{element}
+		</Suspense>
+	);
+
 	return (
 		<Routes>
 			<Route
 				path="/"
 				element={
 					<WebLayout>
-						<EntryPoint />
+						{withPageLoader(<EntryPoint />)}
 					</WebLayout>
 				}
 			/>
@@ -25,7 +36,7 @@ const App = () => {
 				path="/login"
 				element={
 					<WebLayout>
-						<LoginPage />
+						{withPageLoader(<LoginPage />)}
 					</WebLayout>
 				}
 			/>
@@ -33,7 +44,7 @@ const App = () => {
 				path="/register"
 				element={
 					<WebLayout>
-						<RegisterPage />
+						{withPageLoader(<RegisterPage />)}
 					</WebLayout>
 				}
 			/>
@@ -41,7 +52,15 @@ const App = () => {
 				path="/forgot-password"
 				element={
 					<WebLayout>
-						<ForgotPasswordPage />
+						{withPageLoader(<ForgotPasswordPage />)}
+					</WebLayout>
+				}
+			/>
+			<Route
+				path="/reset-password"
+				element={
+					<WebLayout>
+						{withPageLoader(<ResetPasswordPage />)}
 					</WebLayout>
 				}
 			/>
@@ -50,7 +69,7 @@ const App = () => {
 				element={
 					<WebLayout>
 						<ProtectedRoute>
-							<NewGameConfig />
+							{withPageLoader(<NewGameConfig />)}
 						</ProtectedRoute>
 					</WebLayout>
 				}
@@ -60,7 +79,7 @@ const App = () => {
 				element={
 					<WebLayout>
 						<ProtectedRoute>
-							<RestoreGame />
+							{withPageLoader(<RestoreGame />)}
 						</ProtectedRoute>
 					</WebLayout>
 				}
@@ -70,7 +89,7 @@ const App = () => {
 				element={
 					<WebLayout>
 						<ProtectedRoute>
-							<Matchmaking />
+							{withPageLoader(<Matchmaking />)}
 						</ProtectedRoute>
 					</WebLayout>
 				}
@@ -79,7 +98,7 @@ const App = () => {
 				path="/game/:gameId/*"
 				element={
 					<ProtectedRoute>
-						<GameRoutes />
+						{withPageLoader(<GameRoutes />)}
 					</ProtectedRoute>
 				}
 			/>

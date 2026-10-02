@@ -1,2 +1,5 @@
-# Local-only secrets/overrides for `wrangler dev` / `vite dev`.
-# SIGNUPS_ENABLED is set per-environment in wrangler.jsonc; override here if needed.
+# Copy to .dev.vars (git-ignored) for `vite dev`. Never commit real values.
+# Deployed environments use `wrangler secret put` instead.
+# Optional locally: without these, reset links are logged instead of emailed.
+MAILGUN_KEY=
+MAILGUN_DOMAIN=

@@ -16,7 +16,7 @@ turn and resolved in a deterministic order.
   - `MatchmakerDurableObject`, `UsersDurableObject`, `TokensDurableObject` — matchmaking, user/saved games, auth tokens.
 - **React 19 + Vite** frontend (`src/`), Tailwind v4, React Router. Game UI lives in `src/game/`.
 - Shared API types live in **`worker/api.ts`** and are imported by both worker and frontend. This is the contract — change it deliberately.
-- Tests: `test/index.spec.ts` (Vitest + `@cloudflare/vitest-pool-workers`), uses snapshots and a seeded-determinism helper (`test/determinism.ts`).
+- Tests: `test/index.spec.ts` (Vitest + `@cloudflare/vitest-plugin`), uses snapshots and a seeded-determinism helper (`test/determinism.ts`).
 
 ## The hidden-information boundary (most important rule)
 
@@ -89,6 +89,26 @@ The hard rule that makes this work:
 
 WebSockets aren't used yet; when added, apply the same rule at that boundary (a single
 error shape, converted at the edge, never leaking internals).
+
+## Public repository: no secrets, no private data
+
+This repository is public. Never commit or publish secrets or anything private.
+
+- Secrets (API keys, tokens, passwords) live in `.dev.vars` locally (git-ignored) and `wrangler secret put` when deployed. Never in `.env`, `wrangler.jsonc`, source, tests, docs or logs.
+- `.dev.vars.example` lists every secret name with empty values. Update it whenever a secret is added.
+- Don't log tokens, reset links or personal data (emails, passwords) in deployed code.
+- Check `git diff` for credentials, personal emails and internal URLs before committing.
+
+## Types and environments
+
+- Never hand-write `Env` or binding types. Run `npm run cf-typegen` (`wrangler types`) after changing `wrangler.jsonc` and commit `worker-configuration.d.ts`.
+- Environments are `dev`, `test` and `production` only, defined in `wrangler.jsonc`. Select one with `CLOUDFLARE_ENV` at build time, not `wrangler deploy -e`.
+- Tests access bindings via `cloudflare:workers` (`env`, `exports`).
+
+## Code comments
+
+- British English, concise, and only where the code isn't self-explanatory. Explain why, not what.
+- Match the style of the surrounding code.
 
 ## Conventions
 

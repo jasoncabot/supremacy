@@ -1,4 +1,4 @@
-import { SELF } from "cloudflare:test";
+import { exports } from "cloudflare:workers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type {
 	CreateGameRequest,
@@ -18,13 +18,13 @@ const standardHeaders = {
 describe("api", () => {
 	it("returns appropriate content for version", async () => {
 		const request = new Request("http://example.com/api/version");
-		const response = await SELF.fetch(request);
+		const response = await exports.default.fetch(request);
 		expect(await response.json()).toMatchSnapshot();
 	});
 
 	it("returns appropriate content for health", async () => {
 		const request = new Request("http://example.com/api/health");
-		const response = await SELF.fetch(request);
+		const response = await exports.default.fetch(request);
 		expect(await response.json()).toMatchSnapshot();
 	});
 
@@ -32,7 +32,7 @@ describe("api", () => {
 		const request = new Request(
 			"http://example.com/api/something-that-is-random",
 		);
-		const response = await SELF.fetch(request);
+		const response = await exports.default.fetch(request);
 		expect(await response.json()).toMatchSnapshot();
 	});
 });
@@ -71,7 +71,7 @@ describe("auth", () => {
 			} as SignupRequest),
 			headers: standardHeaders,
 		});
-		const signupResponse = await SELF.fetch(signupRequest);
+		const signupResponse = await exports.default.fetch(signupRequest);
 		expect(await signupResponse.json()).toMatchSnapshot();
 
 		const loginRequest = new Request("http://example.com/api/auth/login", {
@@ -82,7 +82,7 @@ describe("auth", () => {
 			} as LoginRequest),
 			headers: standardHeaders,
 		});
-		const loginResponse = await SELF.fetch(loginRequest);
+		const loginResponse = await exports.default.fetch(loginRequest);
 		expect(await loginResponse.json()).toMatchSnapshot();
 
 		const refreshRequest = new Request("http://example.com/api/auth/refresh", {
@@ -93,7 +93,7 @@ describe("auth", () => {
 			} as RefreshTokenRequest),
 			headers: standardHeaders,
 		});
-		const refreshResponse = await SELF.fetch(refreshRequest);
+		const refreshResponse = await exports.default.fetch(refreshRequest);
 		expect(await refreshResponse.json()).toMatchSnapshot();
 
 		// create a game with this access token
@@ -112,7 +112,7 @@ describe("auth", () => {
 					"Bearer swa:351491345f378acc5c06a9f29856f9f89f96981898ea190e7f6bce20ca9ece79:11111111111111111111111111111111",
 			},
 		});
-		const gameResponse = await SELF.fetch(gameRequest);
+		const gameResponse = await exports.default.fetch(gameRequest);
 		expect(await gameResponse.json()).toMatchSnapshot();
 	});
 });

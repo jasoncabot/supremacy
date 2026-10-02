@@ -801,14 +801,6 @@ function projectView(faction: FactionMetadata, gameState: GameState): GameView {
 }
 
 export class GamesDurableObject extends DurableObject<Env> {
-	state: DurableObjectState;
-	env: Env;
-	constructor(ctx: DurableObjectState, env: Env) {
-		// Required, as we're extending the base class.
-		super(ctx, env);
-		this.state = ctx;
-		this.env = env;
-	}
 
 	async create(
 		gameId: string,
@@ -931,8 +923,8 @@ export class GamesDurableObject extends DurableObject<Env> {
 			notifications: [],
 		};
 
-		await this.state.storage.put("gameState", gameState);
-		await this.state.storage.put<FactionMetadata>(
+		await this.ctx.storage.put("gameState", gameState);
+		await this.ctx.storage.put<FactionMetadata>(
 			`user:${request.creatorId}`,
 			request.faction,
 		);
@@ -944,7 +936,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 	}
 
 	async view(userId: string): Promise<Result<GameView>> {
-		const faction = await this.state.storage.get<FactionMetadata>(
+		const faction = await this.ctx.storage.get<FactionMetadata>(
 			`user:${userId}`,
 		);
 		if (!faction) {
@@ -954,7 +946,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 			return err(400, "invalid_faction", "Faction must be Empire or Rebellion");
 		}
 
-		const gameState = await this.state.storage.get<GameState>("gameState");
+		const gameState = await this.ctx.storage.get<GameState>("gameState");
 		if (!gameState) {
 			return err(404, "not_found", "No game state found");
 		}

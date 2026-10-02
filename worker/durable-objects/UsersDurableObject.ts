@@ -41,7 +41,23 @@ export class UsersDurableObject extends DurableObject<Env> {
 			username: req.username,
 			email: req.email || "",
 		} as User);
+
+		if (req.email) {
+			const emailId = this.env.USERS.idFromName(`email:${req.email.trim().toLowerCase()}`);
+			await this.env.USERS.get(emailId).storeEmailMapping(req.username);
+		}
+
 		return ok();
+	}
+
+	// Called on an email-keyed instance to store the reverse mapping.
+	async storeEmailMapping(username: string): Promise<void> {
+		await this.ctx.storage.put("username", username);
+	}
+
+	// Called on an email-keyed instance to retrieve the username.
+	async getUsernameForEmail(): Promise<string | undefined> {
+		return this.ctx.storage.get<string>("username");
 	}
 
 	async getUser(): Promise<User | undefined> {

@@ -78,6 +78,7 @@
 			"vars": {
 				"SIGNUPS_ENABLED": "true",
 			},
+			"secrets": { "required": ["MAILGUN_KEY", "MAILGUN_DOMAIN"] },
 		},
 		// Production: custom domain for live traffic, preview URLs per version
 		// (e.g. uploaded by CI for merge requests). Signups disabled.
@@ -100,8 +101,9 @@
 				],
 			},
 			"vars": {
-				"SIGNUPS_ENABLED": "",
+				"SIGNUPS_ENABLED": "false",
 			},
+			"secrets": { "required": ["MAILGUN_KEY", "MAILGUN_DOMAIN"] },
 		},
 	},
 }

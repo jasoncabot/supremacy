@@ -2,12 +2,54 @@
 import { IRequest, json, Router } from "itty-router";
 import {
 	ApiError,
+	ForgotPasswordRequest,
 	LoginRequest,
 	RefreshTokenRequest,
+	ResetPasswordRequest,
 	SignupRequest,
 } from "../api";
-import { TokensDurableObject } from "../durable-objects";
+import { TokensDurableObject, tokenIdForUserStore } from "../durable-objects/TokensDurableObject";
 import { unwrap } from "../errors";
+
+async function sendResetEmail(env: Env, to: string, resetUrl: string): Promise<void> {
+	if (!env.MAILGUN_KEY || !env.MAILGUN_DOMAIN) {
+		// No email service in dev — log so the reset URL is visible in wrangler output.
+		console.log(`[dev] password reset link for ${to}: ${resetUrl}`);
+		return;
+	}
+	const auth = btoa(`api:${env.MAILGUN_KEY}`);
+	const body = new URLSearchParams({
+		from: `Supremacy <noreply@${env.MAILGUN_DOMAIN}>`,
+		to,
+		subject: "Reset your Supremacy password",
+		text: `Click the link below to reset your password. This link expires in 1 hour.\n\n${resetUrl}\n\nIf you did not request a password reset, ignore this email.`,
+	});
+	const response = await fetch(`https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`, {
+		method: "POST",
+		headers: {
+			Authorization: `Basic ${auth}`,
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		body: body.toString(),
+	});
+	if (!response.ok) {
+		console.error("Mailgun error:", response.status, await response.text());
+		throw new ApiError(500, "email_failed", "Failed to send reset email");
+	}
+}
+
+export const normaliseEmail = (email: string) => email.trim().toLowerCase();
+
+async function sendResetLink(env: Env, email: string, origin: string): Promise<void> {
+	const emailId = env.USERS.idFromName(`email:${email}`);
+	const username = await env.USERS.get(emailId).getUsernameForEmail();
+	if (!username) return;
+
+	const usersHexId = env.USERS.idFromName(`user:${username}`).toString();
+	const tokensId = tokenIdForUserStore(env.TOKENS, usersHexId);
+	const resetToken = await env.TOKENS.get(tokensId).createResetToken();
+	await sendResetEmail(env, email, `${origin}/reset-password?token=${encodeURIComponent(resetToken)}`);
+}
 
 const tokenIdForPasswordAuth = (username: string) => `password:${username}`;
 
@@ -80,6 +122,45 @@ const authRouter = Router<IRequest, [Env, ExecutionContext]>({
 			await passwordAuthObj.login(body.username, body.password, clientId),
 		);
 		return json(tokens, { status: 201 });
+	})
+	// sends a password reset email if the account exists
+	.post("/forgot", async (request, env, ctx) => {
+		const body = (await request.json()) as ForgotPasswordRequest;
+		if (!body.email) {
+			throw new ApiError(400, "bad_request", "Email is required");
+		}
+		const email = normaliseEmail(body.email);
+		const origin = new URL(request.url).origin;
+
+		// Lookup and send happen after responding, so timing and errors reveal nothing
+		ctx.waitUntil(
+			sendResetLink(env, email, origin).catch((e) =>
+				console.error(JSON.stringify({ message: "reset email failed", error: String(e) })),
+			),
+		);
+
+		return json({ success: true }, { status: 200 });
+	})
+	// resets password using a valid reset token
+	.post("/reset", async (request, env) => {
+		const body = (await request.json()) as ResetPasswordRequest;
+		if (!body.token || !body.password) {
+			throw new ApiError(400, "bad_request", "Token and password are required");
+		}
+
+		const parts = body.token.split(":");
+		if (parts.length !== 3 || parts[0] !== "swpr") {
+			throw new ApiError(401, "unauthorized", "Invalid reset token");
+		}
+		let tokenObjId: DurableObjectId;
+		try {
+			tokenObjId = env.TOKENS.idFromString(parts[1]);
+		} catch {
+			throw new ApiError(401, "unauthorized", "Invalid reset token");
+		}
+
+		unwrap(await env.TOKENS.get(tokenObjId).resetPassword(body.token, body.password));
+		return json({ success: true }, { status: 200 });
 	})
 	// refreshes access token using refresh token
 	.post("/refresh", async (request, env) => {
