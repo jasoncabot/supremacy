@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import { UsersDurableObject } from ".";
 import { Result, SignupRequest, TokenPair } from "../api";
 import { ok, err } from "../errors";
-import { AuthScope } from "../middleware";
+import { AuthScope, GRANTED_SCOPES } from "../middleware";
 
 const idFromUsername = (
 	ns: DurableObjectNamespace<UsersDurableObject>,
@@ -205,27 +205,24 @@ export class TokensDurableObject extends DurableObject<Env> {
 		clientId: string,
 		scope: AuthScope,
 	): Promise<Result<string>> {
-		const tokenData = await this.ctx.storage.get<{
-			clientId: string;
-			accessToken: string;
-			expiry: number;
-		}>(`access:${clientId}`);
+		// One read for both keys: this runs on every authenticated request
+		const stored = await this.ctx.storage.get<unknown>([`access:${clientId}`, "userId"]);
+		const tokenData = stored.get(`access:${clientId}`) as
+			| { accessToken: string; expiry: number }
+			| undefined;
+		const userId = stored.get("userId") as string | undefined;
 		if (
 			!tokenData ||
-			tokenData.accessToken !== tokenId ||
+			!userId ||
+			!safeEqual(tokenData.accessToken, tokenId) ||
 			Date.now() > tokenData.expiry
 		) {
 			return err(401, "unauthorized", "Invalid or expired access token");
 		}
 
-		const userId = await this.ctx.storage.get<string>("userId");
-		if (!userId) {
-			return err(401, "unauthorized", "Invalid or expired access token");
+		if (!GRANTED_SCOPES.includes(scope)) {
+			return err(403, "forbidden", `Access denied for scope: ${scope}`);
 		}
-
-		const id = this.env.USERS.idFromString(userId);
-		const allowed = await this.env.USERS.get(id).checkScope(scope);
-		if (!allowed.ok) return allowed;
 
 		return ok(userId);
 	}

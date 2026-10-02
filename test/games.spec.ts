@@ -24,6 +24,7 @@ const call = (path: string, init: RequestInit & { token?: string } = {}) =>
 				"Content-Type": "application/json",
 				"X-Client-ID": "test-client-id",
 				...(init.token ? { Authorization: `Bearer ${init.token}` } : {}),
+				...(init.headers as Record<string, string> | undefined),
 			},
 		}),
 	);
@@ -212,6 +213,136 @@ describe("link recovery", () => {
 		expect(await runDurableObjectAlarm(game)).toBe(true);
 		expect(await listGames(token)).toEqual({ games: [] });
 		await expectWiped(gameId);
+	});
+});
+
+describe("authentication", () => {
+	it("rejects a missing, malformed or wrong token", async () => {
+		const token = await signUp();
+		const [prefix, id] = token.split(":");
+		const wrong = `${prefix}:${id}:${"0".repeat(32)}`;
+
+		expect((await call("/games")).status).toBe(401);
+		expect((await call("/games", { token: "nonsense" })).status).toBe(401);
+		expect((await call("/games", { token: wrong })).status).toBe(401);
+		expect((await call("/games", { token })).status).toBe(200);
+	});
+});
+
+describe("list queries", () => {
+	it("seek to the cursor in the index rather than scanning earlier rows", async () => {
+		await runInDurableObject(env.USERS.getByName("user:plan-check"), (_, state) => {
+			const plan = (sql: string, ...bindings: (string | number)[]) =>
+				(state.storage.sql.exec(`EXPLAIN QUERY PLAN ${sql}`, ...bindings).toArray() as { detail: string }[])
+					.map((row) => row.detail)
+					.join(" | ");
+
+			// Mirrors listGames, so a change there should change this
+			const next = plan(
+				"SELECT game_id FROM games WHERE completed = 0 AND (last_played, game_id) < (?, ?) ORDER BY last_played DESC, game_id DESC LIMIT ?",
+				"2026", "game", 51,
+			);
+			expect(next).toMatch(/USING (COVERING )?INDEX games_recent \(completed=\? AND \(last_played,game_id\)<\(\?,\?\)\)/);
+			expect(next).not.toContain("TEMP B-TREE");
+		});
+	});
+});
+
+describe("unchanged views", () => {
+	const get = (gameId: string, token: string, ifNoneMatch?: string) =>
+		call(`/games/${gameId}`, {
+			token,
+			headers: ifNoneMatch ? { "If-None-Match": ifNoneMatch } : undefined,
+		});
+
+	const inGame = (gameId: string, work: (sql: SqlStorage) => void) =>
+		runInDurableObject(env.GAMES.getByName(gameId), (_, state) => {
+			work(state.storage.sql);
+		});
+
+	it("says 304 while nothing has changed, and sends nothing", async () => {
+		const token = await signUp();
+		const gameId = await createGame(token);
+
+		const first = await get(gameId, token);
+		const etag = first.headers.get("ETag");
+		expect(etag).toBeTruthy();
+		expect(first.headers.get("Cache-Control")).toBe("private, no-cache");
+		expect(first.headers.get("Vary")).toBe("Authorization");
+		await first.arrayBuffer();
+
+		const again = await get(gameId, token, etag as string);
+		expect(again.status).toBe(304);
+		expect(await again.text()).toBe("");
+		expect(again.headers.get("ETag")).toBe(etag);
+
+		// Same answer however the validator is written
+		expect((await get(gameId, token, `"other", ${etag}`)).status).toBe(304);
+		expect((await get(gameId, token, (etag as string).replace("W/", ""))).status).toBe(304);
+		expect((await get(gameId, token, "*")).status).toBe(304);
+	});
+
+	it("sends the new view once a notification, a planet or a faction changes", async () => {
+		const token = await signUp();
+		const gameId = await createGame(token);
+		let etag = (await get(gameId, token)).headers.get("ETag") as string;
+
+		const changes: Record<string, (sql: SqlStorage) => void> = {
+			notification: (sql) => {
+				sql.exec("INSERT INTO notifications (id, faction, turn, message) VALUES ('n1', 'Empire', 1, 'hello')");
+			},
+			planet: (sql) => {
+				sql.exec("UPDATE planets SET data = json_set(data, '$.loyalty', 1) WHERE rowid = 1");
+			},
+			faction: (sql) => {
+				sql.exec("UPDATE factions SET data = json_set(data, '$.resources.mines', 1) WHERE name = 'Empire'");
+			},
+			turn: (sql) => {
+				sql.exec("UPDATE game SET turn = turn + 1");
+			},
+			deletion: (sql) => {
+				sql.exec("DELETE FROM notifications");
+			},
+		};
+
+		for (const [name, change] of Object.entries(changes)) {
+			await inGame(gameId, change);
+			const response = await get(gameId, token, etag);
+			expect(response.status, name).toBe(200);
+			const next = response.headers.get("ETag") as string;
+			expect(next, name).not.toBe(etag);
+			await response.arrayBuffer();
+			etag = next;
+		}
+	});
+
+	it("never tells someone outside the game that it is unchanged", async () => {
+		const owner = await signUp();
+		const outsider = await signUp();
+		const gameId = await createGame(owner);
+		const etag = (await get(gameId, owner)).headers.get("ETag") as string;
+
+		expect((await get(gameId, outsider, etag)).status).toBe(404);
+		expect((await get(gameId, outsider, "*")).status).toBe(404);
+	});
+
+	it("has a revision trigger for every table that feeds a view", async () => {
+		const token = await signUp();
+		const gameId = await createGame(token);
+		await inGame(gameId, (sql) => {
+			const tables = (sql.exec("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'").toArray() as { name: string }[])
+				.map((row) => row.name)
+				.sort();
+			// A new table needs a decision: add it here, with triggers, or say why it doesn't affect views
+			expect(tables).toEqual(["factions", "game", "notifications", "planets", "players"]);
+
+			for (const table of ["planets", "factions", "notifications"]) {
+				const { n } = sql
+					.exec("SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ?", table)
+					.one() as { n: number };
+				expect(n, table).toBe(3);
+			}
+		});
 	});
 });
 

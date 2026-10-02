@@ -8,7 +8,6 @@ import {
 	SignupRequest,
 } from "../api";
 import { ok, err } from "../errors";
-import { AuthScope } from "../middleware";
 
 interface User {
 	createdAt: string;
@@ -24,13 +23,6 @@ interface GameRow {
 	faction: "Empire" | "Rebellion";
 	last_played: string;
 }
-
-const SCOPES: AuthScope[] = [
-	"game:create",
-	"game:view",
-	"game:list",
-	"game:delete",
-];
 
 /**
  * One instance per user. Holds the profile and a cache of links to that
@@ -102,12 +94,6 @@ export class UsersDurableObject extends DurableObject<Env> {
 		return user ? ok(user) : err(404, "not_found", "User not found");
 	}
 
-	async checkScope(scope: AuthScope): Promise<Result<void>> {
-		return SCOPES.includes(scope)
-			? ok()
-			: err(403, "forbidden", `Access denied for scope: ${scope}`);
-	}
-
 	/**
 	 * Adds or refreshes the cached link to a game. Idempotent, and safe against
 	 * reordering: a link for a deleted game is ignored, and an older copy never
@@ -164,18 +150,20 @@ export class UsersDurableObject extends DurableObject<Env> {
 			after = { lastPlayed, gameId };
 		}
 
-		const rows = this.ctx.storage.sql
-			.exec<GameRow>(
-				`SELECT game_id, name, faction, last_played FROM games
-				 WHERE completed = 0
-					AND (?1 IS NULL OR last_played < ?1 OR (last_played = ?1 AND game_id < ?2))
-				 ORDER BY last_played DESC, game_id DESC
-				 LIMIT ?3`,
-				after?.lastPlayed ?? null,
-				after?.gameId ?? null,
-				pageSize + 1,
-			)
-			.toArray();
+		// A row-value comparison lets SQLite seek straight to the cursor in the
+		// index, where an OR of the two columns would walk every earlier row
+		const columns = "SELECT game_id, name, faction, last_played FROM games WHERE completed = 0";
+		const order = "ORDER BY last_played DESC, game_id DESC LIMIT ?";
+		const rows = (
+			after
+				? this.ctx.storage.sql.exec<GameRow>(
+						`${columns} AND (last_played, game_id) < (?, ?) ${order}`,
+						after.lastPlayed,
+						after.gameId,
+						pageSize + 1,
+					)
+				: this.ctx.storage.sql.exec<GameRow>(`${columns} ${order}`, pageSize + 1)
+		).toArray();
 
 		const page = rows.slice(0, pageSize);
 		const last = page[page.length - 1];

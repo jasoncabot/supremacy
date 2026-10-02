@@ -9,6 +9,7 @@ import {
 	FactionView,
 	GameState,
 	GameView,
+	GameViewResponse,
 	PlanetDefenses,
 	PlanetManufacturing,
 	PlanetFleets,
@@ -806,6 +807,12 @@ function projectView(
 	};
 }
 
+/** Whether an `If-None-Match` header (a list of tags, or `*`) names this tag, weak or not. */
+function matchesEtag(header: string, etag: string): boolean {
+	const bare = (tag: string) => tag.trim().replace(/^W\//, "");
+	return header.trim() === "*" || header.split(",").some((tag) => bare(tag) === bare(etag));
+}
+
 function sectorMetadataFor(galaxySize: GalaxySizeMetadata): SectorMetadata[] {
 	switch (galaxySize) {
 		case "Small":
@@ -938,6 +945,7 @@ interface GameRow {
 	galaxy_size: GalaxySizeMetadata;
 	turn: number;
 	updated_at: string;
+	rev: number;
 }
 
 interface PlayerRow {
@@ -953,6 +961,23 @@ const GAME_NAME = "New Game";
 // have built up over the course of the game
 const VIEW_NOTIFICATIONS = 100;
 
+// A view is a pure function of these tables, so a counter that moves whenever
+// any of them changes says exactly when a client's copy has gone stale. The
+// triggers do it, rather than each writer remembering to, so a new kind of
+// change can't forget. (Hashing the view instead would mean building it first,
+// which is the work being avoided, and would depend on key order.)
+function revisionTriggers(): string {
+	const bump = "UPDATE game SET rev = rev + 1;";
+	const onTables = ["planets", "factions", "notifications"].flatMap((table) =>
+		["INSERT", "UPDATE", "DELETE"].map(
+			(event) =>
+				`CREATE TRIGGER IF NOT EXISTS ${table}_rev_${event.toLowerCase()} AFTER ${event} ON ${table} BEGIN ${bump} END;`,
+		),
+	);
+	const onGame = `CREATE TRIGGER IF NOT EXISTS game_rev AFTER UPDATE OF turn, galaxy_size ON game BEGIN ${bump} END;`;
+	return [...onTables, onGame].join("\n\t");
+}
+
 // Planets keep everything about themselves (defences, fleets, missions and so
 // on) in one row. Games run for hundreds of turns, so what accumulates is
 // notifications, which get their own rows.
@@ -963,7 +988,8 @@ const SCHEMA = `
 		status TEXT NOT NULL,
 		galaxy_size TEXT NOT NULL,
 		turn INTEGER NOT NULL,
-		updated_at TEXT NOT NULL
+		updated_at TEXT NOT NULL,
+		rev INTEGER NOT NULL DEFAULT 1
 	);
 	CREATE TABLE IF NOT EXISTS planets (
 		id TEXT PRIMARY KEY,
@@ -987,6 +1013,7 @@ const SCHEMA = `
 		faction TEXT NOT NULL,
 		link_state TEXT NOT NULL
 	);
+	${revisionTriggers()}
 `;
 
 type StoredFaction = Omit<FactionState, "controlledPlanetIds">;
@@ -1014,13 +1041,19 @@ function loadGameState(sql: SqlStorage, game: GameRow): GameState {
 		planets[row.id] = JSON.parse(row.data) as PlanetState;
 	}
 
+	// One pass over the planets, rather than one per faction
+	const controlled: Record<string, string[]> = {};
+	for (const [id, planet] of Object.entries(planets)) {
+		(controlled[planet.owner] ??= []).push(id);
+	}
+
 	const factions = {} as Record<FactionMetadata, FactionState>;
 	for (const row of sql
 		.exec<{ name: FactionMetadata; data: string }>("SELECT name, data FROM factions")
 		.toArray()) {
 		factions[row.name] = {
 			...(JSON.parse(row.data) as StoredFaction),
-			controlledPlanetIds: Object.keys(planets).filter((id) => planets[id].owner === row.name),
+			controlledPlanetIds: controlled[row.name] ?? [],
 		};
 	}
 
@@ -1061,10 +1094,14 @@ const LINK_RETRY_AFTER_FAILURE_MS = 5 * 60_000;
  * that fails, retried by `alarm()`. Pushes are idempotent, so repeats are safe.
  */
 export class GamesDurableObject extends DurableObject<Env> {
-	// `deleteAll()` drops the tables, and the instance can outlive that, so this
-	// runs on every call rather than once in the constructor.
+	// `deleteAll()` drops the tables and the instance can outlive that, so this
+	// is a per-call check that only does any work when the tables are missing.
+	private schemaReady = false;
+
 	private ensureSchema() {
+		if (this.schemaReady) return;
 		this.ctx.storage.sql.exec(SCHEMA);
+		this.schemaReady = true;
 	}
 
 	private getGame(): GameRow | undefined {
@@ -1112,26 +1149,41 @@ export class GamesDurableObject extends DurableObject<Env> {
 		return ok({ gameId });
 	}
 
-	async view(userId: string): Promise<Result<GameView>> {
+	/**
+	 * The faction's view of the game. Pass the `If-None-Match` the client sent and
+	 * the view is only built, and sent back, if it has changed since. Membership
+	 * is checked first either way, so "unchanged" is never told to an outsider.
+	 */
+	async view(userId: string, ifNoneMatch?: string): Promise<Result<GameViewResponse>> {
 		this.ensureSchema();
+		let game = this.getGame();
 		const player = this.getPlayer(userId);
-		if (!player || this.getGame()?.status !== "active") {
+		if (!player || game?.status !== "active") {
 			return err(404, "not_found", "Game not found");
 		}
 		if (player.link_state !== "synced") {
-			// They've found a game their list is missing, so repair it now
+			// They've found a game their list is missing, so repair it now. The
+			// game may have been deleted while that was waiting, so read it again.
 			await this.syncLinksSafely();
+			game = this.getGame();
+			if (game?.status !== "active") {
+				return err(404, "not_found", "Game not found");
+			}
 		}
 
-		// Re-read: the game may have been deleted while the link sync was waiting
-		const game = this.getGame();
-		if (!game || game.status !== "active") {
-			return err(404, "not_found", "Game not found");
+		// Everything that decides what the client sees: what changed in the game,
+		// whose view it is, and which deployed code built it (a new deploy can
+		// change the shape of a view without touching any row)
+		const etag = `W/"${this.env.CF_VERSION_METADATA.id}.${game.rev}.${player.faction}"`;
+		if (ifNoneMatch !== undefined && matchesEtag(ifNoneMatch, etag)) {
+			return ok({ etag });
 		}
+
 		const sql = this.ctx.storage.sql;
-		return ok(
-			projectView(player.faction, loadGameState(sql, game), loadNotifications(sql, player.faction)),
-		);
+		return ok({
+			etag,
+			view: projectView(player.faction, loadGameState(sql, game), loadNotifications(sql, player.faction)),
+		});
 	}
 
 	/**
@@ -1225,6 +1277,7 @@ export class GamesDurableObject extends DurableObject<Env> {
 		if (this.getGame()?.status === "deleting") {
 			// Compatibility date predates deleteAll() clearing alarms itself
 			await this.ctx.storage.deleteAll();
+			this.schemaReady = false;
 		}
 		return ok();
 	}

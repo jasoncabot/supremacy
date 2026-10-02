@@ -544,6 +544,15 @@ export interface GameState {
 	factions: Record<FactionMetadata, FactionState>;
 }
 
+/**
+ * What fetching a game's view returns. `etag` names this exact version of the
+ * view; `view` is left out when the caller already holds that version.
+ */
+export interface GameViewResponse {
+	etag: string;
+	view?: GameView;
+}
+
 // GameView is what a faction sees
 export interface GameView {
 	id: string;

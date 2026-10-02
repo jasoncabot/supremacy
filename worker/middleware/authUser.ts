@@ -9,6 +9,15 @@ export interface AuthenticatedRequest extends IRequest {
 
 export type AuthScope = "none" | "game:create" | "game:view" | "game:list" | "game:delete";
 
+// What every signed-in user may do. Checked where the token is verified, so a
+// request doesn't need a second Durable Object hop just to learn this.
+export const GRANTED_SCOPES: readonly AuthScope[] = [
+	"game:create",
+	"game:view",
+	"game:list",
+	"game:delete",
+];
+
 export const anonymousUser = { id: "anonymous" };
 
 export function withAuthUser(scope: AuthScope = "none") {

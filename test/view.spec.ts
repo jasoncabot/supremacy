@@ -87,8 +87,8 @@ describe("game view", () => {
 
 	const viewFor = async (stub: ReturnType<typeof env.GAMES.getByName>, user: string) => {
 		const result = await stub.view(user);
-		if (!result.ok) throw new Error(result.error.message);
-		return result.value;
+		if (!result.ok || !result.value.view) throw new Error(result.ok ? "no view" : result.error.message);
+		return result.value.view;
 	};
 
 	it("shows the Empire exactly what it did before", async () => {

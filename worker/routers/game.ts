@@ -52,16 +52,29 @@ const gameRouter = Router<IRequest, [Env, ExecutionContext]>({
 			const gameId = req.params.id;
 			const user = req.user;
 
-			const view = unwrap(
+			const { etag, view } = unwrap(
 				await pruningStaleLink(
 					env,
 					user,
 					gameId,
-					env.GAMES.getByName(gameId).view(user.toString()),
+					env.GAMES.getByName(gameId).view(
+						user.toString(),
+						req.headers.get("if-none-match") ?? undefined,
+					),
 				),
 			);
+
+			// Browsers keep the last copy and ask whether it is still current, so an
+			// unchanged game costs a 304. `Vary` keeps one user's copy from another's.
+			const headers = {
+				ETag: etag,
+				"Cache-Control": "private, no-cache",
+				Vary: "Authorization",
+			};
+			if (!view) return new Response(null, { status: 304, headers });
+
 			// For demonstration, include user info in the response
-			return { ...view, user };
+			return json({ ...view, user }, { headers });
 		},
 	)
 	.get(

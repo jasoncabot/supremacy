@@ -40,7 +40,12 @@ Rules:
    it will silently leak secrets over JSON).
 3. **Views are derived on read, never stored.** `view()` loads `gameState` and calls
    `projectView`. Do not persist pre-computed views — that reintroduces stale-data and
-   leak risks and must be regenerated on every mutation.
+   leak risks and must be regenerated on every mutation. The one thing that is stored is a
+   revision counter (`game.rev`), bumped by SQL triggers whenever a table that feeds a view
+   changes. Together with the deployed version and faction it forms the view's `ETag`, so an
+   unchanged view is answered with a 304 without being built. Never use a content hash for
+   this (it needs the view built first, and depends on key order). A new table that feeds the
+   view needs the same three triggers; a test fails until you decide.
 
 ## Turn / command model (in progress)
 
@@ -52,6 +57,12 @@ Current target flow (not all implemented yet — don't assume the resolution loo
 3. On end-of-turn, orders are applied to `gameState` in a **deterministic order**, mutating
    the truth in place.
 4. Clients re-fetch; `view()` re-derives each faction's view from the new truth.
+
+When you build order submission: every order must carry the `turn` it was issued against, and
+the server must reject or flag any whose turn isn't the current one (optimistic concurrency).
+That is what the turn is for here. Don't use it as the view's cache validator: the `ETag` uses
+`game.rev` because it fails safe, and a mutation that forgets to advance the turn would serve
+a stale view of hidden information.
 
 When you build resolution: mutate `gameState` only, then `storage.put("gameState", …)`.
 Views need no maintenance — they recompute from truth. An order may target something that
@@ -114,6 +125,27 @@ players `pending` and reuse `syncLinks`, not call the Users DO directly.
 WebSockets aren't used yet; when added, apply the same rule at that boundary (a single
 error shape, converted at the edge, never leaking internals).
 
+## Performance tests
+
+`npm run perf` (`perf/`, config in `vitest.perf.config.mts`) builds the worker, runs it under
+`wrangler dev --local` and drives it over HTTP like the browser does. It captures CPU profiles,
+sampling allocation profiles and heap snapshots through wrangler's V8 inspector
+(`--inspector-port`, the same one the `d` DevTools key uses), plus request timings from wrangler's
+local explorer API. Heavy fixtures (notification history, long saved-game lists) are seeded with
+SQL through that API. Each scenario has generous absolute budgets, and results are compared with
+`perf/baseline/` when it exists. Allocation per request is the most reliable signal (within about 10%
+between runs, so the tolerance is 15%); CPU and wall time depend on the machine. Capture a baseline on a known-good commit with
+`npm run perf:baseline`; `perf/baseline/` and `perf/results/` are git-ignored because the numbers
+are machine specific. Open the `.cpuprofile`, `.heapprofile` and `.heapsnapshot` files from both
+in Chrome DevTools to see where a regression comes from. Add a scenario when you add a hot path.
+
+**For any significant feature** (a change to how game state is stored, loaded or projected,
+turn resolution, auth, anything that runs on every request, or a new endpoint players will call
+often): run `npm run perf:baseline` on the commit before you start, then `npm run perf` once the
+feature is done, and fix or justify every regression. Add scenarios covering the new work, and
+mention the before and after numbers when they move. The unit tests say a feature is correct;
+these say it is still fast.
+
 ## Public repository: no secrets, no private data
 
 This repository is public. Never commit or publish secrets or anything private.
@@ -148,6 +180,8 @@ npm run dev         # vite dev server (CLOUDFLARE_ENV=dev)
 npm run typecheck   # tsc -b
 npm run lint        # eslint .
 npm test            # vitest run (worker pool)
+npm run perf        # build, then profile a local `wrangler dev` and compare with the baseline
+npm run perf:baseline # same, saving the result as the baseline to compare against
 npm run build       # vite build
 npm run deploy:dev  # build + wrangler deploy to dev
 ```
